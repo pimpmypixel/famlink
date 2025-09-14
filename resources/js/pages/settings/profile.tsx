@@ -44,6 +44,19 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
                                 <div className="grid gap-2">
+                                    <Label htmlFor="name">ID</Label>
+
+                                    <Input
+                                        id="name"
+                                        className="mt-1 block w-full"
+                                        defaultValue={auth.user.id}
+                                        name="name"
+                                        readOnly
+                                    />
+
+                                    <InputError className="mt-2" message={errors.name} />
+                                </div>
+                                <div className="grid gap-2">
                                     <Label htmlFor="name">Name</Label>
 
                                     <Input

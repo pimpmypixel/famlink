@@ -1,12 +1,12 @@
 export interface TimelineItem {
   id: string
-  author: "father" | "mother" | "consultant"
   title: string
   content: string
   date: string
   timestamp: number
   category: "parenting" | "logistics" | "consultation" | "other"
   tags: string[]
+  user: TimelineUser
   isCollapsed?: boolean
 }
 
@@ -20,4 +20,5 @@ export interface TimelineUser {
   id: number;
   name: string;
   email: string;
+  role: string;
 }

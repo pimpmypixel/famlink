@@ -47,12 +47,18 @@ export const filterTimelineItems = (
   selectedCategory?: string,
   dateRange?: { start: string; end: string },
 ) => {
+  // Ensure items is an array
+  if (!Array.isArray(items)) {
+    console.warn('filterTimelineItems: items is not an array:', items);
+    return [];
+  }
+  
   return items.filter((item) => {
     const matchesSearch =
       searchTerm === "" ||
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      (Array.isArray(item.tags) ? item.tags : []).some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
 
     const matchesAuthor = !selectedAuthor || item.author === selectedAuthor
     const matchesCategory = !selectedCategory || item.category === selectedCategory

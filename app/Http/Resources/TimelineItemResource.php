@@ -16,13 +16,18 @@ class TimelineItemResource extends JsonResource
     {
         return [
             'id' => (string) $this->id,
-            'author' => $this->author,
             'title' => $this->title,
             'content' => $this->content,
             'date' => $this->date->format('Y-m-d'),
             'timestamp' => $this->item_timestamp->getTimestamp() * 1000, // Convert to milliseconds for JS
             'category' => $this->category,
-            'tags' => $this->tags,
+            'tags' => $this->tags ?? [], // Ensure tags is always an array
+            'user' => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+                'role' => $this->user->getRoleNames()->first(), // Get the first role name
+            ],
         ];
     }
 }

@@ -12,7 +12,8 @@ interface TimelineProps {
   currentUser?: User
 }
 
-export function Timeline({ items, currentUser }: TimelineProps) {
+export function Timeline({ items = [], currentUser }: TimelineProps) {
+  console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
   const [selectedCategory, setSelectedCategory] = useState<string>("")
@@ -61,7 +62,7 @@ export function Timeline({ items, currentUser }: TimelineProps) {
   }
 
   const renderTimelineItem = (item: TimelineItem, index: number) => {
-    const isLeft = item.author === "father"
+    const isLeft = item.user.role === "father"
 
     return (
       <div key={item.id} className="relative">

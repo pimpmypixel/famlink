@@ -17,13 +17,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface TimelineProps {
-  timelineItems: TimelineItem[];
+  timelineItems: { data: TimelineItem[] };
 }
 
 export default function Timeline({ timelineItems: initialTimelineItems }: TimelineProps) {
   const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
   const [timelineItems, setTimelineItems] = useState(initialTimelineItems)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  // console.log(timelineItems)
 
   const handleAddItem = (newItemData: Omit<TimelineItem, "id" | "timestamp">) => {
     const newItem: TimelineItem = {

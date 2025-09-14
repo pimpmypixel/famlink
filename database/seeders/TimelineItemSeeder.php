@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Family;
 use App\Models\TimelineItem;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,12 +14,16 @@ class TimelineItemSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get the first user or create one for seeding
-        $user = User::first() ?? User::factory()->create();
+        // Get the first family with users
+        $fam = Family::with('users')->whereHas('users')->first();
+        
+        if (!$fam) {
+            // If no family with users exists, skip seeding
+            return;
+        }
 
         $mockTimelineData = [
             [
-                'author' => 'father',
                 'title' => 'Soccer Practice Schedule',
                 'content' => 'Emma has soccer practice every Tuesday and Thursday at 4 PM. I can handle pickup on Tuesdays.',
                 'date' => '2024-01-15',
@@ -27,7 +32,6 @@ class TimelineItemSeeder extends Seeder
                 'tags' => ['soccer', 'schedule', 'pickup'],
             ],
             [
-                'author' => 'mother',
                 'title' => 'Parent-Teacher Conference',
                 'content' => 'Scheduled meeting with Ms. Rodriguez for Thursday at 3 PM to discuss Emma\'s progress in math.',
                 'date' => '2024-01-16',
@@ -36,7 +40,6 @@ class TimelineItemSeeder extends Seeder
                 'tags' => ['school', 'meeting', 'math'],
             ],
             [
-                'author' => 'consultant',
                 'title' => 'Co-Parenting Session Notes',
                 'content' => 'Discussed communication strategies and established guidelines for consistent bedtime routines across both households.',
                 'date' => '2024-01-18',
@@ -45,7 +48,6 @@ class TimelineItemSeeder extends Seeder
                 'tags' => ['communication', 'bedtime', 'consistency'],
             ],
             [
-                'author' => 'father',
                 'title' => 'Medical Appointment',
                 'content' => 'Emma has a dentist appointment on Friday at 2 PM. I\'ll take her and send you the report.',
                 'date' => '2024-01-20',
@@ -54,7 +56,6 @@ class TimelineItemSeeder extends Seeder
                 'tags' => ['medical', 'dentist', 'appointment'],
             ],
             [
-                'author' => 'mother',
                 'title' => 'Behavioral Concerns',
                 'content' => 'Emma has been having trouble with homework completion. We should discuss strategies to help her stay focused.',
                 'date' => '2024-01-22',
@@ -63,7 +64,6 @@ class TimelineItemSeeder extends Seeder
                 'tags' => ['homework', 'behavior', 'focus'],
             ],
             [
-                'author' => 'consultant',
                 'title' => 'Homework Strategy Recommendations',
                 'content' => 'Based on our discussion, I recommend implementing a structured homework time with 15-minute breaks every 30 minutes.',
                 'date' => '2024-01-25',
@@ -74,10 +74,18 @@ class TimelineItemSeeder extends Seeder
         ];
 
         foreach ($mockTimelineData as $item) {
-            TimelineItem::create([
-                'user_id' => $user->id,
-                ...$item,
-            ]);
+            $user = $fam->users()->inRandomOrder()->first();
+            
+            if ($user) {
+                // Get the user's role, defaulting to 'other' if no role
+                $userRole = $user->getRoleNames()->first();
+                $author = $userRole && in_array($userRole, ['father', 'mother', 'authority']) ? $userRole : 'other';
+                
+                TimelineItem::create([
+                    'user_id' => $user->id,
+                    ...$item,
+                ]);
+            }
         }
     }
 }

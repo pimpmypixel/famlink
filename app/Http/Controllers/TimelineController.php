@@ -11,12 +11,15 @@ class TimelineController extends Controller
 {
     public function index(Request $request)
     {
-        $timelineItems = TimelineItem::with('user')
+        $timelineItems = TimelineItem::with('user','user.roles')
             ->orderBy('item_timestamp', 'desc')
+            ->whereIn('user_id', auth()->user()->family->users()->get('id'))
             ->get();
 
-        return Inertia::render('Timeline', [
-            'timelineItems' => TimelineItemResource::collection($timelineItems),
+        // dd($timelineItems);
+
+        return Inertia::render('timeline', [
+            'timelineItems' => TimelineItemResource::collection($timelineItems)->resolve(),
         ]);
     }
 }

@@ -80,10 +80,47 @@ php artisan migrate
 php artisan migrate:fresh --seed
 ```
 
+## Laravel Boost MCP Integration
+
+This project uses Laravel Boost MCP for enhanced development capabilities. Always leverage these tools when working with the Laravel application:
+
+### Essential Boost Commands
+- Use `mcp_laravel_boost_application_info` to get comprehensive app info including PHP version, Laravel version, packages, and models
+- Use `mcp_laravel_boost_search_docs` to search version-specific documentation for Laravel ecosystem packages
+- Use `mcp_laravel_boost_tinker` for debugging and testing PHP code in Laravel context
+- Use `mcp_laravel_boost_database_schema` to read database structure
+- Use `mcp_laravel_boost_database_query` for read-only SQL queries
+- Use `mcp_laravel_boost_list_routes` to see all available routes
+- Use `mcp_laravel_boost_read_log_entries` for application logs
+- Use `mcp_laravel_boost_browser_logs` for frontend debugging
+
+### Development Workflow
+1. Always start new sessions by calling `mcp_laravel_boost_application_info` to understand the current state
+2. Use Boost documentation search before implementing Laravel ecosystem features
+3. Leverage tinker for testing code snippets before implementation
+4. Check logs when debugging issues
+
+## CLI Command Monitoring
+
+**CRITICAL**: Always observe and wait for CLI command completion before proceeding. This includes:
+
+### Command Exit Observation
+- **PHP commands**: `php artisan *` - Wait for command completion and check exit status
+- **Composer commands**: `composer *` - Monitor for successful completion
+- **Bun commands**: `bun run *`, `bun install`, etc. - Ensure processes finish
+- **Database commands**: `php artisan migrate*`, `php artisan db:*` - Verify completion
+- **Testing commands**: `php artisan test`, `composer test` - Wait for test results
+
+### Best Practices
+- Never assume commands completed successfully without verification
+- Check command output for errors or warnings
+- Use appropriate error handling for failed commands
+- Monitor long-running processes (dev servers, builds) for completion signals
+
 ## Key Dependencies
 - **inertiajs/inertia-laravel**: SPA-like experience
 - **laravel/wayfinder**: Type-safe routing
-- **laravel/boost**: Development tooling
+- **laravel/boost**: Development tooling and MCP integration
 - **pestphp/pest**: Modern PHP testing
 - **@radix-ui/react-***: Accessible UI primitives
 - **class-variance-authority**: Component variant management

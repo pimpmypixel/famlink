@@ -16,9 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
     
-    Route::get('timeline', function () {
-        return Inertia::render('timeline');
-    })->name('timeline');
+    Route::get('timeline', [App\Http\Controllers\TimelineController::class, 'index'])->name('timeline');
 });
 
 require __DIR__.'/settings.php';

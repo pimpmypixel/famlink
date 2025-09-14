@@ -15,3 +15,9 @@ export interface User {
   name: string
   role: "father" | "mother" | "consultant"
 }
+
+export interface TimelineUser {
+  id: number;
+  name: string;
+  email: string;
+}

@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/react';
 import { useState } from "react"
 import { Timeline as TimelineComponent } from "@/components/timeline"
 import { AddItemModal } from "@/components/add-item-modal"
-import { mockTimelineData, mockUsers } from "@/lib/mock-data"
+import { mockUsers } from "@/lib/mock-data"
 import type { User, TimelineItem } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -16,9 +16,13 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function Timeline() {
+interface TimelineProps {
+  timelineItems: TimelineItem[];
+}
+
+export default function Timeline({ timelineItems: initialTimelineItems }: TimelineProps) {
   const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
-  const [timelineItems, setTimelineItems] = useState(mockTimelineData)
+  const [timelineItems, setTimelineItems] = useState(initialTimelineItems)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const handleAddItem = (newItemData: Omit<TimelineItem, "id" | "timestamp">) => {

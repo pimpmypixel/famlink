@@ -1,16 +1,28 @@
 # Implementation Plan
 
-- [ ] 1. Set up database schema and models
-  - Create migration files for families, enhanced timeline_items, calendar_events, notifications, and comments tables
-  - Implement Eloquent models with proper relationships and casts
-  - Add role and family_id columns to existing users table
+## Current State Analysis
+- ✅ Basic Laravel 12.28.1 + React 19.1.1 + Inertia.js 2.0.6 setup
+- ✅ Basic authentication with Laravel Breeze
+- ✅ Simple TimelineItem model and controller
+- ✅ Basic timeline display page
+- ✅ Spatie Permission package installed
+- ❌ No family relationships or role-based access
+- ❌ No file attachments, notifications, or advanced features
+
+- [ ] 1. Enhance database schema and models
+  - Add family_id, role, and notification preferences to users table
+  - Enhance timeline_items table with attachments, urgency, and linking fields
+  - Create calendar_events, notifications, and comments tables
+  - Update User and TimelineItem models with proper relationships and casts
+  - Configure Family model with relationships
   - _Requirements: 1.1, 3.1, 7.1, 7.2_
 
-- [ ] 2. Implement core timeline backend functionality
-  - Create TimelineController with Inertia.js responses for CRUD operations and filtering
+- [ ] 2. Enhance timeline backend functionality
+  - Extend existing TimelineController with create, update, delete operations
+  - Add filtering and search capabilities to timeline index method
   - Implement TimelineService for business logic and data processing
-  - Add web routes for timeline operations using Inertia.js middleware
-  - Configure Inertia.js shared data for timeline context
+  - Add family-based access control and authorization policies
+  - Configure proper Inertia.js shared data for user context and permissions
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
 
 - [ ] 3. Build file attachment system
@@ -37,10 +49,12 @@
   - Add export routes that return file downloads through Inertia.js
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7. Enhance frontend timeline components
-  - Update Timeline component with filtering and search using Inertia.js router
-  - Enhance TimelineItem component with attachments and linking
-  - Implement optimistic updates and proper Inertia.js form handling
+- [ ] 7. Enhance existing frontend timeline components
+  - Replace mock data usage with real Inertia.js data flow in timeline page
+  - Update Timeline component with proper filtering and search using Inertia.js router
+  - Enhance TimelineItem component with attachments and linking capabilities
+  - Convert AddItemModal to use Inertia.js forms instead of local state
+  - Implement proper error handling and loading states
   - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.3, 2.4, 5.4_
 
 - [ ] 8. Create advanced filtering system
@@ -86,10 +100,11 @@
   - _Requirements: All requirements - error handling_
 
 - [ ] 15. Create comprehensive test suite
-  - Write feature tests for all timeline operations using Inertia.js testing helpers
-  - Implement unit tests for services and models
+  - Extend existing Pest test setup for timeline operations using Inertia.js testing helpers
+  - Write feature tests for new CRUD operations and filtering
+  - Implement unit tests for services and enhanced models
   - Create component tests for React components with Inertia.js mocking
-  - Add integration tests for Inertia.js page components with Pest
+  - Add integration tests for enhanced Inertia.js page components
   - _Requirements: All requirements - testing coverage_
 
 - [ ] 16. Implement security and validation
@@ -100,16 +115,25 @@
   - _Requirements: 5.5, 7.4, 7.5_
 
 - [ ] 17. Optimize performance and user experience
-  - Implement pagination for timeline items
+  - Implement pagination for timeline items in existing controller
   - Add lazy loading for attachments and images
-  - Create loading states and skeleton screens
-  - Optimize database queries with eager loading
-  - Use Bun for all JavaScript package management and build processes
+  - Create loading states and skeleton screens for existing components
+  - Optimize database queries with eager loading in TimelineController
+  - Ensure Bun is properly configured for all JavaScript package management
   - _Requirements: 1.2, 2.1, 5.4_
 
 - [ ] 18. Final integration and polish
+  - Remove mock data dependencies from existing components
   - Clean up unused imports and components
-  - Implement proper TypeScript types throughout
-  - Add accessibility features and ARIA labels
-  - Create comprehensive documentation
+  - Implement proper TypeScript types throughout existing and new code
+  - Add accessibility features and ARIA labels to existing components
+  - Update existing documentation and create comprehensive feature documentation
   - _Requirements: All requirements - final integration_
+
+## Migration Strategy
+This implementation plan builds incrementally on the existing codebase:
+1. **Phase 1 (Tasks 1-6)**: Enhance backend foundation and data models
+2. **Phase 2 (Tasks 7-12)**: Upgrade frontend components and add new features  
+3. **Phase 3 (Tasks 13-18)**: Add advanced features, testing, and polish
+
+Each task is designed to work with the existing Laravel Breeze + Inertia.js + React setup while progressively adding the missing functionality identified in the requirements and design analysis.

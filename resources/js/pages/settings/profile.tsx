@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/profile';
+import { Badge } from '@/components/ui/badge'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,6 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
+    console.log(auth)
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -72,6 +74,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     />
 
                                     <InputError className="mt-2" message={errors.email} />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Roles</Label>
+                                    <Badge>{auth.user.roles[0]}</Badge>
                                 </div>
 
                                 {mustVerifyEmail && auth.user.email_verified_at === null && (

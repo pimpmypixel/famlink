@@ -4,13 +4,16 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +24,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'family_id',
+        'professional_credentials',
+        'notification_preferences',
     ];
 
     /**
@@ -43,6 +49,24 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'professional_credentials' => 'array',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Get the family that the user belongs to.
+     */
+    public function family(): BelongsTo
+    {
+        return $this->belongsTo(Family::class);
+    }
+
+    /**
+     * Get the timeline items for the user.
+     */
+    public function timelineItems(): HasMany
+    {
+        return $this->hasMany(TimelineItem::class);
     }
 }

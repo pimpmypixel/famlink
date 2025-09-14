@@ -2,26 +2,32 @@
 
 ## Introduction
 
-The Co-Parenting Timeline is a digital platform designed to facilitate communication and coordination between separated parents and social workers with the Danish Agen­cy of Fa­mily Law (DAFL). The system serves as a centralized hub where both parents and authorized consultants, mediators and social workers can document progress and consultations with the authorities. This platform aims to reduce conflict, improve transparency, and ensure consistent care for the child across both households. 
+The Co-Parenting Timeline is a digital platform designed to facilitate communication and coordination between separated parents and social workers with the Danish Agency of Family Law (DAFL). The system serves as a centralized hub where both parents and authorized consultants, mediators and social workers can document progress and consultations with the authorities. This platform aims to reduce conflict, improve transparency, and ensure consistent care for the child across both households.
+
+**Current Implementation Status:** The application has a basic Laravel 12.28.1 backend with React 19.1.1 frontend using Inertia.js 2.0.6. Basic timeline functionality exists with a simple TimelineItem model and controller, but most advanced features are not yet implemented.
 
 Key aspects and use cases include:
-• Custody, residency and visitation
-• Separation and divorce
-• Guardianship
+• Custody, residency and visitation coordination
+• Separation and divorce documentation  
+• Guardianship management
+• Professional consultation tracking
+• Timeline-based communication between parents and authorities
 
 ## Requirements
 
 ### Requirement 1
 
-**User Story:** As a separated parent, I want to create and view timeline entries about correspondance with DAFL, so that all parties stay informed about case developments and can coordinate effectively.
+**User Story:** As a separated parent, I want to create and view timeline entries about correspondence with DAFL, so that all parties stay informed about case developments and can coordinate effectively.
 
 #### Acceptance Criteria
 
 1. WHEN a parent creates a new timeline entry THEN the system SHALL save the entry with author, timestamp, category, and content
-2. WHEN a parent views the timeline THEN the system SHALL display all entries in chronological order with clear author identification
+2. WHEN a parent views the timeline THEN the system SHALL display all entries in chronological order with clear author identification  
 3. WHEN a parent categorizes an entry THEN the system SHALL accept categories of "parenting", "logistics", "consultation", or "other"
 4. WHEN a parent adds tags to an entry THEN the system SHALL store and display these tags for filtering purposes
 5. IF a parent creates an entry THEN the system SHALL automatically timestamp it with the current date and time UNLESS a custom timestamp is supplied
+
+**Current Status:** ✅ Partially implemented - Basic timeline viewing and creation exists, but needs enhancement for proper family relationships and user roles.
 
 ### Requirement 2
 
@@ -35,6 +41,8 @@ Key aspects and use cases include:
 4. WHEN a parent searches by text THEN the system SHALL display entries containing the search term in title or content
 5. WHEN multiple filters are applied THEN the system SHALL display entries matching all active filters
 
+**Current Status:** ❌ Not implemented - Frontend has basic timeline display but no filtering or search functionality.
+
 ### Requirement 3
 
 **User Story:** As a DAFL employee (consultant), I want to add professional observations and recommendations to the timeline, so that both parents can access expert guidance and track progress.
@@ -46,6 +54,8 @@ Key aspects and use cases include:
 3. WHEN a consultant references previous entries THEN the system SHALL allow linking to related timeline items
 4. IF a consultant creates an entry THEN the system SHALL notify both parents of the new consultation notes
 5. WHEN parents view consultant entries THEN the system SHALL display the consultant's credentials and role
+
+**Current Status:** ❌ Not implemented - User model has Spatie permissions but no role-based functionality or consultant features exist.
 
 ### Requirement 4
 
@@ -59,6 +69,8 @@ Key aspects and use cases include:
 4. IF a parent hasn't viewed new entries within 24 hours THEN the system SHALL send a reminder notification
 5. WHEN a parent receives notifications THEN the system SHALL allow them to customize notification preferences
 
+**Current Status:** ❌ Not implemented - No notification system exists in the current application.
+
 ### Requirement 5
 
 **User Story:** As a separated parent, I want to attach documents and photos to timeline entries, so that I can provide complete context and evidence for important events or communications.
@@ -70,6 +82,8 @@ Key aspects and use cases include:
 3. WHEN attachments are uploaded THEN the system SHALL store them securely and associate them with the entry
 4. WHEN viewing entries with attachments THEN the system SHALL display thumbnails and allow full-size viewing
 5. IF attachments contain sensitive information THEN the system SHALL ensure only authorized users can access them
+
+**Current Status:** ❌ Not implemented - No file attachment system exists in the current TimelineItem model or frontend.
 
 ### Requirement 6
 
@@ -83,6 +97,8 @@ Key aspects and use cases include:
 4. IF exporting for legal purposes THEN the system SHALL include digital signatures and timestamps for authenticity
 5. WHEN an export is completed THEN the system SHALL provide a secure download link
 
+**Current Status:** ❌ Not implemented - No export functionality exists in the current application.
+
 ### Requirement 7
 
 **User Story:** As a system administrator, I want to manage user access and permissions, so that only authorized individuals can view and contribute to each family's timeline.
@@ -95,6 +111,8 @@ Key aspects and use cases include:
 4. IF unauthorized access is attempted THEN the system SHALL log the attempt and deny access
 5. WHEN user permissions change THEN the system SHALL immediately update access rights
 
+**Current Status:** ⚠️ Partially implemented - Spatie Permission package is installed with roles/permissions tables, but no family-based access control or role enforcement exists.
+
 ### Requirement 8
 
 **User Story:** As a separated parent, I want to collaborate on shared calendar events and appointments, so that we can coordinate schedules and avoid conflicts.
@@ -106,3 +124,5 @@ Key aspects and use cases include:
 3. WHEN events are updated THEN the system SHALL notify all relevant parties of changes
 4. IF an event requires both parents' attendance THEN the system SHALL track confirmation status
 5. WHEN viewing the calendar THEN the system SHALL display events with clear ownership and status indicators
+
+**Current Status:** ❌ Not implemented - No calendar functionality exists in the current application.

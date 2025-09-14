@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('content');
             $table->date('date');
             $table->timestamp('item_timestamp');
-            $table->enum('category', ['parenting', 'logistics', 'consultation', 'other']);
+            $table->string('category');
             $table->json('tags');
             $table->timestamps();
         });

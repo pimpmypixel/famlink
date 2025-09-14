@@ -16,75 +16,127 @@ class TimelineItemSeeder extends Seeder
     {
         // Get the first family with users
         $fam = Family::with('users')->whereHas('users')->first();
-        
+
         if (!$fam) {
             // If no family with users exists, skip seeding
             return;
         }
 
-        $mockTimelineData = [
+        $timelineData = [
             [
-                'title' => 'Soccer Practice Schedule',
-                'content' => 'Emma has soccer practice every Tuesday and Thursday at 4 PM. I can handle pickup on Tuesdays.',
-                'date' => '2024-01-15',
-                'item_timestamp' => '2024-01-15 10:30:00',
-                'category' => 'logistics',
-                'tags' => ['soccer', 'schedule', 'pickup'],
+                'title' => 'Samværsaftale',
+                'content' => 'Mor ønsker ændring af samværsaftalen, så Anna kan være hos hende i alle vinterferier.',
+                'date' => '2025-01-12',
+                'item_timestamp' => '2025-01-12 09:30:00',
+                'category' => 'familieret',
+                'tags' => ['samvær', 'aftale', 'ferie'],
             ],
             [
-                'title' => 'Parent-Teacher Conference',
-                'content' => 'Scheduled meeting with Ms. Rodriguez for Thursday at 3 PM to discuss Emma\'s progress in math.',
-                'date' => '2024-01-16',
-                'item_timestamp' => '2024-01-16 14:20:00',
-                'category' => 'parenting',
-                'tags' => ['school', 'meeting', 'math'],
+                'title' => 'Indkaldelse til møde',
+                'content' => 'Familieretshuset har indkaldt begge forældre til digitalt møde om ændring af samværsaftalen.',
+                'date' => '2025-01-18',
+                'item_timestamp' => '2025-01-18 14:00:00',
+                'category' => 'korrespondance',
+                'tags' => ['møde', 'indkaldelse', 'samvær'],
             ],
             [
-                'title' => 'Co-Parenting Session Notes',
-                'content' => 'Discussed communication strategies and established guidelines for consistent bedtime routines across both households.',
-                'date' => '2024-01-18',
-                'item_timestamp' => '2024-01-18 16:00:00',
-                'category' => 'consultation',
-                'tags' => ['communication', 'bedtime', 'consistency'],
+                'title' => 'Bekymring om skolearbejde',
+                'content' => 'Far skriver til Familieretshuset, at Anna har svært ved at følge med i skolen, og at han ønsker en vurdering af barnets trivsel.',
+                'date' => '2025-01-20',
+                'item_timestamp' => '2025-01-20 18:15:00',
+                'category' => 'barnet',
+                'tags' => ['skole', 'trivsel', 'bekymring'],
             ],
             [
-                'title' => 'Medical Appointment',
-                'content' => 'Emma has a dentist appointment on Friday at 2 PM. I\'ll take her and send you the report.',
-                'date' => '2024-01-20',
-                'item_timestamp' => '2024-01-20 09:15:00',
-                'category' => 'logistics',
-                'tags' => ['medical', 'dentist', 'appointment'],
+                'title' => 'Statusnotat fra Familieretshuset',
+                'content' => 'Familieretshuset har udsendt statusnotat om barnets trivsel og anbefalet en børnesamtale.',
+                'date' => '2025-01-23',
+                'item_timestamp' => '2025-01-23 11:00:00',
+                'category' => 'rapport',
+                'tags' => ['status', 'barnesamtale', 'rapport'],
             ],
             [
-                'title' => 'Behavioral Concerns',
-                'content' => 'Emma has been having trouble with homework completion. We should discuss strategies to help her stay focused.',
-                'date' => '2024-01-22',
-                'item_timestamp' => '2024-01-22 19:30:00',
-                'category' => 'parenting',
-                'tags' => ['homework', 'behavior', 'focus'],
+                'title' => 'Barnesamtale planlagt',
+                'content' => 'Der er aftalt en samtale med Anna den 1. februar kl. 10.00, hvor hun kan give sin mening til kende om samvær og bopæl.',
+                'date' => '2025-01-25',
+                'item_timestamp' => '2025-01-25 15:45:00',
+                'category' => 'barnet',
+                'tags' => ['barnesamtale', 'høring', 'barnetsStemme'],
             ],
             [
-                'title' => 'Homework Strategy Recommendations',
-                'content' => 'Based on our discussion, I recommend implementing a structured homework time with 15-minute breaks every 30 minutes.',
-                'date' => '2024-01-25',
-                'item_timestamp' => '2024-01-25 11:00:00',
-                'category' => 'consultation',
-                'tags' => ['homework', 'strategy', 'structure'],
+                'title' => 'Lægeerklæring fremsendt',
+                'content' => 'Mor har sendt lægeerklæring til Familieretshuset vedrørende Annas søvnbesvær og behov for faste rutiner.',
+                'date' => '2025-01-28',
+                'item_timestamp' => '2025-01-28 09:10:00',
+                'category' => 'korrespondance',
+                'tags' => ['læge', 'rutiner', 'trivsel'],
             ],
+            [
+                'title' => 'Opfølgende møde med Familieretshuset',
+                'content' => 'Der blev afholdt opfølgende møde med begge forældre, hvor mulige løsninger om fleksibelt samvær blev diskuteret.',
+                'date' => '2025-02-02',
+                'item_timestamp' => '2025-02-02 13:00:00',
+                'category' => 'familieret',
+                'tags' => ['opfølgning', 'møde', 'samvær'],
+            ],
+            [
+                'title' => 'Vejledning om ferieplanlægning',
+                'content' => 'Familieretshuset har sendt vejledning om planlægning af skoleferier, så begge forældre får indflydelse.',
+                'date' => '2025-02-05',
+                'item_timestamp' => '2025-02-05 10:20:00',
+                'category' => 'vejledning',
+                'tags' => ['ferie', 'vejledning', 'forældremyndighed'],
+            ],
+            [
+                'title' => 'Anmodning om bopælssag',
+                'content' => 'Far har indgivet anmodning om ændring af bopæl, da han ønsker, at Anna skal bo fast hos ham.',
+                'date' => '2025-02-10',
+                'item_timestamp' => '2025-02-10 16:45:00',
+                'category' => 'familieret',
+                'tags' => ['bopæl', 'anmodning', 'forældreansvar'],
+            ],
+            [
+                'title' => 'Foreløbig afgørelse',
+                'content' => 'Familieretshuset har truffet midlertidig afgørelse om, at nuværende samvær fortsætter, indtil endelig afgørelse træffes.',
+                'date' => '2025-02-14',
+                'item_timestamp' => '2025-02-14 12:00:00',
+                'category' => 'afgørelse',
+                'tags' => ['midlertidig', 'samvær', 'afgørelse'],
+            ],
+            [
+                'title' => 'Skoleudtalelse indhentet',
+                'content' => 'Familieretshuset har indhentet en udtalelse fra Annas klasselærer om hendes trivsel og udvikling.',
+                'date' => '2025-02-18',
+                'item_timestamp' => '2025-02-18 09:40:00',
+                'category' => 'rapport',
+                'tags' => ['skole', 'udtalelse', 'barnetsTrivsel'],
+            ],
+            [
+                'title' => 'Endelig afgørelse truffet',
+                'content' => 'Familieretshuset har truffet afgørelse om bopæl, hvor Anna skal fortsætte med at bo hos mor, med udvidet samvær hos far.',
+                'date' => '2025-02-25',
+                'item_timestamp' => '2025-02-25 14:30:00',
+                'category' => 'afgørelse',
+                'tags' => ['bopæl', 'samvær', 'familieret'],
+            ]
         ];
 
-        foreach ($mockTimelineData as $item) {
+
+        foreach ($timelineData as $item) {
             $user = $fam->users()->inRandomOrder()->first();
-            
+
             if ($user) {
                 // Get the user's role, defaulting to 'other' if no role
-                $userRole = $user->getRoleNames()->first();
-                $author = $userRole && in_array($userRole, ['father', 'mother', 'authority']) ? $userRole : 'other';
-                
-                TimelineItem::create([
+                // $userRole = $user->getRoleNames()->first();
+                // $author = $userRole && in_array($userRole, ['father', 'mother', 'authority']) ? $userRole : 'other';
+
+                $insert = [
                     'user_id' => $user->id,
                     ...$item,
-                ]);
+                ];
+
+                // print_r($insert);
+                TimelineItem::create($insert);
             }
         }
     }

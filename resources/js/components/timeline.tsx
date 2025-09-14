@@ -13,7 +13,7 @@ interface TimelineProps {
 }
 
 export function Timeline({ items = [], currentUser }: TimelineProps) {
-  console.log(items,'items')
+  // console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
   const [selectedCategory, setSelectedCategory] = useState<string>("")

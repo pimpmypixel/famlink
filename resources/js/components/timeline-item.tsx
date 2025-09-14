@@ -25,7 +25,7 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
     }
   }, [forceExpanded, forceCollapsed])
 
-  const authorColorClass = getAuthorColor(item.author)
+  const authorColorClass = getAuthorColor(item.user.name)
   const categoryColorClass = getCategoryColor(item.category)
 
   const handleToggle = () => {
@@ -40,10 +40,10 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={categoryColorClass}>
+              <Badge variant="outline" className={categoryColorClass}>
                 {item.category}
               </Badge>
-              <span className="text-xs text-muted-foreground">{item.author}</span>
+              <span className="text-xs text-muted-foreground">{item.user.name}</span>
             </div>
             <Button variant="ghost" size="sm" onClick={handleToggle} className="h-6 w-6 p-0">
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

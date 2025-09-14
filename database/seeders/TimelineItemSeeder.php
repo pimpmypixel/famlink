@@ -126,16 +126,11 @@ class TimelineItemSeeder extends Seeder
             $user = $fam->users()->inRandomOrder()->first();
 
             if ($user) {
-                // Get the user's role, defaulting to 'other' if no role
-                // $userRole = $user->getRoleNames()->first();
-                // $author = $userRole && in_array($userRole, ['father', 'mother', 'authority']) ? $userRole : 'other';
-
                 $insert = [
                     'user_id' => $user->id,
                     ...$item,
                 ];
 
-                // print_r($insert);
                 TimelineItem::create($insert);
             }
         }

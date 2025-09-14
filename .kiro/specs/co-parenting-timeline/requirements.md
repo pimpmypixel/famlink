@@ -4,7 +4,7 @@
 
 The Co-Parenting Timeline is a digital platform designed to facilitate communication and coordination between separated parents and social workers with the Danish Agency of Family Law (DAFL). The system serves as a centralized hub where both parents and authorized consultants, mediators and social workers can document progress and consultations with the authorities. This platform aims to reduce conflict, improve transparency, and ensure consistent care for the child across both households.
 
-**Current Implementation Status:** The application has a basic Laravel 12.28.1 backend with React 19.1.1 frontend using Inertia.js 2.0.6. Basic timeline functionality exists with a simple TimelineItem model and controller, but most advanced features are not yet implemented.
+**Current Implementation Status:** The application has Laravel 12.28.1 backend with React 19.1.1 frontend using Inertia.js 2.0.6. Database schema includes families, users with family relationships, timeline_items, and full Spatie Permission system. Basic timeline functionality exists but needs enhancement for filtering, attachments, and role-based access.
 
 Key aspects and use cases include:
 • Custody, residency and visitation coordination
@@ -111,7 +111,7 @@ Key aspects and use cases include:
 4. IF unauthorized access is attempted THEN the system SHALL log the attempt and deny access
 5. WHEN user permissions change THEN the system SHALL immediately update access rights
 
-**Current Status:** ⚠️ Partially implemented - Spatie Permission package is installed with roles/permissions tables, but no family-based access control or role enforcement exists.
+**Current Status:** ⚠️ Partially implemented - Spatie Permission system is fully installed with complete database schema, and users have family relationships, but role enforcement and access control logic needs implementation.
 
 ### Requirement 8
 

@@ -71,8 +71,12 @@
 - Vite handles asset compilation and hot reloading
 
 ### Configuration Files
-- `.env` - Environment variables
+- `.env` - Environment variables (includes MCP server credentials)
+- `.env.example` - Environment template for team setup
 - `vite.config.ts` - Vite build configuration
 - `tsconfig.json` - TypeScript configuration
 - `composer.json` - PHP dependencies and scripts
 - `package.json` - Node.js dependencies and scripts (managed with Bun)
+- `.kiro/settings/mcp.json` - Workspace MCP server configuration
+- `.kiro/steering/` - Development guidelines and project context
+- `.kiro/specs/` - Feature specifications and implementation plans

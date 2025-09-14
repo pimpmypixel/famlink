@@ -25,3 +25,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Kiro - include settings and steering, exclude specs and logs
+/.kiro/specs/
+/.kiro/logs/

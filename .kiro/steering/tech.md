@@ -2,7 +2,7 @@
 
 ## Backend
 - **Framework**: Laravel 12.0 (PHP 8.2+)
-- **Database**: SQLite (default), configurable for other databases
+- **Database**: PostgreSQL (current), configurable for other databases
 - **Authentication**: Laravel Breeze with Inertia.js
 - **API**: Inertia.js for SPA-style interactions
 - **Queue**: Database-based queue system
@@ -80,25 +80,42 @@ php artisan migrate
 php artisan migrate:fresh --seed
 ```
 
-## Laravel Boost MCP Integration
+## MCP Server Integration
 
-This project uses Laravel Boost MCP for enhanced development capabilities. Always leverage these tools when working with the Laravel application:
+This project uses multiple MCP servers for enhanced development capabilities. The workspace is configured with:
 
-### Essential Boost Commands
-- Use `mcp_laravel_boost_application_info` to get comprehensive app info including PHP version, Laravel version, packages, and models
-- Use `mcp_laravel_boost_search_docs` to search version-specific documentation for Laravel ecosystem packages
-- Use `mcp_laravel_boost_tinker` for debugging and testing PHP code in Laravel context
-- Use `mcp_laravel_boost_database_schema` to read database structure
-- Use `mcp_laravel_boost_database_query` for read-only SQL queries
-- Use `mcp_laravel_boost_list_routes` to see all available routes
-- Use `mcp_laravel_boost_read_log_entries` for application logs
-- Use `mcp_laravel_boost_browser_logs` for frontend debugging
+### Laravel Boost MCP
+- **Purpose**: Laravel-specific development tooling
+- **Command**: `php artisan boost:mcp` (local Laravel command)
+- **Key Tools**: `database-schema`, `list-routes`, `read-log-entries`, `application-info`, `browser-logs`, `database-query`, `tinker`
+
+### Browser MCP
+- **Purpose**: Web automation and testing
+- **Command**: `npx @browsermcp/mcp@latest`
+- **Key Tools**: `browser_navigate`, `browser_snapshot`, `browser_get_console_logs`
+
+### GitHub MCP
+- **Purpose**: Repository and project management
+- **Command**: Docker container with GitHub API access
+- **Key Tools**: Repository operations, issue/PR management, code search, workflow automation
+
+### shadcn MCP
+- **Purpose**: UI component management
+- **Command**: `bunx shadcn@latest mcp`
+- **Key Tools**: Component search, installation, and management
+
+### Herd MCP
+- **Purpose**: Local development environment management
+- **Command**: Local PHP binary with Herd's MCP phar file
+- **Key Tools**: Site information, PHP version management, HTTPS configuration
 
 ### Development Workflow
-1. Always start new sessions by calling `mcp_laravel_boost_application_info` to understand the current state
-2. Use Boost documentation search before implementing Laravel ecosystem features
-3. Leverage tinker for testing code snippets before implementation
-4. Check logs when debugging issues
+1. Always start new sessions by calling `application-info` to understand the current state
+2. Use `search-docs` before implementing Laravel ecosystem features
+3. Leverage `tinker` for testing code snippets before implementation
+4. Check `read-log-entries` and `browser-logs` when debugging issues
+5. Use `browser_navigate` and `browser_snapshot` for frontend testing
+6. Use `database-schema` before creating migrations
 
 ## CLI Command Monitoring
 

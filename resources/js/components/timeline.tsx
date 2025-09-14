@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useMemo } from "react"
 import type { TimelineItem, User } from "@/lib/types"
 import { sortTimelineItems, filterTimelineItems, groupItemsByDate, formatGroupDate } from "@/lib/timeline-utils"

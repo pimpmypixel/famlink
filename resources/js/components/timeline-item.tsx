@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { capitalise } from "@/lib/utils"
 
 interface TimelineItemProps {
   item: TimelineItem
@@ -41,7 +42,7 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={categoryColorClass}>
-                {item.category}
+                {capitalise(item.category)}
               </Badge>
               <span className="text-xs text-muted-foreground">{item.user.name}</span>
             </div>
@@ -49,7 +50,7 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </div>
-          <CardTitle className="text-lg">{item.title}</CardTitle>
+          <CardTitle className="text-lg underline">{item.title}</CardTitle>
           <p className="text-sm text-muted-foreground">{formatDate(item.timestamp)}</p>
         </CardHeader>
 
@@ -58,8 +59,8 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
             <p className="text-sm mb-3 leading-relaxed">{item.content}</p>
             <div className="flex flex-wrap gap-1">
               {item.tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {tag}
+                <Badge key={index} variant="outline" className="text-[10px]">
+                  {capitalise(tag)}
                 </Badge>
               ))}
             </div>

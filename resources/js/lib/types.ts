@@ -4,7 +4,7 @@ export interface TimelineItem {
   content: string
   date: string
   timestamp: number
-  category: "parenting" | "logistics" | "consultation" | "other"
+  category: string
   tags: string[]
   user: TimelineUser
   isCollapsed?: boolean

@@ -16,8 +16,6 @@ class TimelineController extends Controller
             ->whereIn('user_id', auth()->user()->family->users()->get('id'))
             ->get();
 
-        // dd($timelineItems);
-
         return Inertia::render('timeline', [
             'timelineItems' => TimelineItemResource::collection($timelineItems)->resolve(),
         ]);

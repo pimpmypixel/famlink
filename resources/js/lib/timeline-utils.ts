@@ -15,7 +15,7 @@ export const getAuthorColor = (author: TimelineItem["author"]) => {
 
 export const getCategoryColor = (category: TimelineItem["category"]) => {
   switch (category) {
-    case "parenting":
+    case "afgørelse":
       return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200"
     case "logistics":
       return "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200"

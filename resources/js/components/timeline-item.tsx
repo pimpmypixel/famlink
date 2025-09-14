@@ -4,7 +4,7 @@ import { getAuthorColor, getCategoryColor, formatDate } from "@/lib/timeline-uti
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, MessageCircle, Paperclip } from "lucide-react"
 import { capitalise } from "@/lib/utils"
 
 interface TimelineItemProps {
@@ -13,10 +13,13 @@ interface TimelineItemProps {
   forceExpanded?: boolean
   forceCollapsed?: boolean
   onToggle?: (id: string, isExpanded: boolean) => void
+  onAddComment?: (itemId: string) => void
+  onAddFile?: (itemId: string) => void
 }
 
-export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollapsed, onToggle }: TimelineItemProps) {
+export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollapsed, onToggle, onAddComment, onAddFile }: TimelineItemProps) {
   const [isExpanded, setIsExpanded] = useState(!item.isCollapsed)
+  const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {
     if (forceExpanded !== undefined) {
@@ -35,9 +38,21 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
     onToggle?.(item.id, newExpanded)
   }
 
+  const handleAddComment = () => {
+    onAddComment?.(item.id)
+  }
+
+  const handleAddFile = () => {
+    onAddFile?.(item.id)
+  }
+
   return (
     <div className={`flex w-full ${isLeft ? "justify-start pr-8" : "justify-end pl-8"}`}>
-      <Card className={`w-full max-w-md border-2 ${authorColorClass}`}>
+      <Card
+        className={`w-full max-w-md border-2 ${authorColorClass} relative transition-all duration-200`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -65,6 +80,30 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
               ))}
             </div>
           </CardContent>
+        )}
+
+        {/* Action buttons that appear on hover */}
+        {isHovered && (
+          <div className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border rounded-b-lg p-2 flex justify-center gap-2 transition-all duration-200">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddComment}
+              className="h-8 px-3 text-xs hover:bg-accent"
+            >
+              <MessageCircle className="h-3 w-3 mr-1" />
+              Add Comment
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddFile}
+              className="h-8 px-3 text-xs hover:bg-accent"
+            >
+              <Paperclip className="h-3 w-3 mr-1" />
+              Add File
+            </Button>
+          </div>
         )}
       </Card>
     </div>

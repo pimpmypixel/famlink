@@ -7,10 +7,18 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+Route::get('timeline', function () {
+    return Inertia::render('timeline');
+})->name('timeline.public');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+    
+    Route::get('timeline', function () {
+        return Inertia::render('timeline');
+    })->name('timeline');
 });
 
 require __DIR__.'/settings.php';

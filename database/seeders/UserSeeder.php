@@ -39,25 +39,32 @@ class UserSeeder extends Seeder
             'password' => 'password',
             'family_id' => $family->id,
         ]);
-        
-        $authority = User::factory()->create([
-            'name' => 'DAFL Consultant',
-            'email' => 'consultant@dafl.dk',
+
+        $socialWorker1 = User::factory()->create([
+            'name' => 'DAFL Consultant #1',
+            'email' => 'consultant1@dafl.dk',
             'password' => 'password',
         ]);
-        
+
+        $socialWorker2 = User::factory()->create([
+            'name' => 'DAFL Consultant #2',
+            'email' => 'consultant2@dafl.dk',
+            'password' => 'password',
+        ]);
+
         $other = User::factory()->create([
             'name' => 'Other Guardian',
             'email' => 'other@example.com',
             'password' => 'password',
         ]);
-        
+
         $adminUser->assignRole('admin');
         $father->assignRole('father');
         $mother->assignRole('mother');
-        $authority->assignRole('authority');
+        $socialWorker1->assignRole('authority');
+        $socialWorker2->assignRole('authority');
         $other->assignRole('other');
-        
+
         // Create additional random users with random roles
         // $roles = ['father', 'mother', 'authority', 'other'];
         // User::factory(5)->create()->each(function ($user) use ($roles) {

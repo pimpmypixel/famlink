@@ -1,7 +1,10 @@
 <?php
 
+
 namespace Database\Seeders;
 
+use App\Models\Comment;
+use Illuminate\Support\Str;
 use App\Models\Family;
 use App\Models\TimelineItem;
 use App\Models\User;
@@ -122,17 +125,29 @@ class TimelineItemSeeder extends Seeder
         ];
 
 
+        $timelineItems = [];
         foreach ($timelineData as $item) {
             $user = $fam->users()->inRandomOrder()->first();
-
             if ($user) {
                 $insert = [
                     'user_id' => $user->id,
                     ...$item,
                 ];
-
-                TimelineItem::create($insert);
+                $timelineItems[] = TimelineItem::create($insert);
             }
+        }
+
+        // Generate 30 comments and relate them randomly to timeline items and users
+        $allUsers = User::all();
+        $allTimelineItems = TimelineItem::all();
+        for ($i = 0; $i < 30; $i++) {
+            $randomTimelineItem = $allTimelineItems->random();
+            $randomUser = $allUsers->random();
+            Comment::create([
+                'timeline_item_id' => $randomTimelineItem->id,
+                'user_id' => $randomUser->id,
+                'content' => 'Kommentar #' . ($i + 1) . ' - ' . Str::random(20),
+            ]);
         }
     }
 }

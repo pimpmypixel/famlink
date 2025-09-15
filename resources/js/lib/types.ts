@@ -8,6 +8,7 @@ export interface TimelineItem {
   tags: string[]
   user: TimelineUser
   isCollapsed?: boolean
+  comments?: { id: string; content: string; user: TimelineUser; created_at?: string }[]
 }
 
 export interface User {

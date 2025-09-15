@@ -11,7 +11,7 @@ class TimelineController extends Controller
 {
     public function index(Request $request)
     {
-        $timelineItems = TimelineItem::with('user','user.roles')
+        $timelineItems = TimelineItem::with('user','user.roles', 'comments', 'comments.user')
             ->orderBy('item_timestamp', 'desc')
             ->whereIn('user_id', auth()->user()->family->users()->get('id'))
             ->get();

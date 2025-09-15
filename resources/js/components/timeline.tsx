@@ -8,9 +8,10 @@ import { TimelineControls } from "./timeline-controls"
 interface TimelineProps {
   items: TimelineItem[]
   currentUser?: User
+  onAddClick?: () => void
 }
 
-export function Timeline({ items = [], currentUser }: TimelineProps) {
+export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps) {
   // console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
@@ -104,6 +105,7 @@ export function Timeline({ items = [], currentUser }: TimelineProps) {
         onCollapseAll={handleCollapseAll}
         groupByDate={groupByDate}
         onToggleGrouping={() => setGroupByDate(!groupByDate)}
+        onAddClick={onAddClick}
       />
 
       {/* Timeline */}

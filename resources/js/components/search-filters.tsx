@@ -60,7 +60,7 @@ export function SearchFilters({
       <CardContent className="space-y-4">
         {/* Search Input */}
         <div>
-          <Label htmlFor="search" className="text-sm font-medium">
+          <Label htmlFor="search" className="text-sm font-medium w-half">
             Search in titles, content, and tags
           </Label>
           <Input

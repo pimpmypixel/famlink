@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronDown, ChevronUp, Calendar, List } from "lucide-react"
 
+import { Plus } from "lucide-react"
+
+
 interface TimelineControlsProps {
   totalItems: number
   expandedCount: number
@@ -9,6 +12,7 @@ interface TimelineControlsProps {
   onCollapseAll: () => void
   groupByDate: boolean
   onToggleGrouping: () => void
+  onAddClick?: () => void
 }
 
 export function TimelineControls({
@@ -18,12 +22,19 @@ export function TimelineControls({
   onCollapseAll,
   groupByDate,
   onToggleGrouping,
+  onAddClick,
 }: TimelineControlsProps) {
   return (
     <Card className="mb-6">
       <CardContent className="py-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {onAddClick && (
+              <Button onClick={onAddClick} className="flex items-center gap-2" size="sm">
+                <Plus className="h-4 w-4" />
+                Tilføj
+              </Button>
+            )}
             <span>
               Showing {totalItems} item{totalItems !== 1 ? "s" : ""}
             </span>

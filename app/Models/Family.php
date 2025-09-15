@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Family extends Model
 {
+    public $incrementing = false;
+    protected $keyType = 'string';
     protected $fillable = [
         'name',
         'child_name',
@@ -33,8 +35,26 @@ class Family extends Model
     /**
      * Get the user who created this family.
      */
-    public function creator(): BelongsTo
+   /*  public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    } */
+
+    /**
+     * Get the user who created this family.
+     */
+    public function socialWorker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
     }
 }

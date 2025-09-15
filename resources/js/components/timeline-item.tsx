@@ -92,7 +92,7 @@ export function TimelineItemComponent({
           </div>
           <p className="text-xs text-muted-foreground">
             <span className="px-2 py-0.5 border border-current rounded-md mr-1 inline-block align-middle">
-              {item.user.name}
+              {item.user.role ?? 'N/A'}
             </span>
             - {formatDate(item.timestamp)}
           </p>

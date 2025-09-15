@@ -61,7 +61,7 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
   }
 
   const renderTimelineItem = (item: TimelineItem, index: number) => {
-    const isLeft = item.user.role === "father"
+    const isLeft = item.user.role === "far"
 
     return (
       <div key={item.id} className="relative flex flex-col sm:block">

@@ -36,7 +36,7 @@ export function TimelineControls({
               </Button>
             )}
             <span>
-              Der er {totalItems} indlæg ialt
+              {totalItems} sagsindlæg
             </span>
             {/* <span>{expandedCount} expanded</span> */}
           </div>

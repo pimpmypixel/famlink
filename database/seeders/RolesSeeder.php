@@ -17,10 +17,10 @@ class RolesSeeder extends Seeder
     {
         // Create roles (or get existing ones)
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $fatherRole = Role::firstOrCreate(['name' => 'father']);
-        $motherRole = Role::firstOrCreate(['name' => 'mother']);
-        $authorityRole = Role::firstOrCreate(['name' => 'authority']);
-        $otherRole = Role::firstOrCreate(['name' => 'other']);
+        $fatherRole = Role::firstOrCreate(['name' => 'far']);
+        $motherRole = Role::firstOrCreate(['name' => 'mor']);
+        $authorityRole = Role::firstOrCreate(['name' => 'myndighed']);
+        $otherRole = Role::firstOrCreate(['name' => 'andet']);
 
     }
 }

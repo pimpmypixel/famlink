@@ -44,7 +44,7 @@ export default function TimelinePage({ timelineItems: initialTimelineItems }: Ti
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Timeline" />
-      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+  <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 scale-100 md:scale-[0.8] origin-top">
         {/* Header */}
         {/* <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Tidslinje</h1> 

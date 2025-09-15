@@ -59,11 +59,11 @@ class UserSeeder extends Seeder
         ]);
 
         $adminUser->assignRole('admin');
-        $father->assignRole('father');
-        $mother->assignRole('mother');
-        $socialWorker1->assignRole('authority');
-        $socialWorker2->assignRole('authority');
-        $other->assignRole('other');
+        $father->assignRole('far');
+        $mother->assignRole('mor');
+        $socialWorker1->assignRole('myndighed');
+        $socialWorker2->assignRole('myndighed');
+        $other->assignRole('andet');
 
         // Create additional random users with random roles
         // $roles = ['father', 'mother', 'authority', 'other'];

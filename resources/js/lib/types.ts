@@ -14,7 +14,7 @@ export interface TimelineItem {
 export interface User {
   id: string
   name: string
-  role: "father" | "mother" | "consultant"
+  role: "far" | "mor" | "myndighed" | "andet"
 }
 
 export interface TimelineUser {

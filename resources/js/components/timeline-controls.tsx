@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronDown, ChevronUp, Calendar, List } from "lucide-react"
@@ -48,7 +46,7 @@ export function TimelineControls({
                 variant="outline"
                 size="sm"
                 onClick={onExpandAll}
-                disabled={expandedCount === totalItems}
+                // disabled={expandedCount === totalItems}
                 className="flex items-center gap-1 bg-transparent"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -58,7 +56,7 @@ export function TimelineControls({
                 variant="outline"
                 size="sm"
                 onClick={onCollapseAll}
-                disabled={expandedCount === 0}
+                // disabled={expandedCount === 0}
                 className="flex items-center gap-1 bg-transparent"
               >
                 <ChevronUp className="h-4 w-4" />

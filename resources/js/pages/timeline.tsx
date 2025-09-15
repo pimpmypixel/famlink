@@ -33,7 +33,12 @@ export default function Timeline({ timelineItems: initialTimelineItems }: Timeli
       timestamp: new Date(`${newItemData.date}T12:00:00`).getTime(),
     }
 
-    setTimelineItems((prev) => [...prev, newItem])
+    // setTimelineItems((prev) => [...prev, newItem])
+
+
+    setTimelineItems((prev) => ({
+      data: [...prev.data, newItem]
+    }))
   }
 
   return (
@@ -42,12 +47,13 @@ export default function Timeline({ timelineItems: initialTimelineItems }: Timeli
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Co-Parenting Timeline</h1>
-          <p className="text-muted-foreground text-lg">Track parenting updates, logistics, and consultations</p>
+          {/* <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Tidslinje</h1> */}
+          <p className="text-muted-foreground text-lg">Følg forældres korrespondance med myndighederne</p>
         </div>
 
         {/* User Selector and Add Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+        <div className="flex flex-col items-center justify-between mb-8 gap-4">
+          {/* <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4"> */}
           <div className="flex gap-2 p-1 bg-muted rounded-lg">
             {mockUsers.map((user) => (
               <Button
@@ -63,7 +69,7 @@ export default function Timeline({ timelineItems: initialTimelineItems }: Timeli
 
           <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Add New Item
+            Tilføj
           </Button>
         </div>
 

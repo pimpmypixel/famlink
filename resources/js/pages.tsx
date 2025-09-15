@@ -26,7 +26,7 @@ export default function Home() {
       <div className="container mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Co-Parenting Timeline</h1>
+          {/* <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Co-Parenting Timeline</h1> */}
           <p className="text-muted-foreground text-lg">Track parenting updates, logistics, and consultations</p>
         </div>
 

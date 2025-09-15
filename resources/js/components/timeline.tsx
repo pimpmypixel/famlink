@@ -39,12 +39,12 @@ export function Timeline({ items = [], currentUser }: TimelineProps) {
 
   const handleExpandAll = () => {
     setForceExpandAll(true)
-    setTimeout(() => setForceExpandAll(undefined), 100)
+    // setTimeout(() => setForceExpandAll(undefined), 100)
   }
 
   const handleCollapseAll = () => {
     setForceExpandAll(false)
-    setTimeout(() => setForceExpandAll(undefined), 100)
+    // setTimeout(() => setForceExpandAll(undefined), 100)
   }
 
   const handleItemToggle = (id: string, isExpanded: boolean) => {

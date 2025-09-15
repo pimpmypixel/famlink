@@ -10,12 +10,12 @@ import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Oversigt',
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Timeline',
+        title: 'Tidslinje',
         href: timeline(),
         icon: Clock,
     },

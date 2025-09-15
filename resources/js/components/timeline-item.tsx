@@ -92,7 +92,7 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
               className="h-8 px-3 text-xs hover:bg-accent"
             >
               <MessageCircle className="h-3 w-3 mr-1" />
-              Add Comment
+              Tilføj Kommentar
             </Button>
             <Button
               variant="ghost"
@@ -101,7 +101,7 @@ export function TimelineItemComponent({ item, isLeft, forceExpanded, forceCollap
               className="h-8 px-3 text-xs hover:bg-accent"
             >
               <Paperclip className="h-3 w-3 mr-1" />
-              Add File
+              Tilføj Fil
             </Button>
           </div>
         )}

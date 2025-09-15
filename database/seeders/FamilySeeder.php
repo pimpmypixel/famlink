@@ -17,17 +17,21 @@ class FamilySeeder extends Seeder
     public function run(): void
     {
 
-       $fam1 = Family::create([
-            'id' => (string) Str::uuid(),
-            'name' => 'Smith',
-            'child_name' => 'Sandy',
-        ]);
+        $familyNames = [
+            ['name' => 'Smith', 'child_name' => 'Sandy'],
+            ['name' => 'Johnson', 'child_name' => 'Dakota'],
+            ['name' => 'Williams', 'child_name' => 'Taylor'],
+            ['name' => 'Brown', 'child_name' => 'Morgan'],
+            ['name' => 'Jones', 'child_name' => 'Casey'],
+        ];
 
-       $fam2 = Family::create([
-            'id' => (string) Str::uuid(),
-            'name' => 'Johnson',
-            'child_name' => 'Dakota',
-        ]);
+        foreach ($familyNames as $fam) {
+            Family::create([
+                'id' => (string) Str::uuid(),
+                'name' => $fam['name'],
+                'child_name' => $fam['child_name'],
+            ]);
+        }
 
     }
 }

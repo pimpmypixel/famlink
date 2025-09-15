@@ -11,33 +11,14 @@ class UserSeeder extends Seeder
 {
     /**
      * Seed the application's database.
-     */
+    */
     public function run(): void
     {
-        // Create a family first
-        $family = Family::create([
-            'name' => 'The Smith Family',
-            'child_name' => 'Emma Smith',
-        ]);
 
         $adminUser = User::factory()->create([
-            'name' => 'Mig',
+            'name' => 'Admin User',
             'email' => 'pimpmypixel@me.com',
             'password' => 'hejhejhej',
-        ]);
-
-        $father = User::factory()->create([
-            'name' => 'John Father',
-            'email' => 'father@example.com',
-            'password' => 'password',
-            'family_id' => $family->id,
-        ]);
-
-        $mother = User::factory()->create([
-            'name' => 'Jane Mother',
-            'email' => 'mother@example.com',
-            'password' => 'password',
-            'family_id' => $family->id,
         ]);
 
         $socialWorker1 = User::factory()->create([
@@ -57,18 +38,42 @@ class UserSeeder extends Seeder
             'email' => 'other@example.com',
             'password' => 'password',
         ]);
-
+        
         $adminUser->assignRole('admin');
-        $father->assignRole('far');
-        $mother->assignRole('mor');
-        $socialWorker1->assignRole('myndighed');
         $socialWorker2->assignRole('myndighed');
         $other->assignRole('andet');
+        $socialWorker1->assignRole('myndighed');
 
-        // Create additional random users with random roles
-        // $roles = ['father', 'mother', 'authority', 'other'];
-        // User::factory(5)->create()->each(function ($user) use ($roles) {
-        //     $user->assignRole(fake()->randomElement($roles));
-        // });
+
+
+
+        // Create 1 mother and 1 father for each family, and assign a random social worker to each family
+        $families = Family::all();
+        $socialWorkers = [$socialWorker1, $socialWorker2];
+
+        foreach ($families as $index => $family) {
+            $fatherFirst = fake()->firstName();
+            $motherFirst = fake()->firstName();
+            $father = User::factory()->create([
+                'name' => $fatherFirst . ' ' . $family->name,
+                'email' => strtolower($fatherFirst) . '_' . strtolower($family->name) . '@example.com',
+                'password' => 'password',
+                'family_id' => $family->id,
+            ]);
+            $father->assignRole('far');
+
+            $mother = User::factory()->create([
+                'name' => $motherFirst . ' ' . $family->name,
+                'email' => strtolower($motherFirst) . '_' . strtolower($family->name) . '@example.com',
+                'password' => 'password',
+                'family_id' => $family->id,
+            ]);
+            $mother->assignRole('mor');
+
+            // Assign a random social worker to this family (as a user with family_id)
+            $assignedWorker = $socialWorkers[array_rand($socialWorkers)];
+            $assignedWorker->family_id = $family->id;
+            $assignedWorker->save();
+        }
     }
 }

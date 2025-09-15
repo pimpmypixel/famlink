@@ -2,13 +2,18 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { dashboard, timeline } from '@/routes';
+import { dashboard, timeline, intro } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Clock } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Clock, FileText } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
+    {
+        title: 'Projektbeskrivelse',
+        href: intro(),
+        icon: FileText,
+    },
     {
         title: 'Oversigt',
         href: dashboard(),

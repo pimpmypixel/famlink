@@ -27,8 +27,8 @@ export function TimelineControls({
   return (
     <Card className="mb-6">
       <CardContent className="py-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm text-muted-foreground w-full sm:w-auto">
             {onAddClick && (
               <Button onClick={onAddClick} className="flex items-center gap-2" size="sm">
                 <Plus className="h-4 w-4" />
@@ -36,12 +36,12 @@ export function TimelineControls({
               </Button>
             )}
             <span>
-              Showing {totalItems} item{totalItems !== 1 ? "s" : ""}
+              Der er {totalItems} indlæg ialt
             </span>
-            <span>{expandedCount} expanded</span>
+            {/* <span>{expandedCount} expanded</span> */}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -49,10 +49,10 @@ export function TimelineControls({
               className="flex items-center gap-2 bg-transparent"
             >
               {groupByDate ? <List className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
-              {groupByDate ? "List View" : "Group by Date"}
+              {groupByDate ? "Listevisning" : "Grupper efter dato"}
             </Button>
 
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto justify-center sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -61,7 +61,7 @@ export function TimelineControls({
                 className="flex items-center gap-1 bg-transparent"
               >
                 <ChevronDown className="h-4 w-4" />
-                Expand All
+                Udvid Alle
               </Button>
               <Button
                 variant="outline"
@@ -71,7 +71,7 @@ export function TimelineControls({
                 className="flex items-center gap-1 bg-transparent"
               >
                 <ChevronUp className="h-4 w-4" />
-                Collapse All
+                Fold Alle
               </Button>
             </div>
           </div>

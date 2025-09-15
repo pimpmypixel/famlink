@@ -40,18 +40,18 @@ export function SearchFilters({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Search & Filter
+            Søg & Filtrer
           </CardTitle>
           <div className="flex items-center gap-2">
             {hasActiveFilters && (
               <Button variant="outline" size="sm" onClick={onClearFilters} className="text-xs bg-transparent">
                 <X className="h-3 w-3 mr-1" />
-                Clear
+                Forfra
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={() => setShowAdvanced(!showAdvanced)}>
               <Filter className="h-4 w-4 mr-1" />
-              {showAdvanced ? "Hide" : "Show"} Filters
+              {showAdvanced ? "Skjul" : "Vis"} filtre
             </Button>
           </div>
         </div>
@@ -61,12 +61,12 @@ export function SearchFilters({
         {/* Search Input */}
         <div>
           <Label htmlFor="search" className="text-sm font-medium w-half">
-            Search in titles, content, and tags
+            Søg i titler, indhold og tags
           </Label>
           <Input
             id="search"
             type="text"
-            placeholder="Type to search..."
+            placeholder="Skriv for at søge..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="mt-1"
@@ -78,7 +78,7 @@ export function SearchFilters({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
             <div>
               <Label htmlFor="author" className="text-sm font-medium">
-                Author
+                Forfatter
               </Label>
               <select
                 id="author"
@@ -86,16 +86,16 @@ export function SearchFilters({
                 onChange={(e) => setSelectedAuthor(e.target.value)}
                 className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">All Authors</option>
-                <option value="father">Father</option>
-                <option value="mother">Mother</option>
-                <option value="consultant">Consultant</option>
+                <option value="">Alle Forfattere</option>
+                <option value="father">Far</option>
+                <option value="mother">Mor</option>
+                <option value="consultant">Konsulent</option>
               </select>
             </div>
 
             <div>
               <Label htmlFor="category" className="text-sm font-medium">
-                Category
+                Kategori
               </Label>
               <select
                 id="category"
@@ -103,17 +103,17 @@ export function SearchFilters({
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">All Categories</option>
-                <option value="parenting">Parenting</option>
-                <option value="logistics">Logistics</option>
-                <option value="consultation">Consultation</option>
-                <option value="other">Other</option>
+                <option value="">Alle Kategorier</option>
+                <option value="parenting">Forældreskab</option>
+                <option value="logistics">Logistik</option>
+                <option value="consultation">Konsultation</option>
+                <option value="other">Andet</option>
               </select>
             </div>
 
             <div>
               <Label htmlFor="startDate" className="text-sm font-medium">
-                From Date
+                Fra dato
               </Label>
               <Input
                 id="startDate"
@@ -126,7 +126,7 @@ export function SearchFilters({
 
             <div>
               <Label htmlFor="endDate" className="text-sm font-medium">
-                To Date
+                Til dato
               </Label>
               <Input
                 id="endDate"

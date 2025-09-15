@@ -20,7 +20,7 @@ interface TimelineProps {
   timelineItems: { data: TimelineItem[] };
 }
 
-export default function Timeline({ timelineItems: initialTimelineItems }: TimelineProps) {
+export default function TimelinePage({ timelineItems: initialTimelineItems }: TimelineProps) {
   const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
   const [timelineItems, setTimelineItems] = useState(initialTimelineItems)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)

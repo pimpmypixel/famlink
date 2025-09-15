@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import React, { Dispatch, SetStateAction } from "react";
 import type { TimelineItem } from "@/lib/types"
 import { getAuthorColor, getCategoryColor, formatDate } from "@/lib/timeline-utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +18,7 @@ interface TimelineItemProps {
   onAddComment?: (itemId: string) => void
   onAddFile?: (itemId: string) => void
 }
+import { CommentsSheet } from "@/components/comments-sheet";
 
 export function TimelineItemComponent({
   item,
@@ -58,9 +60,9 @@ export function TimelineItemComponent({
   }
 
   return (
-    <div className={`flex w-full ${isLeft ? "justify-start pr-8" : "justify-end pl-8"}`}>
+    <div className={`flex w-full ${isLeft ? "justify-start sm:pr-8" : "justify-end sm:pl-8"}`}>
       <Card
-        className={`w-full max-w-md border-2 ${authorColorClass} relative transition-all duration-200`}
+        className={`w-full max-w-md sm:max-w-md max-w-full border-2 ${authorColorClass} relative transition-all duration-200`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -76,16 +78,16 @@ export function TimelineItemComponent({
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg underline">{item.title}</CardTitle>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+            <CardTitle className="text-lg underline flex-1">{item.title}</CardTitle>
             <button
               type="button"
-              className="flex items-center text-xs text-muted-foreground ml-1 rounded px-1 py-0.5 border border-current bg-teal-100 hover:bg-green-300 dark:hover:bg-gray-800"
+              className="flex items-center text-xs text-muted-foreground mt-2 sm:mt-0 ml-0 sm:ml-1 rounded px-2 py-1 border border-current bg-teal-100 hover:bg-green-300 dark:hover:bg-gray-800 w-full sm:w-auto justify-center"
               onClick={() => setShowComments(true)}
               aria-label="Show comments"
             >
               <MessageCircle className="h-3 w-3 mr-0.5" />
-              {Array.isArray(item.comments) ? item.comments.length : 0}
+              {Array.isArray(item.comments) ? item.comments.length : 0} kommentarer
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -109,33 +111,8 @@ export function TimelineItemComponent({
           </CardContent>
         )}
 
-        {/* Comments Sidebar as Sheet */}
-        <Sheet open={showComments} onOpenChange={setShowComments}>
-          <SheetContent side="right" className="max-w-md w-full h-full flex flex-col">
-            <SheetHeader>
-              <SheetTitle>Kommentarer</SheetTitle>
-            </SheetHeader>
-            {/* <SheetClose asChild>
-              <button className="absolute right-4 top-4 text-lg" aria-label="Close">×</button>
-            </SheetClose> */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {Array.isArray(item.comments) && item.comments.length > 0 ? (
-                <ul className="space-y-4">
-                  {item.comments.map((comment, idx) => (
-                    <li key={comment.id || idx} className="border-b pb-2">
-                      <div className="text-xs text-muted-foreground mb-1">
-                        {comment.user?.name} <span className="ml-2 text-[10px]">{comment.created_at ? new Date(comment.created_at).toLocaleString() : ''}</span>
-                      </div>
-                      <div className="text-sm">{comment.content}</div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center text-muted-foreground">Ingen kommentarer endnu.</div>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
+        <CommentsSheet open={showComments} onOpenChange={setShowComments} comments={item.comments ?? []} />
+
 
         {/* Action buttons that appear on hover */}
         {isHovered && (

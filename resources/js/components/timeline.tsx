@@ -64,13 +64,13 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
     const isLeft = item.user.role === "father"
 
     return (
-      <div key={item.id} className="relative">
+      <div key={item.id} className="relative flex flex-col sm:block">
         {/* Timeline dot */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10"></div>
+        <div className="absolute left-1/2 sm:left-1/2 top-0 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10"></div>
 
         {/* Timeline item */}
-        <div className={`flex ${isLeft ? "justify-start" : "justify-end"}`}>
-          <div className={`w-1/2 ${isLeft ? "pr-8" : "pl-8"}`}>
+        <div className={`flex flex-col sm:flex-row ${isLeft ? "sm:justify-start" : "sm:justify-end"}`}>
+          <div className={`w-full sm:w-1/2 ${isLeft ? "sm:pr-8" : "sm:pl-8"}`}>
             <TimelineItemComponent
               item={item}
               isLeft={isLeft}
@@ -85,7 +85,7 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+  <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
       <SearchFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -111,23 +111,25 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
       {/* Timeline */}
       <div className="relative">
         {/* Center line */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-border h-full"></div>
+        <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-border h-full"></div>
 
         {groupByDate && groupedItems ? (
           <div className="space-y-12">
             {Object.entries(groupedItems)
               .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
               .map(([dateString, dateItems]) => (
-                <div key={dateString} className="space-y-8">
-                  {/* Date header */}
-                  <div className="relative">
-                    <div className="absolute left-1/2 transform -translate-x-1/2 bg-background px-4 py-2 border border-border rounded-full z-10">
-                      <h3 className="text-sm font-medium text-foreground">{formatGroupDate(dateString)}</h3>
+                <div key={dateString} className="space-y-4">
+                  {/* Date header above cards */}
+                  <div className="flex justify-center mb-2">
+                    <div className="bg-background px-6 py-3 rounded-2xl shadow-lg z-10 flex items-center justify-center min-w-[180px] max-w-xs border border-border">
+                      <h3 className="text-base sm:text-lg font-semibold text-center text-foreground tracking-tight leading-tight whitespace-pre-line">
+                        {formatGroupDate(dateString)}
+                      </h3>
                     </div>
                   </div>
 
                   {/* Items for this date */}
-                  <div className="space-y-8 pt-8">
+                  <div className="space-y-8">
                     {dateItems.map((item, index) => renderTimelineItem(item, index))}
                   </div>
                 </div>
@@ -141,7 +143,7 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
 
         {filteredAndSortedItems.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No timeline items found matching your criteria.</p>
+            <p className="text-muted-foreground">Intet fundet.</p>
           </div>
         )}
       </div>

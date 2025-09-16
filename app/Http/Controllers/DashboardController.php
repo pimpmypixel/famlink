@@ -15,20 +15,73 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $stats = null;
+        $timelineCases = null;
 
-        // Only show stats for admin users
-        if ($user && $user->hasRole('admin')) {
-            $stats = [
-                'users_count' => User::count(),
-                'families_count' => Family::count(),
-                'timeline_items_count' => TimelineItem::count(),
-                'comments_count' => Comment::count(),
-                'average_session_time' => 'N/A', // Placeholder for now
-            ];
+        if ($user) {
+            if ($user->hasRole('admin')) {
+                // Admin stats - system wide
+                $stats = [
+                    'users_count' => User::count(),
+                    'families_count' => Family::count(),
+                    'timeline_items_count' => TimelineItem::count(),
+                    'comments_count' => Comment::count(),
+                    'average_session_time' => 'N/A',
+                ];
+
+                // Get all users for impersonation (excluding current admin)
+                $impersonatableUsers = User::where('id', '!=', $user->id)
+                    ->with('roles')
+                    ->get()
+                    ->map(function ($impersonatableUser) {
+                        return [
+                            'id' => $impersonatableUser->id,
+                            'name' => $impersonatableUser->name,
+                            'email' => $impersonatableUser->email,
+                            'role' => $impersonatableUser->getRoleNames()->first() ?? 'user',
+                            'family_name' => $impersonatableUser->family?->name,
+                        ];
+                    });
+            } elseif ($user->hasRole('myndighed')) {
+                // Social worker stats - specific to their families
+                $families = Family::where('created_by', $user->id)->get();
+                $familyIds = $families->pluck('id');
+
+                $stats = [
+                    'users_count' => User::whereIn('family_id', $familyIds)->count(),
+                    'families_count' => $families->count(),
+                    'timeline_items_count' => TimelineItem::whereIn('family_id', $familyIds)->count(),
+                    'comments_count' => Comment::whereHas('timelineItem', function ($query) use ($familyIds) {
+                        $query->whereIn('family_id', $familyIds);
+                    })->count(),
+                    'average_session_time' => 'N/A',
+                ];
+
+                // Get timeline cases for this social worker
+                $timelineCases = TimelineItem::with(['user', 'family'])
+                    ->whereIn('family_id', $familyIds)
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->title,
+                            'content' => $item->content,
+                            'category' => $item->category,
+                            'created_at' => $item->created_at->format('Y-m-d H:i'),
+                            'family_name' => $item->family->name,
+                            'user_name' => $item->user->name,
+                            'user_role' => $item->user->role,
+                        ];
+                    });
+            }
         }
 
         return Inertia::render('dashboard', [
             'stats' => $stats,
+            'timelineCases' => $timelineCases,
+            'userRole' => $user ? $user->getRoleNames()->first() : null,
+            'impersonatableUsers' => $impersonatableUsers ?? null,
+            'isImpersonating' => $user && session()->has('impersonated_by'),
         ]);
     }
 }

@@ -5,11 +5,11 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { ChevronsUpDown } from 'lucide-react';
+import { ChevronsUpDown, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge'
 
 export function NavUser() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, isImpersonating } = usePage<SharedData>().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
 
@@ -19,8 +19,14 @@ export function NavUser() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton size="lg" className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent">
-                            <UserInfo user={auth.user} /><Badge variant={'outline'}>{auth.user.roles?.[0] || 'No role'}</Badge>
-                            <ChevronsUpDown className="ml-auto size-4" />
+                            <UserInfo user={auth.user} />
+                            <div className="flex items-center gap-1">
+                                <Badge variant={isImpersonating ? 'destructive' : 'outline'} className="flex items-center gap-1">
+                                    {isImpersonating && <AlertTriangle className="h-3 w-3" />}
+                                    {isImpersonating ? 'Impersonating' : (auth.user.roles?.[0] || 'No role')}
+                                </Badge>
+                                <ChevronsUpDown className="ml-auto size-4" />
+                            </div>
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

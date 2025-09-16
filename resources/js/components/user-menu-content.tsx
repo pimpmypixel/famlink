@@ -4,9 +4,10 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
-import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings, MoonIcon, Lightbulb } from 'lucide-react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { LogOut, Settings, MoonIcon, Lightbulb, UserX } from 'lucide-react';
 import { useAppearance } from '@/hooks/use-appearance';
+import { type SharedData } from '@/types';
 
 interface UserMenuContentProps {
     user: User;
@@ -15,10 +16,16 @@ interface UserMenuContentProps {
 export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
     const { appearance, updateAppearance } = useAppearance();
+    const { isImpersonating } = usePage<SharedData>().props;
 
     const handleLogout = () => {
         cleanup();
         router.flushAll();
+    };
+
+    const handleLeaveImpersonation = () => {
+        cleanup();
+        router.get('/impersonate/leave');
     };
 
     return (
@@ -29,6 +36,23 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {isImpersonating && (
+                <>
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                            <button
+                                className="block w-full text-left"
+                                onClick={handleLeaveImpersonation}
+                                data-test="leave-impersonation-button"
+                            >
+                                <UserX className="mr-2" />
+                                Stop Impersonering
+                            </button>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                </>
+            )}
             <DropdownMenuGroup>
                 <div className="flex items-center gap-2 px-2 py-2">
                     <MoonIcon size={20} className='text-neutral-700 dark:text-neutral-200' />

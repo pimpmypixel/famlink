@@ -36,15 +36,57 @@ test('admin users receive dashboard statistics', function () {
         );
 });
 
-test('non-admin users do not receive dashboard statistics', function () {
-    $user = User::factory()->create();
+test('social worker users receive their specific dashboard statistics and timeline cases', function () {
+    // Ensure roles exist
+    Role::firstOrCreate(['name' => 'myndighed']);
+    Role::firstOrCreate(['name' => 'far']);
+    Role::firstOrCreate(['name' => 'mor']);
 
-    $this->actingAs($user);
+    // Create social worker
+    $socialWorker = User::factory()->create();
+    $socialWorker->assignRole('myndighed');
+
+    // Create families assigned to this social worker
+    $family1 = \App\Models\Family::factory()->create(['created_by' => $socialWorker->id]);
+    $family2 = \App\Models\Family::factory()->create(['created_by' => $socialWorker->id]);
+
+    // Create users for these families
+    $father1 = User::factory()->create(['family_id' => $family1->id]);
+    $father1->assignRole('far');
+    $mother1 = User::factory()->create(['family_id' => $family1->id]);
+    $mother1->assignRole('mor');
+
+    $father2 = User::factory()->create(['family_id' => $family2->id]);
+    $father2->assignRole('far');
+
+    // Create timeline items for these families
+    \App\Models\TimelineItem::factory()->create([
+        'user_id' => $father1->id,
+        'family_id' => $family1->id,
+        'title' => 'Test Timeline Item 1',
+        'content' => 'Test content 1',
+        'category' => 'consultation',
+    ]);
+
+    \App\Models\TimelineItem::factory()->create([
+        'user_id' => $mother1->id,
+        'family_id' => $family1->id,
+        'title' => 'Test Timeline Item 2',
+        'content' => 'Test content 2',
+        'category' => 'parenting',
+    ]);
+
+    $this->actingAs($socialWorker);
 
     $response = $this->get(route('dashboard'));
 
     $response->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('stats', null)
+            ->has('stats')
+            ->has('timelineCases')
+            ->where('stats.families_count', 2) // 2 families assigned to this social worker
+            ->where('stats.users_count', 3) // 3 users in those families
+            ->where('stats.timeline_items_count', 2) // 2 timeline items
+            ->where('userRole', 'myndighed')
         );
 });

@@ -20,6 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('timeline', [App\Http\Controllers\TimelineController::class, 'index'])->name('timeline');
 
+    // Impersonation routes
+    Route::impersonate();
+
     // Comment routes
     Route::post('timeline/{timelineItemId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
 

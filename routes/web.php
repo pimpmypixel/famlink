@@ -12,9 +12,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('timeline');
     })->name('timeline.public');
 
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('intro', function () {
         return Inertia::render('intro');

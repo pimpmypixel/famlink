@@ -22,7 +22,7 @@ describe('Model Factory Tests', function () {
             $user = User::factory()->create();
             
             expect($user->exists)->toBeTrue();
-            expect($user->id)->toBeInt(); // Currently using integer IDs
+            expect($user->id)->toBeString(); // Now using UUIDs
             expect($user->created_at)->not->toBeNull();
             expect($user->updated_at)->not->toBeNull();
         });
@@ -61,7 +61,7 @@ describe('Model Factory Tests', function () {
             $family = Family::factory()->create();
             
             expect($family->exists)->toBeTrue();
-            expect($family->id)->toBeInt(); // Currently using integer IDs
+            expect($family->id)->toBeString(); // Now using UUIDs
             expect($family->created_at)->not->toBeNull();
             expect($family->updated_at)->not->toBeNull();
         });
@@ -93,7 +93,7 @@ describe('Model Factory Tests', function () {
             $timelineItem = TimelineItem::factory()->create();
             
             expect($timelineItem->exists)->toBeTrue();
-            expect($timelineItem->id)->toBeInt(); // Currently using integer IDs
+            expect($timelineItem->id)->toBeString(); // Now using UUIDs
             expect($timelineItem->user_id)->not->toBeNull();
             expect($timelineItem->created_at)->not->toBeNull();
             expect($timelineItem->updated_at)->not->toBeNull();

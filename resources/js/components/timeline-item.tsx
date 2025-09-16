@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import React, { Dispatch, SetStateAction } from "react";
-import type { TimelineItem } from "@/lib/types"
+// import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+// import React, { Dispatch, SetStateAction } from "react";
+import type { TimelineItem, Attachment } from "@/lib/types"
 import { getAuthorColor, getCategoryColor, formatDate } from "@/lib/timeline-utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, MessageCircle, Paperclip } from "lucide-react"
+import { ChevronDown, ChevronUp, MessageCircle, Paperclip, Download, Trash2, File, FileImage, FileText, FileVideo } from "lucide-react"
 import { capitalise } from "@/lib/utils"
+import { FileUploadModal } from "@/components/file-upload-modal"
+import { router } from '@inertiajs/react'
 
 interface TimelineItemProps {
   item: TimelineItem
@@ -33,6 +35,7 @@ export function TimelineItemComponent({
   const [isExpanded, setIsExpanded] = useState(!item.isCollapsed)
   const [isHovered, setIsHovered] = useState(false)
   const [showComments, setShowComments] = useState(false)
+  const [showFileUpload, setShowFileUpload] = useState(false)
 
   useEffect(() => {
     if (forceExpanded !== undefined) {
@@ -56,7 +59,52 @@ export function TimelineItemComponent({
   }
 
   const handleAddFile = () => {
-    onAddFile?.(item.id)
+    setShowFileUpload(true)
+  }
+
+  const handleFileUploadSuccess = () => {
+    // Refresh the page to get updated attachments
+    window.location.reload()
+  }
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) {
+      return <FileImage className="h-4 w-4 text-blue-500" />
+    } else if (mimeType.startsWith('video/')) {
+      return <FileVideo className="h-4 w-4 text-red-500" />
+    } else if (mimeType.includes('pdf') || mimeType.includes('document')) {
+      return <FileText className="h-4 w-4 text-green-500" />
+    } else {
+      return <File className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const handleDownload = (attachment: Attachment) => {
+    window.open(attachment.url, '_blank')
+  }
+
+  const handleDeleteAttachment = (attachment: Attachment) => {
+    if (!confirm(`Are you sure you want to delete "${attachment.original_name}"?`)) {
+      return
+    }
+
+    router.delete(`/timeline/${item.id}/attachment/${attachment.id}`, {
+      onSuccess: () => {
+        // Refresh the page to get updated attachments
+        window.location.reload()
+      },
+      onError: (errors) => {
+        alert('Failed to delete attachment: ' + (errors.error || 'Unknown error'))
+      },
+    })
   }
 
   return (
@@ -108,6 +156,49 @@ export function TimelineItemComponent({
         {isExpanded && (
           <CardContent className="pb-4">
             <p className="text-sm mb-3 leading-relaxed">{item.content}</p>
+
+            {/* Attachments Section */}
+            {item.attachments && item.attachments.length > 0 && (
+              <div className="mb-3">
+                <h4 className="text-sm font-medium mb-2 flex items-center">
+                  <Paperclip className="h-4 w-4 mr-1" />
+                  Attachments ({item.attachments.length})
+                </h4>
+                <div className="space-y-2">
+                  {item.attachments.map((attachment) => (
+                    <div key={attachment.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        {getFileIcon(attachment.mime_type)}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{attachment.original_name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(attachment.size)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(attachment)}
+                          className="h-8 w-8 p-0"
+                          title="Download"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteAttachment(attachment)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         )}
 
@@ -138,6 +229,13 @@ export function TimelineItemComponent({
           </div>
         )}
       </Card>
+
+      <FileUploadModal
+        isOpen={showFileUpload}
+        onClose={() => setShowFileUpload(false)}
+        timelineItemId={item.id}
+        onUploadSuccess={handleFileUploadSuccess}
+      />
     </div>
   )
 }

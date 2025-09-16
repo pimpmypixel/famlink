@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +16,7 @@ class User extends Authenticatable
     public $incrementing = false;
     protected $keyType = 'string';
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, HasUuids;
 
     /**
      * The attributes that are mass assignable.
@@ -70,15 +71,5 @@ class User extends Authenticatable
     public function timelineItems(): HasMany
     {
         return $this->hasMany(TimelineItem::class);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
-            }
-        });
     }
 }

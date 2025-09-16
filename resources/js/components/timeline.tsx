@@ -9,9 +9,10 @@ interface TimelineProps {
   items: TimelineItem[]
   currentUser?: User
   onAddClick?: () => void
+  onAddFile?: (itemId: string) => void
 }
 
-export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps) {
+export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: TimelineProps) {
   // console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
@@ -77,6 +78,7 @@ export function Timeline({ items = [], currentUser, onAddClick }: TimelineProps)
               forceExpanded={forceExpandAll}
               forceCollapsed={forceExpandAll === false}
               onToggle={handleItemToggle}
+              onAddFile={onAddFile}
             />
           </div>
         </div>

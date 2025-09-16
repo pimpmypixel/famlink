@@ -1,14 +1,21 @@
 import { useState } from "react"
 import { Timeline } from "@/components/timeline"
 import { AddItemModal } from "@/components/add-item-modal"
-import { mockTimelineData, mockUsers } from "@/lib/mock-data"
 import type { User, TimelineItem } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { usePage } from "@inertiajs/react"
+import { SharedData } from "./types"
 
 export default function Home() {
-  const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
-  const [timelineItems, setTimelineItems] = useState(mockTimelineData)
+  const { auth } = usePage<SharedData>().props;
+  const [currentUser, setCurrentUser] = useState<User>({
+    id: auth.user.id.toString(),
+    name: auth.user.name,
+    role: (auth.user.role as User['role']) ?? "andet", // fallback if role is missing
+  })
+  // const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const handleAddItem = (newItemData: Omit<TimelineItem, "id" | "timestamp">) => {
@@ -32,7 +39,8 @@ export default function Home() {
 
         {/* User Selector and Add Button */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-          <div className="flex gap-2 p-1 bg-muted rounded-lg">
+          {/* User selector removed - no mock data available */}
+          {/* <div className="flex gap-2 p-1 bg-muted rounded-lg">
             {mockUsers.map((user) => (
               <Button
                 key={user.id}
@@ -43,7 +51,7 @@ export default function Home() {
                 {user.name} ({user.role})
               </Button>
             ))}
-          </div>
+          </div> */}
 
           <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />

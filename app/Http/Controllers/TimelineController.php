@@ -11,9 +11,18 @@ class TimelineController extends Controller
 {
     public function index(Request $request)
     {
-        $timelineItems = TimelineItem::with('user','user.roles', 'comments', 'comments.user')
+        $user = auth()->user();
+
+        // Check if user has a family
+        if (! $user->family) {
+            return Inertia::render('timeline_page', [
+                'timelineItems' => [],
+            ]);
+        }
+
+        $timelineItems = TimelineItem::with('user', 'user.roles', 'comments', 'comments.user')
             ->orderBy('item_timestamp', 'desc')
-            ->whereIn('user_id', auth()->user()->family->users()->get('id'))
+            ->whereIn('user_id', $user->family->users()->pluck('id'))
             ->get();
 
         return Inertia::render('timeline_page', [

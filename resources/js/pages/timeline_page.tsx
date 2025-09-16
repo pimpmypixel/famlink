@@ -1,13 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { SharedData, type BreadcrumbItem } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from "react"
 import { Timeline as TimelineComponent } from "@/components/timeline"
 import { AddItemModal } from "@/components/add-item-modal"
-import { mockUsers } from "@/lib/mock-data"
 import type { User, TimelineItem } from "@/lib/types"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+// import { Button } from "@/components/ui/button"
+// import { Plus } from "lucide-react"
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -17,11 +16,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface TimelineProps {
-  timelineItems: { data: TimelineItem[] };
+  timelineItems: TimelineItem[];
 }
 
 export default function TimelinePage({ timelineItems: initialTimelineItems }: TimelineProps) {
-  const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
+  const { auth } = usePage<SharedData>().props;
+  const [currentUser, setCurrentUser] = useState<User>({
+    id: auth.user.id.toString(),
+    name: auth.user.name,
+    role: (auth.user.role as User['role']) ?? "andet", // fallback if role is missing
+  })
   const [timelineItems, setTimelineItems] = useState(initialTimelineItems)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   // console.log(timelineItems)
@@ -36,15 +40,13 @@ export default function TimelinePage({ timelineItems: initialTimelineItems }: Ti
     // setTimelineItems((prev) => [...prev, newItem])
 
 
-    setTimelineItems((prev) => ({
-      data: [...prev.data, newItem]
-    }))
+    setTimelineItems((prev) => ([...prev, newItem]))
   }
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Timeline" />
-  <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 scale-100 md:scale-[0.8] origin-top">
+      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4 scale-100 md:scale-[0.8] origin-top">
         {/* Header */}
         {/* <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">Tidslinje</h1> 
@@ -72,6 +74,10 @@ export default function TimelinePage({ timelineItems: initialTimelineItems }: Ti
           items={timelineItems}
           currentUser={currentUser}
           onAddClick={() => setIsAddModalOpen(true)}
+          onAddFile={(itemId) => {
+            // This will be handled by the TimelineItemComponent's FileUploadModal
+            console.log('Add file for item:', itemId)
+          }}
         />
 
         <AddItemModal

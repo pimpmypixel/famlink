@@ -22,6 +22,7 @@ class TimelineItemResource extends JsonResource
             'timestamp' => $this->item_timestamp->getTimestamp() * 1000, // Convert to milliseconds for JS
             'category' => $this->category,
             'tags' => $this->tags ?? [], // Ensure tags is always an array
+            'attachments' => $this->attachments ?? [], // Include attachments
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

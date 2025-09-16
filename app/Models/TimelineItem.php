@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +12,7 @@ class TimelineItem extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+    use HasFactory, HasUuids;
     protected $fillable = [
         'user_id',
         'family_id',
@@ -47,15 +50,5 @@ class TimelineItem extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
-            }
-        });
     }
 }

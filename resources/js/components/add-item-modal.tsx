@@ -35,7 +35,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
   const [newTag, setNewTag] = useState("")
   const { isRecording, transcript, error, retryCount, toggleSpeechRecognition, clearTranscript } = useSpeechRecognition()
 
-  console.log('Speech recognition hook state:', { isRecording, transcript: transcript.length, error, retryCount })
+  // console.log('Speech recognition hook state:', { isRecording, transcript: transcript.length, error, retryCount })
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -189,7 +189,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
                         ? "Stop optagelse"
                         : "Start tale-til-tekst"
                   }
-                  disabled={error && typeof error === 'string' && error.includes('retrying')}
+                  disabled={!!(error && typeof error === 'string' && error.includes('retrying'))}
                 >
                   <Mic className={`h-5 w-5 ${isRecording ? 'animate-pulse' : ''} ${error && typeof error === 'string' && !error.includes('retrying') ? 'text-white' : ''}`} />
                   {isRecording && <span className="sr-only">Lytter...</span>}

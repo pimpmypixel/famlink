@@ -19,7 +19,7 @@ export function NavUser() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton size="lg" className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent">
-                            <UserInfo user={auth.user} /><Badge variant={'outline'}>{auth.user.roles[0]}</Badge>
+                            <UserInfo user={auth.user} /><Badge variant={'outline'}>{auth.user.roles?.[0] || 'No role'}</Badge>
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>

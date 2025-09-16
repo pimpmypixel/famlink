@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
-    console.log(auth)
+    // console.log(auth)
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -35,7 +35,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     <HeadingSmall title="Profile information" description="Update your name and email address" />
 
                     <Form
-                        {...ProfileController.update.form()}
+                        {...ProfileController.update.form}
                         options={{
                             preserveScroll: true,
                         }}
@@ -91,7 +91,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Roles</Label>
-                                    <Badge>{auth.user.roles[0]}</Badge>
+                                    <Badge>{auth.user.roles?.[0] || 'No role'}</Badge>
                                 </div>
 
                                 {mustVerifyEmail && auth.user.email_verified_at === null && (

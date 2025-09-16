@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,10 +12,10 @@ class Family extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+    use HasFactory, HasUuids;
     protected $fillable = [
         'name',
         'child_name',
-        'created_by',
     ];
 
     /**
@@ -46,15 +48,5 @@ class Family extends Model
     public function socialWorker(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
-            }
-        });
     }
 }

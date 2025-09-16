@@ -7,6 +7,8 @@ export interface TimelineItem {
   category: string
   tags: string[]
   user: TimelineUser
+  author?: string
+  attachments?: Attachment[]
   isCollapsed?: boolean
   comments?: { id: string; content: string; user: TimelineUser; created_at?: string }[]
 }
@@ -14,7 +16,7 @@ export interface TimelineItem {
 export interface User {
   id: string
   name: string
-  role: "far" | "mor" | "myndighed" | "andet"
+  role: "far" | "mor" | "myndighed" | "andet" | "father" | "mother" | "consultant"
 }
 
 export interface TimelineUser {
@@ -22,4 +24,15 @@ export interface TimelineUser {
   name: string;
   email: string;
   role: string;
+}
+
+export interface Attachment {
+  id: string
+  original_name: string
+  filename: string
+  path: string
+  url: string
+  mime_type: string
+  size: number
+  uploaded_at: string
 }

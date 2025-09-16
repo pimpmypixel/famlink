@@ -11,7 +11,7 @@ class UserSeeder extends Seeder
 {
     /**
      * Seed the application's database.
-    */
+     */
     public function run(): void
     {
 
@@ -38,14 +38,11 @@ class UserSeeder extends Seeder
             'email' => 'other@example.com',
             'password' => 'password',
         ]);
-        
+
         $adminUser->assignRole('admin');
         $socialWorker2->assignRole('myndighed');
         $other->assignRole('andet');
         $socialWorker1->assignRole('myndighed');
-
-
-
 
         // Create 1 mother and 1 father for each family, and assign a random social worker to each family
         $families = Family::all();
@@ -55,25 +52,30 @@ class UserSeeder extends Seeder
             $fatherFirst = fake()->firstName();
             $motherFirst = fake()->firstName();
             $father = User::factory()->create([
-                'name' => $fatherFirst . ' ' . $family->name,
-                'email' => strtolower($fatherFirst) . '_' . strtolower($family->name) . '@example.com',
+                'name' => $fatherFirst.' '.$family->name,
+                'email' => strtolower($fatherFirst).'_'.strtolower($family->name).'@example.com',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
             $father->assignRole('far');
 
             $mother = User::factory()->create([
-                'name' => $motherFirst . ' ' . $family->name,
-                'email' => strtolower($motherFirst) . '_' . strtolower($family->name) . '@example.com',
+                'name' => $motherFirst.' '.$family->name,
+                'email' => strtolower($motherFirst).'_'.strtolower($family->name).'@example.com',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
             $mother->assignRole('mor');
 
-            // Assign a random social worker to this family (as a user with family_id)
-            $assignedWorker = $socialWorkers[array_rand($socialWorkers)];
-            $assignedWorker->family_id = $family->id;
-            $assignedWorker->save();
+            // Assign a designated social worker to this family
+            $designatedWorker = $socialWorkers[$index % count($socialWorkers)];
+
+            // Set the designated social worker for this family
+            $family->update(['created_by' => $designatedWorker->id]);
+
+            // Also assign the social worker to this family (they can access it)
+            $designatedWorker->family_id = $family->id;
+            $designatedWorker->save();
         }
     }
 }

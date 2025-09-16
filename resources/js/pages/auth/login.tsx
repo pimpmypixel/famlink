@@ -1,4 +1,3 @@
-import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         <AuthLayout /* title="Log in to your account" description="Enter your email and password below to log in" */>
             <Head title="Log in" />
 
-            <Form {...AuthenticatedSessionController.store.form} resetOnSuccess={['password']} className="flex flex-col gap-6">
+            <Form action="/login" method="post" resetOnSuccess={['password']} className="flex flex-col gap-6">
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
@@ -35,7 +34,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    // placeholder="email@example.com"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -56,7 +55,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    // placeholder="Password"
                                 />
                                 <InputError message={errors.password} />
                             </div>

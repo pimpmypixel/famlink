@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronDown, ChevronUp, Calendar, List } from "lucide-react"
 
-import { Plus } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 
 
 interface TimelineControlsProps {
@@ -13,6 +13,7 @@ interface TimelineControlsProps {
   groupByDate: boolean
   onToggleGrouping: () => void
   onAddClick?: () => void
+  onSearchClick?: () => void
 }
 
 export function TimelineControls({
@@ -23,6 +24,7 @@ export function TimelineControls({
   groupByDate,
   onToggleGrouping,
   onAddClick,
+  onSearchClick,
 }: TimelineControlsProps) {
   return (
     <Card className="mb-6">
@@ -33,6 +35,12 @@ export function TimelineControls({
               <Button onClick={onAddClick} className="flex items-center gap-2" size="sm">
                 <Plus className="h-4 w-4" />
                 Tilføj
+              </Button>
+            )}
+            {onSearchClick && (
+              <Button onClick={onSearchClick} variant="outline" className="flex items-center gap-2" size="sm">
+                <Search className="h-4 w-4" />
+                Søg
               </Button>
             )}
             <span>

@@ -75,7 +75,7 @@ export function SearchFilters({
 
         {/* Advanced Filters */}
         {showAdvanced && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 md:scale-[0.8]">
             <div>
               <Label htmlFor="author" className="text-sm font-medium">
                 Forfatter
@@ -84,7 +84,7 @@ export function SearchFilters({
                 id="author"
                 value={selectedAuthor}
                 onChange={(e) => setSelectedAuthor(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="mt-1 font-sm w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Alle Forfattere</option>
                 <option value="father">Far</option>

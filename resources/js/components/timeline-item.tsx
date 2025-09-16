@@ -162,7 +162,7 @@ export function TimelineItemComponent({
               <div className="mb-3">
                 <h4 className="text-sm font-medium mb-2 flex items-center">
                   <Paperclip className="h-4 w-4 mr-1" />
-                  Attachments ({item.attachments.length})
+                  Filer ({item.attachments.length})
                 </h4>
                 <div className="space-y-2">
                   {item.attachments.map((attachment) => (

@@ -4,6 +4,7 @@ import { sortTimelineItems, filterTimelineItems, groupItemsByDate, formatGroupDa
 import { TimelineItemComponent } from "./timeline-item"
 import { SearchFilters } from "./search-filters"
 import { TimelineControls } from "./timeline-controls"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface TimelineProps {
   items: TimelineItem[]
@@ -21,6 +22,7 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [groupByDate, setGroupByDate] = useState(false)
   const [forceExpandAll, setForceExpandAll] = useState<boolean | undefined>()
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
 
   const filteredAndSortedItems = useMemo(() => {
     const filtered = filterTimelineItems(items, searchTerm, selectedAuthor, selectedCategory, dateRange)
@@ -88,18 +90,6 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
 
   return (
   <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
-      <SearchFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedAuthor={selectedAuthor}
-        setSelectedAuthor={setSelectedAuthor}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        onClearFilters={clearFilters}
-      />
-
       <TimelineControls
         totalItems={filteredAndSortedItems.length}
         expandedCount={expandedItems.size}
@@ -108,7 +98,28 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
         groupByDate={groupByDate}
         onToggleGrouping={() => setGroupByDate(!groupByDate)}
         onAddClick={onAddClick}
+        onSearchClick={() => setIsSearchModalOpen(true)}
       />
+
+      {/* Search Modal */}
+      <Dialog open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Søg & Filtrer</DialogTitle>
+          </DialogHeader>
+          <SearchFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedAuthor={selectedAuthor}
+            setSelectedAuthor={setSelectedAuthor}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            onClearFilters={clearFilters}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Timeline */}
       <div className="relative">

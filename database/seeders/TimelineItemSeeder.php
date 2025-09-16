@@ -1,10 +1,8 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use App\Models\Comment;
-use Illuminate\Support\Str;
 use App\Models\Family;
 use App\Models\TimelineItem;
 use App\Models\User;
@@ -211,7 +209,7 @@ class TimelineItemSeeder extends Seeder
                     'item_timestamp' => '2025-04-15 10:30:00',
                     'category' => 'opfølgning',
                     'tags' => ['opfølgning', 'samvær', 'familieret'],
-                ]
+                ],
             ];
 
         $families = Family::all();
@@ -229,14 +227,9 @@ class TimelineItemSeeder extends Seeder
             $mother = $familyUsers->first(function ($user) {
                 return $user->hasRole('mor');
             });
-            $familySocialWorkers = $familyUsers->filter(function ($user) {
-                return $user->hasRole('myndighed');
-            });
 
-            if ($familySocialWorkers->isEmpty()) {
-                // If no social worker assigned to this family, use any social worker
-                $familySocialWorkers = $socialWorkers;
-            }
+            // Get the designated social worker for this family
+            $designatedSocialWorker = $family->socialWorker;
 
             // Ensure at least 2 items from father
             if ($father) {
@@ -244,6 +237,7 @@ class TimelineItemSeeder extends Seeder
                     $item = collect($timelineData)->random();
                     $insert = [
                         'user_id' => $father->id,
+                        'family_id' => $family->id,
                         ...$item,
                     ];
                     $timelineItems[] = TimelineItem::create($insert);
@@ -256,21 +250,37 @@ class TimelineItemSeeder extends Seeder
                     $item = collect($timelineData)->random();
                     $insert = [
                         'user_id' => $mother->id,
+                        'family_id' => $family->id,
                         ...$item,
                     ];
                     $timelineItems[] = TimelineItem::create($insert);
                 }
             }
 
-            // Ensure at least 2 items from each social worker assigned to this family
-            foreach ($familySocialWorkers as $socialWorker) {
+            // Ensure at least 2 items from the designated social worker
+            if ($designatedSocialWorker) {
                 for ($i = 0; $i < 2; $i++) {
                     $item = collect($timelineData)->random();
                     $insert = [
-                        'user_id' => $socialWorker->id,
+                        'user_id' => $designatedSocialWorker->id,
+                        'family_id' => $family->id,
                         ...$item,
                     ];
                     $timelineItems[] = TimelineItem::create($insert);
+                }
+            } else {
+                // Fallback: if no designated social worker, use any social worker
+                $fallbackWorker = $socialWorkers->first();
+                if ($fallbackWorker) {
+                    for ($i = 0; $i < 2; $i++) {
+                        $item = collect($timelineData)->random();
+                        $insert = [
+                            'user_id' => $fallbackWorker->id,
+                            'family_id' => $family->id,
+                            ...$item,
+                        ];
+                        $timelineItems[] = TimelineItem::create($insert);
+                    }
                 }
             }
         }
@@ -280,36 +290,56 @@ class TimelineItemSeeder extends Seeder
         for ($i = 0; $i < $remainingItems; $i++) {
             $item = collect($timelineData)->random();
             $randomUser = $allUsers->random();
+            $familyId = $randomUser->family_id ?? $families->random()->id;
             $insert = [
                 'user_id' => $randomUser->id,
+                'family_id' => $familyId,
                 ...$item,
             ];
             $timelineItems[] = TimelineItem::create($insert);
         }
 
-        // Ensure each timeline item has at least 1 comment
+        // Ensure each timeline item has at least 1 comment from family members or social workers
         $allUsers = User::all();
         $allTimelineItems = TimelineItem::all();
+        $socialWorkers = User::role('myndighed')->get();
 
         // First, create at least 1 comment for each timeline item
         foreach ($allTimelineItems as $timelineItem) {
-            $randomUser = $allUsers->random();
-            Comment::create([
-                'timeline_item_id' => $timelineItem->id,
-                'user_id' => $randomUser->id,
-                'content' => fake()->paragraph(),
-            ]);
+            // Get users who can comment on this timeline item:
+            // 1. Users in the same family as the timeline item
+            // 2. Social workers
+            $familyUsers = $timelineItem->family?->users ?? collect();
+            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+
+            if ($allowedUsers->isNotEmpty()) {
+                $randomUser = $allowedUsers->random();
+                Comment::create([
+                    'timeline_item_id' => $timelineItem->id,
+                    'user_id' => $randomUser->id,
+                    'content' => fake()->paragraph(),
+                ]);
+            }
         }
 
         // Generate additional random comments to increase engagement
         for ($i = 0; $i < 30; $i++) {
             $randomTimelineItem = $allTimelineItems->random();
-            $randomUser = $allUsers->random();
-            Comment::create([
-                'timeline_item_id' => $randomTimelineItem->id,
-                'user_id' => $randomUser->id,
-                'content' => fake()->paragraph(),
-            ]);
+
+            // Get users who can comment on this timeline item:
+            // 1. Users in the same family as the timeline item
+            // 2. Social workers
+            $familyUsers = $randomTimelineItem->family?->users ?? collect();
+            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+
+            if ($allowedUsers->isNotEmpty()) {
+                $randomUser = $allowedUsers->random();
+                Comment::create([
+                    'timeline_item_id' => $randomTimelineItem->id,
+                    'user_id' => $randomUser->id,
+                    'content' => fake()->paragraph(),
+                ]);
+            }
         }
     }
 }

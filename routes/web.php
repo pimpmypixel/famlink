@@ -22,6 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('timeline', [App\Http\Controllers\TimelineController::class, 'index'])->name('timeline');
 
+    // Comment routes
+    Route::post('timeline/{timelineItemId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
+
     // File upload routes
     Route::post('timeline/{timelineItemId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
     Route::delete('timeline/{timelineItemId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');

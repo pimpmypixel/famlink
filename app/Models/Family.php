@@ -5,17 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Family extends Model
 {
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     use HasFactory, HasUuids;
+
     protected $fillable = [
         'name',
         'child_name',
+        'created_by',
     ];
 
     /**
@@ -37,10 +41,10 @@ class Family extends Model
     /**
      * Get the user who created this family.
      */
-   /*  public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    } */
+    /*  public function creator(): BelongsTo
+     {
+         return $this->belongsTo(User::class, 'created_by');
+     } */
 
     /**
      * Get the user who created this family.

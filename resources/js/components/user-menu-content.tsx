@@ -41,11 +41,11 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                     <DropdownMenuGroup>
                         <DropdownMenuItem asChild>
                             <button
-                                className="block w-full text-left"
+                                className="block w-full text-left text-red-600 hover:bg-red-50"
                                 onClick={handleLeaveImpersonation}
                                 data-test="leave-impersonation-button"
                             >
-                                <UserX className="mr-2" />
+                                <UserX className="mr-2 text-red-600" />
                                 Stop Impersonering
                             </button>
                         </DropdownMenuItem>

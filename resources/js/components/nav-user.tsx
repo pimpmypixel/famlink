@@ -23,7 +23,7 @@ export function NavUser() {
                             <div className="flex items-center gap-1">
                                 <Badge variant={isImpersonating ? 'destructive' : 'outline'} className="flex items-center gap-1">
                                     {isImpersonating && <AlertTriangle className="h-3 w-3" />}
-                                    {isImpersonating ? 'Impersonating' : (auth.user.roles?.[0] || 'No role')}
+                                    {/* {isImpersonating ? 'Imp.' : (auth.user.roles?.[0] || 'No role')} */}
                                 </Badge>
                                 <ChevronsUpDown className="ml-auto size-4" />
                             </div>

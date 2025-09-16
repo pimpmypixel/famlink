@@ -15,7 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { X } from "lucide-react"
+import { X, Mic } from "lucide-react"
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 
 interface AddItemModalProps {
   isOpen: boolean
@@ -32,6 +33,9 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5))
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
+  const { isRecording, transcript, error, retryCount, toggleSpeechRecognition, clearTranscript } = useSpeechRecognition()
+
+  console.log('Speech recognition hook state:', { isRecording, transcript: transcript.length, error, retryCount })
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -50,7 +54,12 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
     if (!title.trim() || !content.trim()) return
 
     const newItem: Omit<TimelineItem, "id" | "timestamp"> = {
-      author: currentUser.role,
+      user: {
+        id: parseInt(currentUser.id),
+        name: currentUser.name,
+        email: "", // We'll need to get this from somewhere or make it optional
+        role: currentUser.role,
+      },
       title: title.trim(),
       content: content.trim(),
       date: date,
@@ -68,6 +77,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
     setTime(new Date().toTimeString().slice(0, 5))
     setTags([])
     setNewTag("")
+    clearTranscript()
 
     onClose()
   }
@@ -83,9 +93,13 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Timeline Item</DialogTitle>
+          <DialogTitle>Tilføj nyt tidslinjeelement</DialogTitle>
           <DialogDescription>
-            Create a new entry as {currentUser.name} ({currentUser.role})
+            Opret en ny post som {currentUser.name} ({currentUser.role})
+            <br />
+            <span className="text-xs text-muted-foreground mt-1 block">
+              💡 Brug mikrofon-knappen til at diktere tekst direkte i feltet nedenfor
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -97,42 +111,111 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter a descriptive title"
+                placeholder="Beskrivende titel"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Kategori</Label>
               <select
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as TimelineItem["category"])}
                 className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="parenting">Parenting</option>
-                <option value="logistics">Logistics</option>
-                <option value="consultation">Consultation</option>
-                <option value="other">Other</option>
+                <option value="parenting">Forældre</option>
+                <option value="logistics">Logistik</option>
+                <option value="consultation">Konsultation</option>
+                <option value="other">Andet</option>
               </select>
             </div>
 
             <div>
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Dato</Label>
               <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="content">Content *</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Describe the details of this timeline item..."
-              rows={4}
-              required
-            />
+            <Label htmlFor="content">Indhold *</Label>
+            <div className="flex gap-2 items-start">
+              <Textarea
+                id="content"
+                value={content + (transcript ? ' ' + transcript : '')}
+                onChange={(e) => {
+                  // If user is editing while speech recognition is active,
+                  // we need to handle this carefully
+                  if (isRecording && transcript) {
+                    const newValue = e.target.value
+                    const transcriptStart = content.length + 1 // +1 for the space
+                    if (newValue.length >= transcriptStart) {
+                      // User is editing within or after the transcript
+                      const userEditedPart = newValue.slice(transcriptStart)
+                      setContent(content + userEditedPart)
+                    } else {
+                      // User is editing the original content
+                      setContent(newValue)
+                    }
+                  } else {
+                    setContent(e.target.value)
+                  }
+                }}
+                placeholder="Beskriv detaljerne for dette tidslinjeelement..."
+                rows={4}
+                required
+                className="flex-1 w-4/5"
+              />
+              <div className="flex flex-col items-center gap-1">
+                <Button
+                  type="button"
+                  variant={
+                    error && typeof error === 'string' && !error.includes('retrying')
+                      ? "destructive"
+                      : isRecording
+                        ? "destructive"
+                        : "outline"
+                  }
+                  size="lg"
+                  onClick={() => {
+                    console.log('Button clicked, isRecording:', isRecording, 'error:', error)
+                    toggleSpeechRecognition()
+                  }}
+                  className="h-10 w-10 p-0 flex-shrink-0"
+                  title={
+                    error && typeof error === 'string' && !error.includes('retrying')
+                      ? `Error: ${error}. Click to retry`
+                      : isRecording
+                        ? "Stop optagelse"
+                        : "Start tale-til-tekst"
+                  }
+                  disabled={error && typeof error === 'string' && error.includes('retrying')}
+                >
+                  <Mic className={`h-5 w-5 ${isRecording ? 'animate-pulse' : ''} ${error && typeof error === 'string' && !error.includes('retrying') ? 'text-white' : ''}`} />
+                  {isRecording && <span className="sr-only">Lytter...</span>}
+                </Button>
+                {isRecording && (
+                  <span className="text-xs text-red-500 font-medium">
+                    🎤 Lytter{retryCount > 0 ? ` (Retry ${retryCount})` : ''}
+                  </span>
+                )}
+                {error && typeof error === 'string' && error.includes('retrying') && (
+                  <span className="text-xs text-orange-500 font-medium">
+                    🔄 {error}
+                  </span>
+                )}
+                {error && typeof error === 'string' && !error.includes('retrying') && (
+                  <span className="text-xs text-red-600 font-medium">
+                    ❌ Error: {error}
+                  </span>
+                )}
+                {transcript && !error && (
+                  <span className="text-xs text-green-600">
+                    📝 {transcript.length} tegn
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>
@@ -144,10 +227,10 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Add a tag and press Enter"
+                  placeholder="Tilføj en tag og tryk Enter"
                 />
                 <Button type="button" variant="outline" onClick={handleAddTag} disabled={!newTag.trim()}>
-                  Add
+                  Tilføj
                 </Button>
               </div>
 

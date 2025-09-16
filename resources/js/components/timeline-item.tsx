@@ -14,6 +14,7 @@ import { router } from '@inertiajs/react'
 interface TimelineItemProps {
   item: TimelineItem
   isLeft: boolean
+  isCenter?: boolean
   forceExpanded?: boolean
   forceCollapsed?: boolean
   onToggle?: (id: string, isExpanded: boolean) => void
@@ -25,6 +26,7 @@ import { CommentsSheet } from "@/components/comments-sheet";
 export function TimelineItemComponent({
   item,
   isLeft,
+  isCenter = false,
   forceExpanded,
   forceCollapsed,
   onToggle,
@@ -45,7 +47,7 @@ export function TimelineItemComponent({
     }
   }, [forceExpanded, forceCollapsed])
 
-  const authorColorClass = getAuthorColor(item.user.name)
+  const authorColorClass = getAuthorColor(item.user.role)
   const categoryColorClass = getCategoryColor(item.category)
 
   const handleToggle = () => {
@@ -108,9 +110,9 @@ export function TimelineItemComponent({
   }
 
   return (
-    <div className={`flex w-full ${isLeft ? "justify-start sm:pr-8" : "justify-end sm:pl-8"}`}>
+    <div className={`flex w-full ${isCenter ? "justify-center" : isLeft ? "justify-start sm:pr-8" : "justify-end sm:pl-8"}`}>
       <Card
-        className={`w-full max-w-md sm:max-w-md max-w-full border-2 ${authorColorClass} relative transition-all duration-200`}
+        className={`w-full ${isCenter ? "max-w-2xl" : "max-w-md sm:max-w-md"} max-w-full border-2 ${authorColorClass} relative transition-all duration-200`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

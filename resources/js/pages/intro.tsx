@@ -1,6 +1,6 @@
 import React from "react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { Download, FileText, ShieldCheck } from "lucide-react";
+import { Download, FileText, ShieldCheck, Lock, Sparkles } from "lucide-react";
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
@@ -17,6 +17,29 @@ export default function ProjektbeskrivelseApp() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Projektbeskrivelse" />
       <div className="min-h-screen bg-background p-8 text-foreground">
+        {/* Salgspitch med fokus på privatliv og AI */}
+        <section className="max-w-5xl mx-auto px-6 pb-16 grid md:grid-cols-2 gap-12">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-2xl font-bold mb-4">Privatliv i centrum</h2>
+            <p className="mb-4 text-slate-700">
+              Alle dine oplysninger gemmes krypteret og kun du bestemmer, hvem der får adgang. Vores mål er at gøre dig tryg i en sårbar proces, hvor hvert dokument kan have afgørende betydning.
+            </p>
+            <div className="flex items-center gap-2 text-slate-600">
+              <Lock className="w-5 h-5" />
+              <span>Krypteret datalagring & fuld kontrol</span>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center">
+            <h2 className="text-2xl font-bold mb-4">AI-forbedret rådgivning</h2>
+            <p className="mb-4 text-slate-700">
+              Få adgang til en intelligent chat, der kan hjælpe dig med at forstå lovgivning, dine rettigheder og næste skridt i sagsbehandlingen. AI kan også opsummere lange dokumenter og foreslå mulige handleplaner.
+            </p>
+            <div className="flex items-center gap-2 text-slate-600">
+              <Sparkles className="w-5 h-5" />
+              <span>AI-assistance til lovgivning & dokumentation</span>
+            </div>
+          </div>
+        </section>
         <div className="max-w-4xl mx-auto">
           <header className="mb-8">
             <h1 className="text-4xl font-extrabold mb-2 text-foreground">Projektbeskrivelse</h1>
@@ -117,23 +140,12 @@ export default function ProjektbeskrivelseApp() {
             </AccordionItem>
           </Accordion>
 
-          <footer className="flex items-center justify-between mt-6">
+          {/* <footer className="flex items-center justify-between mt-6">
             <div className="flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Sikkerhed & privatliv prioriteres</span>
             </div>
-
-            {/* <div className="flex gap-2">
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm transition-colors">
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
-              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:bg-accent text-sm transition-colors">
-                <FileText className="w-4 h-4" />
-                <span>Vis som dokument</span>
-              </button>
-            </div> */}
-          </footer>
+          </footer> */}
         </div>
       </div>
     </AppLayout>

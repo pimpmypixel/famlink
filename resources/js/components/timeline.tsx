@@ -65,18 +65,20 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
 
   const renderTimelineItem = (item: TimelineItem, index: number) => {
     const isLeft = item.user.role === "far"
+    const isCenter = item.user.role === "myndighed"
 
     return (
       <div key={item.id} className="relative flex flex-col sm:block">
         {/* Timeline dot */}
-        <div className="absolute left-1/2 sm:left-1/2 top-0 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10"></div>
+        <div className={`absolute ${isCenter ? 'left-1/2' : 'left-1/2 sm:left-1/2'} top-0 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10`}></div>
 
         {/* Timeline item */}
-        <div className={`flex flex-col sm:flex-row ${isLeft ? "sm:justify-start" : "sm:justify-end"}`}>
-          <div className={`w-full sm:w-1/2 ${isLeft ? "sm:pr-8" : "sm:pl-8"}`}>
+        <div className={`flex flex-col sm:flex-row ${isCenter ? 'justify-center' : isLeft ? "sm:justify-start" : "sm:justify-end"}`}>
+          <div className={`w-full ${isCenter ? 'sm:w-2/3 sm:max-w-2xl' : 'sm:w-1/2'} ${isCenter ? '' : isLeft ? "sm:pr-8" : "sm:pl-8"}`}>
             <TimelineItemComponent
               item={item}
               isLeft={isLeft}
+              isCenter={isCenter}
               forceExpanded={forceExpandAll}
               forceCollapsed={forceExpandAll === false}
               onToggle={handleItemToggle}

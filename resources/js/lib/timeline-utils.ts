@@ -1,15 +1,18 @@
 import type { TimelineItem } from "./types"
 
-export const getAuthorColor = (author: TimelineItem["author"]) => {
-  switch (author) {
+export const getAuthorColor = (role: string) => {
+  switch (role) {
+    case "far":
     case "father":
-      return "bg-blue-100 border-blue-300 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-100"
+      return "bg-gradient-to-br from-green-100 to-green-200 border-green-300 text-green-900 dark:from-green-900/20 dark:to-green-800/20 dark:border-green-700 dark:text-green-100"
+    case "mor":
     case "mother":
-      return "bg-pink-100 border-pink-300 text-pink-900 dark:bg-pink-900/20 dark:border-pink-700 dark:text-pink-100"
+      return "bg-gradient-to-br from-blue-100 to-blue-200 border-blue-300 text-blue-900 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700 dark:text-blue-100"
+    case "myndighed":
     case "consultant":
-      return "bg-green-100 border-green-300 text-green-900 dark:bg-green-900/20 dark:border-green-700 dark:text-green-100"
+      return "bg-gradient-to-br from-yellow-100 to-yellow-200 border-yellow-300 text-yellow-900 dark:from-yellow-900/20 dark:to-yellow-800/20 dark:border-yellow-700 dark:text-yellow-100"
     default:
-      return "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900/20 dark:border-gray-700 dark:text-gray-100"
+      return "bg-gradient-to-br from-gray-100 to-gray-200 border-gray-300 text-gray-900 dark:from-gray-900/20 dark:to-gray-800/20 dark:border-gray-700 dark:text-gray-100"
   }
 }
 

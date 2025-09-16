@@ -20,20 +20,18 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             $response = actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
-            $response->assertStatus(200)
-                ->assertJson([
-                    'success' => true
-                ]);
+            $response->assertRedirect()
+                ->assertSessionHas('success', 'File uploaded successfully!');
 
             $timelineItem->refresh();
             expect($timelineItem->attachments)->toHaveCount(1);
@@ -46,14 +44,14 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family1->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => User::factory()->create(['family_id' => $family2->id])->id,
-                'family_id' => $family2->id
+                'family_id' => $family2->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             $response = actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
             $response->assertStatus(403);
@@ -65,8 +63,8 @@ describe('File Upload', function () {
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             $response = actingAs($user)
-                ->post("/timeline/non-existent-id/upload", [
-                    'file' => $file
+                ->post('/timeline/non-existent-id/upload', [
+                    'file' => $file,
                 ]);
 
             $response->assertStatus(403);
@@ -79,7 +77,7 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             // Test validation rules directly with custom messages
@@ -110,7 +108,7 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             // Create a file larger than 10MB
@@ -143,7 +141,7 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             // Create a file with unsupported extension
@@ -176,7 +174,7 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $validFiles = [
@@ -191,13 +189,11 @@ describe('File Upload', function () {
                 $response = actingAs($user)
                     ->withoutMiddleware()
                     ->post("/timeline/{$timelineItem->id}/upload", [
-                        'file' => $file
+                        'file' => $file,
                     ]);
 
-                $response->assertStatus(200)
-                    ->assertJson([
-                        'success' => true
-                    ]);
+                $response->assertRedirect()
+                    ->assertSessionHas('success', 'File uploaded successfully!');
             }
         });
     });
@@ -208,14 +204,14 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
             // Check that file was stored (using fake storage)
@@ -228,14 +224,14 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
             $timelineItem->refresh();
@@ -244,7 +240,7 @@ describe('File Upload', function () {
             $attachment = $timelineItem->attachments[0];
             expect($attachment)->toHaveKeys([
                 'id', 'original_name', 'filename', 'path', 'url',
-                'mime_type', 'size', 'uploaded_at'
+                'mime_type', 'size', 'uploaded_at',
             ]);
             expect($attachment['original_name'])->toBe('test.pdf');
             expect($attachment['mime_type'])->toBe('application/pdf');
@@ -255,14 +251,14 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
             $timelineItem->refresh();
@@ -273,33 +269,34 @@ describe('File Upload', function () {
             expect($attachment['filename'])->not->toBe('test.pdf');
         });
 
-        it('returns correct JSON response with attachment data', function () {
+        it('returns correct response and stores attachment data', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $file = UploadedFile::fake()->create('test.pdf', 1000);
 
             $response = actingAs($user)
                 ->post("/timeline/{$timelineItem->id}/upload", [
-                    'file' => $file
+                    'file' => $file,
                 ]);
 
-            $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'success',
-                    'attachment' => [
-                        'id', 'original_name', 'filename', 'path', 'url',
-                        'mime_type', 'size', 'uploaded_at'
-                    ]
-                ]);
+            $response->assertRedirect()
+                ->assertSessionHas('success', 'File uploaded successfully!');
 
-            $responseData = $response->json();
-            expect($responseData['success'])->toBeTrue();
-            expect($responseData['attachment']['original_name'])->toBe('test.pdf');
+            $timelineItem->refresh();
+            expect($timelineItem->attachments)->toHaveCount(1);
+
+            $attachment = $timelineItem->attachments[0];
+            expect($attachment)->toHaveKeys([
+                'id', 'original_name', 'filename', 'path', 'url',
+                'mime_type', 'size', 'uploaded_at',
+            ]);
+            expect($attachment['original_name'])->toBe('test.pdf');
+            expect($attachment['mime_type'])->toBe('application/pdf');
         });
     });
 
@@ -309,7 +306,7 @@ describe('File Upload', function () {
             $user = User::factory()->create(['family_id' => $family->id]);
             $timelineItem = TimelineItem::factory()->create([
                 'user_id' => $user->id,
-                'family_id' => $family->id
+                'family_id' => $family->id,
             ]);
 
             $files = [
@@ -321,7 +318,7 @@ describe('File Upload', function () {
             foreach ($files as $file) {
                 actingAs($user)
                     ->post("/timeline/{$timelineItem->id}/upload", [
-                        'file' => $file
+                        'file' => $file,
                     ]);
             }
 

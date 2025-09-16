@@ -79,6 +79,8 @@ export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSucce
           setError(errors.file)
         } else if (errors.error) {
           setError(errors.error)
+        } else if (errors.attachment) {
+          setError(errors.attachment)
         } else {
           setError('Upload failed. Please try again.')
         }

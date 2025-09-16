@@ -30,7 +30,7 @@ class FileUploadController extends Controller
         );
 
         if (! $path) {
-            return response()->json(['error' => 'Failed to upload file'], 500);
+            return back()->withErrors(['file' => 'Failed to upload file. Please try again.']);
         }
 
         // Get file URL - construct manually since some S3 drivers don't have url() method
@@ -53,10 +53,7 @@ class FileUploadController extends Controller
 
         $timelineItem->update(['attachments' => $attachments]);
 
-        return response()->json([
-            'success' => true,
-            'attachment' => end($attachments),
-        ]);
+        return back()->with('success', 'File uploaded successfully!');
     }
 
     public function delete(DeleteAttachmentRequest $request, string $timelineItemId, string $attachmentId)
@@ -69,7 +66,7 @@ class FileUploadController extends Controller
         });
 
         if ($attachmentIndex === false) {
-            return response()->json(['error' => 'Attachment not found'], 404);
+            return back()->withErrors(['attachment' => 'Attachment not found.']);
         }
 
         $attachment = $attachments[$attachmentIndex];
@@ -81,6 +78,6 @@ class FileUploadController extends Controller
         unset($attachments[$attachmentIndex]);
         $timelineItem->update(['attachments' => array_values($attachments)]);
 
-        return response()->json(['success' => true]);
+        return back()->with('success', 'Attachment deleted successfully!');
     }
 }

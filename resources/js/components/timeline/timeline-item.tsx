@@ -202,7 +202,7 @@ export function TimelineItemComponent({
           </CardContent>
         )}
 
-        <CommentsSheet open={showComments} onOpenChange={setShowComments} comments={item.comments ?? []} />
+        <CommentsSheet item={item} open={showComments} onOpenChange={setShowComments} comments={item.comments ?? []} />
 
 
         {/* Action buttons that appear on hover */}

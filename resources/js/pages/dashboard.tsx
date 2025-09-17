@@ -131,7 +131,7 @@ export default function Dashboard({ stats, timelineCases, userRole, impersonatab
                                                             {typeof user.email === 'string' ? user.email : 'No email'}
                                                         </div>
                                                         <div className="text-xs text-muted-foreground capitalize mt-1">
-                                                            Rolle: {user.role === 'far' ? 'Far' : user.role === 'mor' ? 'Mor' : user.role}
+                                                            Rolle: {user.role === 'far' ? 'Far' : user.role === 'mor' ? 'Mor' : typeof user.role === 'string' ? user.role : 'Unknown'}
                                                         </div>
                                                     </button>
                                                 ))

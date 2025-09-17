@@ -10,7 +10,7 @@ export interface TimelineItem {
   author?: string
   attachments?: Attachment[]
   isCollapsed?: boolean
-  comments?: { id: string; content: string; user: TimelineUser; created_at?: string }[]
+  comments?: { id: string; content: string; user: TimelineUser; created_at?: string; replies?: { id: string; content: string; user: TimelineUser; created_at?: string; parent_comment_id?: string }[]; parent_comment_id?: string }[]
 }
 
 export interface User {

@@ -403,5 +403,105 @@ class TimelineItemSeeder extends Seeder
                 ]);
             }
         }
+
+        // Generate replies for at least half of the comments randomly
+        $allComments = Comment::all();
+        $commentsToReplyTo = $allComments->random(min((int) ceil($allComments->count() / 2), $allComments->count()));
+
+        foreach ($commentsToReplyTo as $parentComment) {
+            $timelineItem = $parentComment->timelineItem;
+
+            // Get users who can reply to this comment (same as those who can comment)
+            $familyUsers = $timelineItem->family?->users ?? collect();
+            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+
+            // Remove the original comment author to ensure different users reply
+            $replyUsers = $allowedUsers->filter(function ($user) use ($parentComment) {
+                return $user->id !== $parentComment->user_id;
+            });
+
+            if ($replyUsers->isNotEmpty()) {
+                // Create 1-3 replies per comment
+                $numberOfReplies = fake()->numberBetween(1, 3);
+
+                for ($i = 0; $i < $numberOfReplies; $i++) {
+                    $replyUser = $replyUsers->random();
+
+                    // Generate different types of reply content
+                    $replyTypes = [
+                        'Jeg er enig i dette punkt.',
+                        'Tak for at påpege dette.',
+                        'Kan du uddybe dette nærmere?',
+                        'Jeg har en anden oplevelse med dette.',
+                        'Det er vigtigt at tage højde for dette.',
+                        'Jeg støtter denne holdning.',
+                        'Har du flere detaljer om dette?',
+                        'Det giver god mening.',
+                        'Jeg vil gerne høre mere om dette.',
+                        'Det er en god pointe.',
+                        'Jeg er uenig i denne del.',
+                        'Kan vi drøfte dette videre?',
+                        'Det er værd at overveje.',
+                        'Jeg har lignende erfaringer.',
+                        'Det er positivt at adressere dette.',
+                    ];
+
+                    $replyContent = fake()->randomElement($replyTypes) . ' ' . fake()->sentence();
+
+                    Comment::create([
+                        'timeline_item_id' => $parentComment->timeline_item_id,
+                        'user_id' => $replyUser->id,
+                        'parent_comment_id' => $parentComment->id,
+                        'content' => $replyContent,
+                    ]);
+                }
+            }
+        }
+
+        // Generate some nested replies (replies to replies) for more realistic conversation threads
+        $allCommentsWithReplies = Comment::whereNotNull('parent_comment_id')->get();
+
+        if ($allCommentsWithReplies->isNotEmpty()) {
+            $repliesToReplyTo = $allCommentsWithReplies->random(min(10, $allCommentsWithReplies->count()));
+
+            foreach ($repliesToReplyTo as $parentReply) {
+                $timelineItem = $parentReply->timelineItem;
+
+                // Get users who can reply
+                $familyUsers = $timelineItem->family?->users ?? collect();
+                $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+
+                // Remove the original reply author
+                $nestedReplyUsers = $allowedUsers->filter(function ($user) use ($parentReply) {
+                    return $user->id !== $parentReply->user_id;
+                });
+
+                if ($nestedReplyUsers->isNotEmpty()) {
+                    $nestedReplyUser = $nestedReplyUsers->random();
+
+                    $nestedReplyTypes = [
+                        'Det er en god uddybning.',
+                        'Jeg forstår dit synspunkt bedre nu.',
+                        'Tak for at forklare det.',
+                        'Det giver mening i denne kontekst.',
+                        'Jeg kan se hvor du kommer fra.',
+                        'Det er nyttigt at vide.',
+                        'Det hjælper med at forstå situationen.',
+                        'Tak for perspektivet.',
+                        'Det er en konstruktiv tilgang.',
+                        'Jeg værdsætter din indsigt.',
+                    ];
+
+                    $nestedReplyContent = fake()->randomElement($nestedReplyTypes) . ' ' . fake()->sentence();
+
+                    Comment::create([
+                        'timeline_item_id' => $parentReply->timeline_item_id,
+                        'user_id' => $nestedReplyUser->id,
+                        'parent_comment_id' => $parentReply->id,
+                        'content' => $nestedReplyContent,
+                    ]);
+                }
+            }
+        }
     }
 }

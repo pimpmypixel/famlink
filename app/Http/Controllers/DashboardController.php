@@ -70,7 +70,7 @@ class DashboardController extends Controller
                             'created_at' => $item->created_at->format('Y-m-d H:i'),
                             'family_name' => $item->family->name,
                             'user_name' => $item->user->name,
-                            'user_role' => $item->user->role,
+                            'user_role' => $item->user->getRoleNames()->first() ?? 'user',
                         ];
                     });
             }

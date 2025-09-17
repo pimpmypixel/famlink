@@ -8,7 +8,6 @@ import { Plus, Search } from "lucide-react"
 interface TimelineControlsProps {
   totalItems: number
   totalFiles?: number
-  expandedCount: number
   onExpandAll: () => void
   onCollapseAll: () => void
   groupByDate: boolean
@@ -20,7 +19,6 @@ interface TimelineControlsProps {
 export function TimelineControls({
   totalItems,
   totalFiles,
-  expandedCount,
   onExpandAll,
   onCollapseAll,
   groupByDate,

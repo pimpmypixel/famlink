@@ -20,17 +20,6 @@ interface FileUploadModalProps {
   onUploadSuccess?: () => void
 }
 
-interface Attachment {
-  id: string
-  original_name: string
-  filename: string
-  path: string
-  url: string
-  mime_type: string
-  size: number
-  uploaded_at: string
-}
-
 export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSuccess }: FileUploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -73,7 +62,7 @@ export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSucce
         // Close modal
         onClose()
       },
-      onError: (errors) => {
+      onError: (errors: any) => {
         // Handle validation errors or other errors
         if (errors.file) {
           setError(errors.file)

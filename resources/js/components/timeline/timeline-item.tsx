@@ -29,7 +29,7 @@ export function TimelineItemComponent({
   forceCollapsed,
   onToggle,
   onAddComment,
-  onAddFile
+  onAddFile: _onAddFile
 }: TimelineItemProps) {
   // console.log(item,'item')
   const [isExpanded, setIsExpanded] = useState(!item.isCollapsed)

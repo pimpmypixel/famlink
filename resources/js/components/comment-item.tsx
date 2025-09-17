@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
-import { MessageCircle, Send, Reply } from "lucide-react";
+import { Send, Reply } from "lucide-react";
 
 export type CommentType = {
   id?: string;

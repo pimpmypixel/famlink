@@ -1,25 +1,23 @@
 import { useState, useMemo } from "react"
-import type { TimelineItem, User } from "@/lib/types"
+import type { TimelineItem } from "@/lib/types"
 import { sortTimelineItems, filterTimelineItems, groupItemsByDate, formatGroupDate } from "@/lib/timeline-utils"
 import { TimelineItemComponent } from "./timeline-item"
 import { SearchFilters } from "./search-filters"
 import { TimelineControls } from "./timeline-controls"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface TimelineProps {
   items: TimelineItem[]
-  currentUser?: User
   onAddClick?: () => void
   onAddFile?: (itemId: string) => void
 }
 
-export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: TimelineProps) {
+export function Timeline({ items = [], onAddClick, onAddFile }: TimelineProps) {
   // console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [dateRange, setDateRange] = useState({ start: "", end: "" })
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [groupByDate, setGroupByDate] = useState(false)
   const [forceExpandAll, setForceExpandAll] = useState<boolean | undefined>()
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
@@ -58,19 +56,7 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
     // setTimeout(() => setForceExpandAll(undefined), 100)
   }
 
-  const handleItemToggle = (id: string, isExpanded: boolean) => {
-    setExpandedItems((prev) => {
-      const newSet = new Set(prev)
-      if (isExpanded) {
-        newSet.add(id)
-      } else {
-        newSet.delete(id)
-      }
-      return newSet
-    })
-  }
-
-  const renderTimelineItem = (item: TimelineItem, index: number) => {
+  const renderTimelineItem = (item: TimelineItem) => {
     const isLeft = item.user.role === "far"
     const isCenter = item.user.role === "myndighed"
 
@@ -88,7 +74,6 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
               isCenter={isCenter}
               forceExpanded={forceExpandAll}
               forceCollapsed={forceExpandAll === false}
-              onToggle={handleItemToggle}
               onAddFile={onAddFile}
             />
           </div>
@@ -102,7 +87,6 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
       <TimelineControls
         totalItems={filteredAndSortedItems.length}
         totalFiles={totalFiles}
-        expandedCount={expandedItems.size}
         onExpandAll={handleExpandAll}
         onCollapseAll={handleCollapseAll}
         groupByDate={groupByDate}
@@ -153,14 +137,14 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
 
                   {/* Items for this date */}
                   <div className="space-y-8">
-                    {dateItems.map((item, index) => renderTimelineItem(item, index))}
+                    {dateItems.map((item) => renderTimelineItem(item))}
                   </div>
                 </div>
               ))}
           </div>
         ) : (
           <div className="space-y-8">
-            {filteredAndSortedItems.map((item, index) => renderTimelineItem(item, index))}
+            {filteredAndSortedItems.map((item) => renderTimelineItem(item))}
           </div>
         )}
 

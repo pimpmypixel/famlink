@@ -21,7 +21,7 @@ interface TimelineProps {
 
 export default function TimelinePage({ timelineItems: initialTimelineItems }: TimelineProps) {
   const { auth } = usePage<SharedData>().props;
-  const [currentUser, setCurrentUser] = useState<User>({
+  const [currentUser] = useState<User>({
     id: auth.user.id.toString(),
     name: auth.user.name,
     role: (auth.user.role as User['role']) ?? "andet", // fallback if role is missing
@@ -72,7 +72,6 @@ export default function TimelinePage({ timelineItems: initialTimelineItems }: Ti
         {/* Timeline */}
         <TimelineComponent
           items={timelineItems}
-          currentUser={currentUser}
           onAddClick={() => setIsAddModalOpen(true)}
           onAddFile={(itemId) => {
             // This will be handled by the TimelineItemComponent's FileUploadModal

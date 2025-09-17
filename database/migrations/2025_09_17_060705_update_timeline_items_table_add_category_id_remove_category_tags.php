@@ -22,8 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('timeline_items', function (Blueprint $table) {
-            $table->string('category')->after('item_timestamp');
-            $table->json('tags')->after('category');
+            $table->string('category')->nullable()->after('item_timestamp');
+            $table->json('tags')->nullable()->after('category');
 
             $table->dropForeign(['category_id']);
             $table->dropColumn('category_id');

@@ -88,34 +88,53 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-full p-0">
-        <DialogHeader>
-          <DialogTitle>AI Chatbot</DialogTitle>
-          <DialogDescription>
-            Chat with our AI assistant. Responses stream in real-time.
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] p-0">
+        <DialogHeader className="px-6 py-4 border-b bg-background">
+          <DialogTitle className="text-lg font-semibold">Sagsbehandler chat</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Chat med mig om alt vedrørende din sag, familieret og tips fra den virkelige verden.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col h-[60vh] w-full p-6">
-          <div className="flex-1 overflow-y-auto mb-4 bg-muted rounded-lg p-4">
+        <div className="flex flex-col h-[70vh] w-full p-6">
+          <div className="flex-1 overflow-y-auto mb-4 bg-muted/30 rounded-lg p-4 border">
+            {messages.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                <p className="text-sm">Start en samtale med AI sagsbehandleren</p>
+              </div>
+            )}
             {messages.map((msg, idx) => (
-              <div key={idx} className={`mb-2 text-sm ${msg.role === "user" ? "text-right" : "text-left text-primary"}`}>
-                <span className={msg.role === "user" ? "font-semibold" : "font-normal"}>{msg.content}</span>
+              <div key={idx} className={`mb-4 ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                <div className={`inline-block max-w-[80%] px-4 py-2 rounded-lg text-sm ${
+                  msg.role === "user" 
+                    ? "bg-primary text-primary-foreground ml-auto" 
+                    : "bg-background border text-foreground"
+                }`}>
+                  <span className="whitespace-pre-wrap">{msg.content}</span>
+                </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
           </div>
-          {error && <div className="text-red-500 mb-2">{error}</div>}
-          <form onSubmit={handleSend} className="flex gap-2">
+          {error && (
+            <div className="text-red-500 mb-2 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSend} className="flex gap-3">
             <input
-              className="flex-1 border rounded px-3 py-2"
+              className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="Skriv noget..."
               disabled={loading}
               autoFocus
             />
-            <Button type="submit" disabled={loading || !input.trim()}>
-              {loading ? "Thinking..." : "Send"}
+            <Button 
+              type="submit" 
+              disabled={loading || !input.trim()}
+              className="px-6 py-3"
+            >
+              {loading ? "Tænker..." : "Send"}
             </Button>
           </form>
         </div>

@@ -2,6 +2,8 @@
 
 namespace App\Tools;
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
@@ -19,7 +21,7 @@ class TimelineTool implements ToolInterface
         return [
             'name' => 'timeline_lookup',
             'description' => 'Use this tool to lookup information in the timelineitems table',
-            'parameters' => [
+            /* 'parameters' => [
                 'type' => 'object',
                 'properties' => [
                     'user_id' => [
@@ -28,7 +30,7 @@ class TimelineTool implements ToolInterface
                     ],
                 ],
                 // 'required' => ['example_param'],
-            ],
+            ], */
         ];
     }
 
@@ -41,13 +43,26 @@ class TimelineTool implements ToolInterface
      */
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
-        // Access arguments: $location = $arguments['location'] ?? null;
-         $sessionId = $context->getSessionId();
-        // Access state: $previousValue = $context->getState('some_key');
-        // dd($sessionId, $arguments);
+        // Get the authenticated user ID from the context if available
+        $authenticatedUserId = request()->user()?->id ?? $context->getState('authenticated_user_id') ?? auth()->id();
+        
+        // Log::info('TimelineTool executed', [
+        //     'arguments' => $arguments,
+        //     'session_id' => $context->getSessionId(),
+        //     'authenticated_user_id' => $authenticatedUserId
+        // ]);
+        // // Access arguments: $location = $arguments['location'] ?? null;
+        // $sessionId = $context->getSessionId();
+        // // Access state: $previousValue = $context->getState('some_key');
+        // // dd($sessionId, $arguments);
 
-        // Query timeline messages
+        // // Query timeline messages
         $query = TimelineItem::query();
+
+        // If we have an authenticated user ID, filter by it
+        if ($authenticatedUserId) {
+            $query->where('user_id', $authenticatedUserId);
+        }
 
         // Optionally filter by user_id, date, category_id if provided in $arguments
         if (isset($arguments['user_id'])) {

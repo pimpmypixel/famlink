@@ -6,8 +6,12 @@ import { MessageCircle, Settings, Info } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import React from 'react';
+import { AIChatModal } from '@/components/ai-chat-modal';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
+
+    const [aiModalOpen, setAIModalOpen] = React.useState(false);
 
     return (
         <AppShell variant="sidebar">
@@ -21,7 +25,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                             {
                                 icon: MessageCircle,
                                 label: 'Ask AI',
-                                onClick: () => {/* open modal logic here */},
+                                onClick: () => setAIModalOpen(true),
                             },
                             {
                                 icon: Settings,
@@ -39,6 +43,12 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                         style="circle"
                     />
                 </div>
+                {/* Large centered modal for AI chat */}
+                <React.Suspense fallback={null}>
+                  {aiModalOpen && (
+                    <AIChatModal open={aiModalOpen} onOpenChange={setAIModalOpen} />
+                  )}
+                </React.Suspense>
             </AppContent>
         </AppShell>
     );

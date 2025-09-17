@@ -4,9 +4,11 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { dashboard, timeline, intro, userguide } from '@/routes';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, LayoutGrid, Clock, FileText } from 'lucide-react';
 import AppLogo from './app-logo';
+import { MessageSquare, Plus, Settings, Archive, Search, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -24,7 +26,7 @@ const mainNavItems: NavItem[] = [
         href: timeline(),
         icon: Clock,
     },
-];
+]
 
 const footerNavItems: NavItem[] = [
     {
@@ -40,6 +42,8 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+  const { url } = usePage();
+  const [isCollapsed, setIsCollapsed] = useState(false);
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

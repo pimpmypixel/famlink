@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { Timeline } from "@/components/timeline"
-import { AddItemModal } from "@/components/add-item-modal"
+import { Timeline } from "@/components/timeline/timeline"
+import { AddItemModal } from "@/components/timeline/add-item-modal"
 import type { User, TimelineItem } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"

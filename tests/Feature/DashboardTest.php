@@ -65,7 +65,6 @@ test('social worker users receive their specific dashboard statistics and timeli
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 1',
         'content' => 'Test content 1',
-        'category' => 'consultation',
     ]);
 
     \App\Models\TimelineItem::factory()->create([
@@ -73,7 +72,6 @@ test('social worker users receive their specific dashboard statistics and timeli
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 2',
         'content' => 'Test content 2',
-        'category' => 'parenting',
     ]);
 
     $this->actingAs($socialWorker);

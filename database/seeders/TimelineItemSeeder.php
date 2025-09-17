@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Family;
+use App\Models\Tag;
 use App\Models\TimelineItem;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -212,6 +214,20 @@ class TimelineItemSeeder extends Seeder
                 ],
             ];
 
+        // First, create categories from the seeder data
+        $categories = [];
+        $allCategories = collect($timelineData)->pluck('category')->unique();
+        foreach ($allCategories as $categoryName) {
+            $categories[$categoryName] = Category::firstOrCreate(['name' => $categoryName]);
+        }
+
+        // Create tags from the seeder data
+        $allTags = collect($timelineData)->pluck('tags')->flatten()->unique();
+        $tags = [];
+        foreach ($allTags as $tagName) {
+            $tags[$tagName] = Tag::firstOrCreate(['name' => $tagName]);
+        }
+
         $families = Family::all();
         $allUsers = User::all();
         $socialWorkers = User::role('myndighed')->get();
@@ -235,12 +251,21 @@ class TimelineItemSeeder extends Seeder
             if ($father) {
                 for ($i = 0; $i < 2; $i++) {
                     $item = collect($timelineData)->random();
-                    $insert = [
+                    $timelineItem = TimelineItem::create([
                         'user_id' => $father->id,
                         'family_id' => $family->id,
-                        ...$item,
-                    ];
-                    $timelineItems[] = TimelineItem::create($insert);
+                        'category_id' => $categories[$item['category']]->id,
+                        'title' => $item['title'],
+                        'content' => $item['content'],
+                        'date' => $item['date'],
+                        'item_timestamp' => $item['item_timestamp'],
+                    ]);
+
+                    // Attach tags
+                    $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+                    $timelineItem->tags()->attach($tagIds);
+
+                    $timelineItems[] = $timelineItem;
                 }
             }
 
@@ -248,12 +273,21 @@ class TimelineItemSeeder extends Seeder
             if ($mother) {
                 for ($i = 0; $i < 2; $i++) {
                     $item = collect($timelineData)->random();
-                    $insert = [
+                    $timelineItem = TimelineItem::create([
                         'user_id' => $mother->id,
                         'family_id' => $family->id,
-                        ...$item,
-                    ];
-                    $timelineItems[] = TimelineItem::create($insert);
+                        'category_id' => $categories[$item['category']]->id,
+                        'title' => $item['title'],
+                        'content' => $item['content'],
+                        'date' => $item['date'],
+                        'item_timestamp' => $item['item_timestamp'],
+                    ]);
+
+                    // Attach tags
+                    $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+                    $timelineItem->tags()->attach($tagIds);
+
+                    $timelineItems[] = $timelineItem;
                 }
             }
 
@@ -261,12 +295,21 @@ class TimelineItemSeeder extends Seeder
             if ($designatedSocialWorker) {
                 for ($i = 0; $i < 2; $i++) {
                     $item = collect($timelineData)->random();
-                    $insert = [
+                    $timelineItem = TimelineItem::create([
                         'user_id' => $designatedSocialWorker->id,
                         'family_id' => $family->id,
-                        ...$item,
-                    ];
-                    $timelineItems[] = TimelineItem::create($insert);
+                        'category_id' => $categories[$item['category']]->id,
+                        'title' => $item['title'],
+                        'content' => $item['content'],
+                        'date' => $item['date'],
+                        'item_timestamp' => $item['item_timestamp'],
+                    ]);
+
+                    // Attach tags
+                    $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+                    $timelineItem->tags()->attach($tagIds);
+
+                    $timelineItems[] = $timelineItem;
                 }
             } else {
                 // Fallback: if no designated social worker, use any social worker
@@ -274,12 +317,21 @@ class TimelineItemSeeder extends Seeder
                 if ($fallbackWorker) {
                     for ($i = 0; $i < 2; $i++) {
                         $item = collect($timelineData)->random();
-                        $insert = [
+                        $timelineItem = TimelineItem::create([
                             'user_id' => $fallbackWorker->id,
                             'family_id' => $family->id,
-                            ...$item,
-                        ];
-                        $timelineItems[] = TimelineItem::create($insert);
+                            'category_id' => $categories[$item['category']]->id,
+                            'title' => $item['title'],
+                            'content' => $item['content'],
+                            'date' => $item['date'],
+                            'item_timestamp' => $item['item_timestamp'],
+                        ]);
+
+                        // Attach tags
+                        $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+                        $timelineItem->tags()->attach($tagIds);
+
+                        $timelineItems[] = $timelineItem;
                     }
                 }
             }
@@ -291,12 +343,22 @@ class TimelineItemSeeder extends Seeder
             $item = collect($timelineData)->random();
             $randomUser = $allUsers->random();
             $familyId = $randomUser->family_id ?? $families->random()->id;
-            $insert = [
+
+            $timelineItem = TimelineItem::create([
                 'user_id' => $randomUser->id,
                 'family_id' => $familyId,
-                ...$item,
-            ];
-            $timelineItems[] = TimelineItem::create($insert);
+                'category_id' => $categories[$item['category']]->id,
+                'title' => $item['title'],
+                'content' => $item['content'],
+                'date' => $item['date'],
+                'item_timestamp' => $item['item_timestamp'],
+            ]);
+
+            // Attach tags
+            $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+            $timelineItem->tags()->attach($tagIds);
+
+            $timelineItems[] = $timelineItem;
         }
 
         // Ensure each timeline item has at least 1 comment from family members or social workers

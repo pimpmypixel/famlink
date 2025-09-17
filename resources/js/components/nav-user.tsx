@@ -10,8 +10,17 @@ import { Badge } from '@/components/ui/badge'
 
 export function NavUser() {
     const { auth, isImpersonating } = usePage<SharedData>().props;
-    const { state } = useSidebar();
     const isMobile = useIsMobile();
+
+    // Safely get sidebar state, fallback to 'expanded' if not available
+    let sidebarState = 'expanded';
+    try {
+        const { state } = useSidebar();
+        sidebarState = state;
+    } catch (error) {
+        // SidebarProvider not available, use default state
+        console.warn('SidebarProvider not available, using default sidebar state');
+    }
 
     return (
         <SidebarMenu>
@@ -32,7 +41,7 @@ export function NavUser() {
                     <DropdownMenuContent
                         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                         align="end"
-                        side={isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'}
+                        side={isMobile ? 'bottom' : sidebarState === 'collapsed' ? 'left' : 'bottom'}
                     >
                         <UserMenuContent user={auth.user} />
                     </DropdownMenuContent>

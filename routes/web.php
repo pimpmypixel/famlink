@@ -8,6 +8,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('userguide', [App\Http\Controllers\UserguideController::class, 'index'])->name('userguide');
+
     Route::get('timeline', function () {
         return Inertia::render('timeline');
     })->name('timeline.public');

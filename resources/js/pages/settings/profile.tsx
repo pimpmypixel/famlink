@@ -91,7 +91,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Roles</Label>
-                                    <Badge>{auth.user.roles?.[0] || 'No role'}</Badge>
+                                    <Badge>
+                                        {typeof auth.user.roles?.[0] === 'string' 
+                                            ? auth.user.roles[0] 
+                                            : 'No role'}
+                                    </Badge>
                                 </div>
 
                                 {mustVerifyEmail && auth.user.email_verified_at === null && (

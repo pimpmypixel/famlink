@@ -124,8 +124,12 @@ export default function Dashboard({ stats, timelineCases, userRole, impersonatab
                                                         onClick={() => handleImpersonate(user.id)}
                                                         className="w-full text-left p-3 hover:bg-muted transition-colors border-b border-sidebar-border/50 last:border-b-0"
                                                     >
-                                                        <div className="font-medium">{user.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                                                        <div className="font-medium">
+                                                            {typeof user.name === 'string' ? user.name : 'Unknown User'}
+                                                        </div>
+                                                        <div className="text-sm text-muted-foreground">
+                                                            {typeof user.email === 'string' ? user.email : 'No email'}
+                                                        </div>
                                                         <div className="text-xs text-muted-foreground capitalize mt-1">
                                                             Rolle: {user.role === 'far' ? 'Far' : user.role === 'mor' ? 'Mor' : user.role}
                                                         </div>
@@ -256,9 +260,17 @@ export default function Dashboard({ stats, timelineCases, userRole, impersonatab
                                                                 {case_.content}
                                                             </div>
                                                         </td>
-                                                        <td className="py-3 px-4 text-sm">{case_.family_name}</td>
                                                         <td className="py-3 px-4 text-sm">
-                                                            <div>{case_.user_name}</div>
+                                                            {typeof case_.family_name === 'string' 
+                                                                ? case_.family_name 
+                                                                : 'Unknown Family'}
+                                                        </td>
+                                                        <td className="py-3 px-4 text-sm">
+                                                            <div>
+                                                                {typeof case_.user_name === 'string' 
+                                                                    ? case_.user_name 
+                                                                    : 'Unknown User'}
+                                                            </div>
                                                             <div className="text-xs text-muted-foreground capitalize">
                                                                 {case_.user_role === 'far' ? 'Far' : 
                                                                  case_.user_role === 'mor' ? 'Mor' : 
@@ -266,7 +278,11 @@ export default function Dashboard({ stats, timelineCases, userRole, impersonatab
                                                             </div>
                                                         </td>
                                                         <td className="py-3 px-4 text-sm capitalize">{case_.category}</td>
-                                                        <td className="py-3 px-4 text-sm">{case_.created_at}</td>
+                                                        <td className="py-3 px-4 text-sm">
+                                                            {typeof case_.created_at === 'string' 
+                                                                ? case_.created_at 
+                                                                : 'Unknown Date'}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>

@@ -2,8 +2,8 @@ import AppLayout from '@/layouts/app-layout';
 import { SharedData, type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { useState } from "react"
-import { Timeline as TimelineComponent } from "@/components/timeline"
-import { AddItemModal } from "@/components/add-item-modal"
+import { Timeline as TimelineComponent } from "@/components/timeline/timeline"
+import { AddItemModal } from "@/components/timeline/add-item-modal"
 import type { User, TimelineItem } from "@/lib/types"
 // import { Button } from "@/components/ui/button"
 // import { Plus } from "lucide-react"

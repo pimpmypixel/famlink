@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react"
-// import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-// import React, { Dispatch, SetStateAction } from "react";
 import type { TimelineItem, Attachment } from "@/lib/types"
 import { getAuthorColor, getCategoryColor, formatDate } from "@/lib/timeline-utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +8,7 @@ import { ChevronDown, ChevronUp, MessageCircle, Paperclip, Download, Trash2, Fil
 import { capitalise } from "@/lib/utils"
 import { FileUploadModal } from "@/components/file-upload-modal"
 import { router } from '@inertiajs/react'
+import { CommentsSheet } from "@/components/comments-sheet";
 
 interface TimelineItemProps {
   item: TimelineItem
@@ -21,7 +20,6 @@ interface TimelineItemProps {
   onAddComment?: (itemId: string) => void
   onAddFile?: (itemId: string) => void
 }
-import { CommentsSheet } from "@/components/comments-sheet";
 
 export function TimelineItemComponent({
   item,
@@ -120,7 +118,7 @@ export function TimelineItemComponent({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={categoryColorClass}>
-                {capitalise(item.category)}
+                {capitalise(typeof item.category === 'string' ? item.category : 'Uncategorized')}
               </Badge>
 
             </div>
@@ -141,17 +139,17 @@ export function TimelineItemComponent({
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="px-2 py-0.5 border border-current rounded-md mr-1 inline-block align-middle">
+            <span className={`px-2 py-0.5 border border-current rounded-md mr-1 inline-block align-middle bg-white dark:bg-black uppercase font-medium ${authorColorClass}`}>
               {item.user.role ?? 'N/A'}
             </span>
             - {formatDate(item.timestamp)}
           </p>
           <div className="flex flex-wrap gap-1">
-            {item.tags.map((tag, index) => (
+            {item.tags?.map((tag, index) => (
               <Badge key={index} variant="outline" className="text-[10px] text-neutral-700 dark:text-neutral-200">
-                {capitalise(tag)}
+                {capitalise(typeof tag === 'string' ? tag : 'Unknown')}
               </Badge>
-            ))}
+            )) ?? null}
           </div>
         </CardHeader>
 

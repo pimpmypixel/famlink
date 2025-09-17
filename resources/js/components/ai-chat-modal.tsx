@@ -14,21 +14,55 @@ interface AIChatModalProps {
 }
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: string; content: string; timestamp?: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load messages when modal opens
+  React.useEffect(() => {
+    if (open) {
+      loadMessages();
+    }
+  }, [open]);
 
   // Scroll to bottom when new message arrives
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function loadMessages() {
+    try {
+      const response = await fetch("/api/vizra/customer_support/messages", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages);
+        }
+      } else if (response.status === 401) {
+        setError("Authentication required to load chat history.");
+      } else {
+        console.warn("Failed to load chat messages:", response.status);
+      }
+    } catch (err) {
+      console.warn("Error loading chat messages:", err);
+    }
+  }
+
   async function streamResponse(userMessage: string) {
     setLoading(true);
     setError(null);
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    const userMessageWithTimestamp = { 
+      role: "user" as const, 
+      content: userMessage, 
+      timestamp: new Date().toISOString() 
+    };
+    setMessages((prev) => [...prev, userMessageWithTimestamp]);
     try {
       const response = await fetch("/api/vizra-adk/chat/completions", {
         method: "POST",
@@ -60,9 +94,17 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 setMessages((prev) => {
                   // If last message is AI, update it; else, add new
                   if (prev.length && prev[prev.length - 1].role === "assistant") {
-                    return [...prev.slice(0, -1), { role: "assistant", content: aiMessage }];
+                    return [...prev.slice(0, -1), { 
+                      role: "assistant", 
+                      content: aiMessage,
+                      timestamp: new Date().toISOString()
+                    }];
                   } else {
-                    return [...prev, { role: "assistant", content: aiMessage }];
+                    return [...prev, { 
+                      role: "assistant", 
+                      content: aiMessage,
+                      timestamp: new Date().toISOString()
+                    }];
                   }
                 });
               }
@@ -94,6 +136,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           <DialogDescription className="text-sm text-muted-foreground">
             Chat med mig om alt vedrørende din sag, familieret og tips fra den virkelige verden.
           </DialogDescription>
+          
         </DialogHeader>
         <div className="flex flex-col h-[70vh] w-full p-6">
           <div className="flex-1 overflow-y-auto mb-4 bg-muted/30 rounded-lg p-4 border">
@@ -111,6 +154,16 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 }`}>
                   <span className="whitespace-pre-wrap">{msg.content}</span>
                 </div>
+                {msg.timestamp && (
+                  <div className={`text-xs text-muted-foreground mt-1 ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                    {new Date(msg.timestamp).toLocaleString('da-DK', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      day: 'numeric',
+                      month: 'short'
+                    })}
+                  </div>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />

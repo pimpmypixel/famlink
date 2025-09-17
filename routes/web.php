@@ -31,6 +31,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // File upload routes
     Route::post('timeline/{timelineItemId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
     Route::delete('timeline/{timelineItemId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
+
+    // Vizra Agent API routes
+    Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');
 });
 
 require __DIR__.'/settings.php';

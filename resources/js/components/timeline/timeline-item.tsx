@@ -8,7 +8,9 @@ import { ChevronDown, ChevronUp, MessageCircle, Paperclip, Download, Trash2, Fil
 import { capitalise } from "@/lib/utils"
 import { FileUploadModal } from "@/components/file-upload-modal"
 import { router } from '@inertiajs/react'
-import { CommentsSheet } from "@/components/comments-sheet";
+import { CommentsSheet } from "@/components/comments-sheet"
+import { store as storeComment } from "@/routes/timeline/comments"
+import { Toast } from "@/components/ui/toast"
 
 interface TimelineItemProps {
   item: TimelineItem
@@ -56,6 +58,26 @@ export function TimelineItemComponent({
 
   const handleAddComment = () => {
     onAddComment?.(item.id)
+  }
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleAddCommentSubmit = (content: string, parentCommentId?: string) => {
+    router.post(storeComment.url(item.id), {
+      content,
+      parent_comment_id: parentCommentId,
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setToastMessage(parentCommentId ? 'Svaret blev tilføjet!' : 'Kommentaren blev tilføjet!');
+        // Refetch the timeline item to get latest comments
+        router.reload({ only: ['timelineItems'], preserveUrl: true });
+      },
+      onError: (errors) => {
+        setToastMessage('Der opstod en fejl ved tilføjelse af kommentar.');
+        console.error('Error adding comment:', errors)
+      }
+    })
   }
 
   const handleAddFile = () => {
@@ -202,7 +224,16 @@ export function TimelineItemComponent({
           </CardContent>
         )}
 
-        <CommentsSheet item={item} open={showComments} onOpenChange={setShowComments} comments={item.comments ?? []} />
+        <CommentsSheet 
+          item={item} 
+          open={showComments} 
+          onOpenChange={setShowComments} 
+          comments={item.comments ?? []} 
+          onAddComment={handleAddCommentSubmit}
+        />
+        {toastMessage && (
+          <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+        )}
 
 
         {/* Action buttons that appear on hover */}

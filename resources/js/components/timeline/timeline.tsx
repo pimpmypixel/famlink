@@ -34,6 +34,13 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
     return groupItemsByDate(filteredAndSortedItems)
   }, [filteredAndSortedItems, groupByDate])
 
+  // Calculate total files across all timeline items
+  const totalFiles = useMemo(() => {
+    return filteredAndSortedItems.reduce((total, item) => {
+      return total + (item.attachments?.length || 0)
+    }, 0)
+  }, [filteredAndSortedItems])
+
   const clearFilters = () => {
     setSearchTerm("")
     setSelectedAuthor("")
@@ -94,6 +101,7 @@ export function Timeline({ items = [], currentUser, onAddClick, onAddFile }: Tim
   <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
       <TimelineControls
         totalItems={filteredAndSortedItems.length}
+        totalFiles={totalFiles}
         expandedCount={expandedItems.size}
         onExpandAll={handleExpandAll}
         onCollapseAll={handleCollapseAll}

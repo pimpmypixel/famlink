@@ -7,6 +7,7 @@ import { Plus, Search } from "lucide-react"
 
 interface TimelineControlsProps {
   totalItems: number
+  totalFiles?: number
   expandedCount: number
   onExpandAll: () => void
   onCollapseAll: () => void
@@ -18,6 +19,7 @@ interface TimelineControlsProps {
 
 export function TimelineControls({
   totalItems,
+  totalFiles,
   expandedCount,
   onExpandAll,
   onCollapseAll,
@@ -46,6 +48,11 @@ export function TimelineControls({
             <span>
               {totalItems} sagsindlæg
             </span>
+            {totalFiles !== undefined && (
+              <span>
+                {totalFiles} filer
+              </span>
+            )}
             {/* <span>{expandedCount} expanded</span> */}
           </div>
 

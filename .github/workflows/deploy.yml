@@ -30,31 +30,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Get ECR Repository URI
-        id: ecr-uri
-        run: |
-          ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
-          if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
-            echo "Error: Could not find ECR repository URI in CDK outputs"
-            exit 1
-          fi
-          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
-          echo "Using ECR URI: $ECR_URI"
+      # - name: Get ECR Repository URI
+      #   id: ecr-uri
+      #   run: |
+      #     ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
+      #     if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
+      #       echo "Error: Could not find ECR repository URI in CDK outputs"
+      #       exit 1
+      #     fi
+      #     echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
+      #     echo "Using ECR URI: $ECR_URI"
 
       - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
           | docker login --username AWS \
-            --password-stdin ${{ steps.ecr-uri.outputs.ecr_uri }}
+            --password-stdin 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink
 
       - name: Build Docker Image
         run: docker build -t famlink .
 
       - name: Tag Docker Image
-        run: docker tag famlink:latest ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
+        run: docker tag famlink:latest 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest
 
       - name: Push Docker Image
-        run: docker push ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
+        run: docker push 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest
 
       - name: CDK Bootstrap
         run: cdk bootstrap || true

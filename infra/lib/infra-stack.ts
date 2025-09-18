@@ -100,6 +100,7 @@ export class FamlinkStack extends cdk.Stack {
       memoryLimitMiB: 1024,
       publicLoadBalancer: true,
       taskImageOptions: {
+        containerName: 'web',
         image: ecs.ContainerImage.fromRegistry('035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest'), // Laravel Dockerfile in root
         containerPort: 80,
         environment: {

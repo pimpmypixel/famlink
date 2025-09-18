@@ -43,7 +43,7 @@ jobs:
 
       # Deploy stack
       - name: Deploy CDK Stack
-        run: cdk deploy --require-approval never
+        run: cdk deploy --app "npx ts-node bin/laravel.ts" --require-approval never
       - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \

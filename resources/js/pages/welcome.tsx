@@ -1,17 +1,21 @@
+import { AIChatModal } from '@/components/ai-chat-modal';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Download, FileText, ShieldCheck, Lock, Sparkles } from "lucide-react";
+import { Suspense, useState } from 'react';
 
 export default function Welcome() {
     const { auth } = usePage<SharedData>().props;
+    const [aiModalOpen, setAIModalOpen] = useState(false);
 
     return (
         <>
             <Head title="Welcome">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+                <meta name="csrf-token" content={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
             </Head>
             <div className="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]">
                 <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
@@ -49,8 +53,9 @@ export default function Welcome() {
                                 Vores platform hjælper separerede forældre med at dokumentere deres forløb – sikkert, privat og understøttet af AI.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <button className="px-6 py-3 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-200">
-                                    Kom i gang gratis
+                                <button
+                                    onClick={() => setAIModalOpen(true)} className="px-6 py-3 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-200">
+                                    Start nu
                                 </button>
                                 <button className="px-6 py-3 rounded-lg border border-white text-white font-semibold hover:bg-slate-800">
                                     Læs mere
@@ -85,6 +90,11 @@ export default function Welcome() {
                     </section>
                 </div>
                 <div className="hidden h-14.5 lg:block"></div>
+                <Suspense fallback={null}>
+                    {aiModalOpen && (
+                        <AIChatModal open={aiModalOpen} onOpenChange={setAIModalOpen} />
+                    )}
+                </Suspense>
             </div>
         </>
     );

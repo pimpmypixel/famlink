@@ -15,7 +15,7 @@ interface TimelineCase {
         name: string;
         [key: string]: any;
     };
-    created_at: string;
+    updated_at: string;
     family_name: string;
     user_name: string;
     user_role: string;
@@ -158,7 +158,7 @@ export default function Dashboard({ stats, timelineCases, userRole }: DashboardP
                                                     <th className="text-left py-3 px-4 font-medium">Familie</th>
                                                     <th className="text-left py-3 px-4 font-medium">Bruger</th>
                                                     <th className="text-left py-3 px-4 font-medium">Kategori</th>
-                                                    <th className="text-left py-3 px-4 font-medium">Oprettet</th>
+                                                    <th className="text-left py-3 px-4 font-medium">Opdateret</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -198,7 +198,7 @@ export default function Dashboard({ stats, timelineCases, userRole }: DashboardP
                                                         </td> 
                                                         <td className="py-3 px-4 text-sm">
                                                             <div>
-                                                                {typeof case_.created_at === 'string' ? case_.created_at : 'Unknown Date'}
+                                                                {typeof case_.updated_at === 'string' ? case_.updated_at : 'Unknown Date'}
                                                             </div>
                                                         </td>
                                                     </tr>

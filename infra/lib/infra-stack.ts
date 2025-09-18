@@ -2,15 +2,14 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as rds from 'aws-cdk-lib/aws-rds';
-import { TaskDefinition } from 'aws-cdk-lib/aws-ecs';
-import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-
-import * as ecr from 'aws-cdk-lib/aws-ecr';
+// import * as ecs from 'aws-cdk-lib/aws-ecs';
+// import * as ec2 from 'aws-cdk-lib/aws-ec2';
+// import * as rds from 'aws-cdk-lib/aws-rds';
+// import { TaskDefinition } from 'aws-cdk-lib/aws-ecs';
+// import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
+// import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+// import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+// import * as ecr from 'aws-cdk-lib/aws-ecr';
 
 export class FamlinkStack extends cdk.Stack {
 
@@ -19,12 +18,12 @@ export class FamlinkStack extends cdk.Stack {
     super(scope, id, props);
 
     // VPC
-    const vpc = new ec2.Vpc(this, 'FamLinkVpc', { maxAzs: 2 });
+    // const vpc = new ec2.Vpc(this, 'FamLinkVpc', { maxAzs: 2 });
 
     // ECS Cluster
-    const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
+    // const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
 
-    const repository = ecr.Repository.fromRepositoryName(this, 'FamLinkRepository', 'famlink');
+    // const repository = ecr.Repository.fromRepositoryName(this, 'FamLinkRepository', 'famlink');
 
     // ECR Repository
     // const repository = new ecr.Repository(this, 'FamLinkRepository', {
@@ -38,7 +37,7 @@ export class FamlinkStack extends cdk.Stack {
     // });
 
     // Create a secret for DB credentials
-    const dbSecret = new Secret(this, 'DBCredentials', {
+    /* const dbSecret = new Secret(this, 'DBCredentials', {
       secretName: 'famlink-db-credentials',
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
@@ -50,10 +49,10 @@ export class FamlinkStack extends cdk.Stack {
         excludePunctuation: true,
         includeSpace: false,
       },
-    });
+    }); */
 
     // App Key Secret
-    const appKeySecret = new secretsmanager.Secret(this, 'AppKeySecret', {
+    /* const appKeySecret = new secretsmanager.Secret(this, 'AppKeySecret', {
       secretName: 'famlink/app-key',
       generateSecretString: {
         secretStringTemplate: JSON.stringify({}),
@@ -61,10 +60,10 @@ export class FamlinkStack extends cdk.Stack {
         excludePunctuation: true,
         includeSpace: false,
       },
-    });
+    }); */
 
     // RDS (PostgreSQL)
-    const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
+    /* const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
       engine: rds.DatabaseInstanceEngine.postgres({
         version: rds.PostgresEngineVersion.VER_15
       }),
@@ -75,7 +74,7 @@ export class FamlinkStack extends cdk.Stack {
       multiAz: false,
       publiclyAccessible: false,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    }); */
 
     const bucketName = `famlink-uploads-${this.stackName.toLowerCase()}`;
 
@@ -94,18 +93,22 @@ export class FamlinkStack extends cdk.Stack {
       ],
     });
 
-    /* const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
+
+    const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
       roleName: 'FamLinkAppRole',
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'), // or ecs-tasks.amazonaws.com, or lambda.amazonaws.com
     });
 
     famlinkS3Role.addToPolicy(new iam.PolicyStatement({
       actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-      resources: [`${uploadBucket.bucketArn}/*`],
-    })); */
+      resources: [`${bucket.bucketArn}/*`],
+    }));
+
+    /* 
+*/
 
     // Fargate Service with Load Balancer
-    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'FamlinkService', {
+    /* const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'FamlinkService', {
       cluster,
       cpu: 512,
       desiredCount: 1,
@@ -139,16 +142,16 @@ export class FamlinkStack extends cdk.Stack {
     fargateService.taskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
       actions: ['secretsmanager:GetSecretValue'],
       resources: [dbSecret.secretArn, appKeySecret.secretArn],
-    }));
+    })); */
 
 
     // Outputs
-
-    new cdk.CfnOutput(this, 'LoadBalancerURL', {
-      value: fargateService.loadBalancer.loadBalancerDnsName,
-    });
     new cdk.CfnOutput(this, 'UploadBucketName', {
       value: bucket.bucketName,
+    });
+
+    /* new cdk.CfnOutput(this, 'LoadBalancerURL', {
+      value: fargateService.loadBalancer.loadBalancerDnsName,
     });
     new cdk.CfnOutput(this, 'ECRRepositoryURI', {
       value: repository.repositoryUri,
@@ -158,6 +161,6 @@ export class FamlinkStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, 'AppKeySecretArn', {
       value: appKeySecret.secretArn,
-    });
+    }); */
   }
 }

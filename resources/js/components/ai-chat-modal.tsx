@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+// Onboarding chat modal for welcome page
 interface AIChatModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -15,143 +16,140 @@ interface AIChatModalProps {
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   const [messages, setMessages] = useState<{ role: string; content: string; timestamp?: string }[]>([]);
+  const [question, setQuestion] = useState<{ id: number; text: string } | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load messages when modal opens
   React.useEffect(() => {
     if (open) {
-      loadMessages();
+      startOnboarding();
+    } else {
+      setMessages([]);
+      setQuestion(null);
+      setInput("");
+      setCompleted(false);
     }
   }, [open]);
 
-  // Scroll to bottom when new message arrives
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function loadMessages() {
-    try {
-      const response = await fetch("/api/vizra/customer_support/messages", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.messages && data.messages.length > 0) {
-          setMessages(data.messages);
-        }
-      } else if (response.status === 401) {
-        setError("Authentication required to load chat history.");
-      } else {
-        console.warn("Failed to load chat messages:", response.status);
-      }
-    } catch (err) {
-      console.warn("Error loading chat messages:", err);
+  // Focus input field after each question or message update
+  React.useEffect(() => {
+    if (open && !completed && !loading && inputRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
-  }
+  }, [question, messages, loading, open, completed]);
 
-  async function streamResponse(userMessage: string) {
+  async function startOnboarding() {
     setLoading(true);
     setError(null);
-    const userMessageWithTimestamp = { 
-      role: "user" as const, 
-      content: userMessage, 
-      timestamp: new Date().toISOString() 
-    };
-    setMessages((prev) => [...prev, userMessageWithTimestamp]);
     try {
-      const response = await fetch("/api/vizra-adk/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "customer_support",
-          messages: [{ role: "user", content: userMessage }],
-          stream: true,
-          temperature: 0.8,
-        }),
-      });
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let aiMessage = "";
-      while (reader) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content;
-              if (content) {
-                aiMessage += content;
-                setMessages((prev) => {
-                  // If last message is AI, update it; else, add new
-                  if (prev.length && prev[prev.length - 1].role === "assistant") {
-                    return [...prev.slice(0, -1), { 
-                      role: "assistant", 
-                      content: aiMessage,
-                      timestamp: new Date().toISOString()
-                    }];
-                  } else {
-                    return [...prev, { 
-                      role: "assistant", 
-                      content: aiMessage,
-                      timestamp: new Date().toISOString()
-                    }];
-                  }
-                });
-              }
-            } catch (e) {
-              // Ignore parse errors
-            }
-          }
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch("/api/onboarding/question", {
+        method: "GET",
+        headers: {
+          "X-CSRF-TOKEN": csrfToken || ""
         }
+      });
+      const data = await res.json();
+      if (data.question) {
+        setQuestion(data.question);
+        setCompleted(false);
+        setInput(""); // Clear input for new question
+        // Use agent message if available, otherwise fallback to question text
+        const messageContent = data.agent_message || data.question.text;
+        setMessages([
+          { role: "agent", content: messageContent, timestamp: new Date().toISOString() }
+        ]);
+      } else {
+        setCompleted(true);
+        setMessages([
+          { role: "agent", content: data.message || "Tak for dine svar! Din profil er nu oprettet.", timestamp: new Date().toISOString() }
+        ]);
       }
     } catch (err) {
-      setError("Failed to stream response.");
+      setError("Kunne ikke hente onboarding spørgsmål.");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleSend(e: React.FormEvent) {
+  async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim()) return;
-    streamResponse(input.trim());
-    setInput("");
+    if (!input.trim() || !question) return;
+    setLoading(true);
+    setError(null);
+    // Show user answer
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: input.trim(), timestamp: new Date().toISOString() }
+    ]);
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch("/api/onboarding/answer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken || ""
+        },
+        body: JSON.stringify({ question_id: question.id, answer: input.trim() })
+      });
+      const data = await res.json();
+      if (data.next_question) {
+        setQuestion(data.next_question);
+        setInput(""); // Clear input for new question
+        // Use agent message if available, otherwise fallback to question text
+        const messageContent = data.agent_message || data.next_question.text;
+        setMessages((prev) => [
+          ...prev,
+          { role: "agent", content: messageContent, timestamp: new Date().toISOString() }
+        ]);
+      } else {
+        setCompleted(true);
+        setMessages((prev) => [
+          ...prev,
+          { role: "agent", content: data.message || "Tak for dine svar! Din profil er nu oprettet.", timestamp: new Date().toISOString() }
+        ]);
+      }
+      setInput("");
+    } catch (err) {
+      setError("Kunne ikke sende svar.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-full max-h-[90vh] p-0">
         <DialogHeader className="px-6 py-4 border-b bg-background">
-          <DialogTitle className="text-lg font-semibold">Sagsbehandler chat</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Onboarding chat</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Chat med mig om alt vedrørende din sag, familieret og tips fra den virkelige verden.
+            Besvar spørgsmålene for at oprette din profil og få personlig hjælp.
           </DialogDescription>
-          
         </DialogHeader>
         <div className="flex flex-col h-[70vh] w-full p-6">
           <div className="flex-1 overflow-y-auto mb-4 bg-muted/30 rounded-lg p-4 border">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
-                <p className="text-sm">Start en samtale med AI sagsbehandleren</p>
+                <p className="text-sm">Start onboarding chatten</p>
               </div>
             )}
             {messages.map((msg, idx) => (
               <div key={idx} className={`mb-4 ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                <div className={`inline-block max-w-[80%] px-4 py-2 rounded-lg text-sm ${
-                  msg.role === "user" 
-                    ? "bg-primary text-primary-foreground ml-auto" 
-                    : "bg-background border text-foreground"
-                }`}>
+                <div className={`inline-block max-w-[80%] px-4 py-2 rounded-lg text-sm ${msg.role === "user"
+                  ? "bg-primary text-primary-foreground ml-auto"
+                  : "bg-background border text-foreground"
+                  }`}>
                   <span className="whitespace-pre-wrap">{msg.content}</span>
                 </div>
                 {msg.timestamp && (
@@ -173,23 +171,26 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
               {error}
             </div>
           )}
-          <form onSubmit={handleSend} className="flex gap-3">
-            <input
-              className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Skriv noget..."
-              disabled={loading}
-              autoFocus
-            />
-            <Button 
-              type="submit" 
-              disabled={loading || !input.trim()}
-              className="px-6 py-3"
-            >
-              {loading ? "Tænker..." : "Send"}
-            </Button>
-          </form>
+          {!completed && (
+            <form onSubmit={handleSend} className="flex gap-3">
+              <input
+                ref={inputRef}
+                className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Skriv dit svar..."
+                disabled={loading}
+                autoFocus
+              />
+              <Button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="px-6 py-3"
+              >
+                {loading ? "Sender..." : "Send"}
+              </Button>
+            </form>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,11 +1,22 @@
 <?php
 
+use App\Http\Controllers\OnboardingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
+
+// Guest onboarding route
+Route::middleware('guest')->get('/onboarding', function () {
+    return Inertia::render('onboarding');
+})->name('onboarding');
+
+Route::prefix('api/onboarding')->group(function () {
+    Route::get('question', [OnboardingController::class, 'getQuestion']);
+    Route::post('answer', [OnboardingController::class, 'submitAnswer']);
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('userguide', [App\Http\Controllers\UserguideController::class, 'index'])->name('userguide');
@@ -35,7 +46,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('timeline/{timelineItemId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
 
     // Vizra Agent API routes
-    Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');
+    Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages'); // Onboarding API routes (session-based, public)
+
 });
 
 require __DIR__.'/settings.php';

@@ -1,0 +1,60 @@
+name: Deploy Famlink Stack
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install Node (needed for CDK CLI)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Install AWS CDK
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      # Configure AWS credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Bootstrap (only needed first time)
+      - name: CDK Bootstrap
+        run: cdk bootstrap
+        continue-on-error: true
+
+      # Deploy stack
+      - name: Deploy CDK Stack
+        run: cdk deploy --require-approval never
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS \
+            --password-stdin ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Build Docker Image
+        run: docker build -t famlink .
+
+      - name: Tag Docker Image
+        run: docker tag famlink:latest ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/famlink:latest
+
+      - name: Push Docker Image
+        run: docker push ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/famlink:latest

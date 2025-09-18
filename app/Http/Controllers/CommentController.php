@@ -35,7 +35,7 @@ class CommentController extends Controller
         $comment = Comment::create([
             'timeline_item_id' => $timelineItemId,
             'user_id' => $user->id,
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'parent_comment_id' => $request->parent_comment_id,
         ]);
 

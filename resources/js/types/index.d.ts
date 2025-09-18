@@ -28,6 +28,12 @@ export interface SharedData {
     auth: Auth;
     sidebarOpen: boolean;
     isImpersonating?: boolean;
+    impersonatableUsers?: Array<{
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+    }>;
     [key: string]: unknown;
 }
 

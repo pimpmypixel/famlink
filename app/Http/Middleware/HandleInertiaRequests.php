@@ -38,19 +38,42 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        $impersonatableUsers = null;
+
+        // Get impersonatable users for admin users
+        if ($user && ($user->hasRole('admin') || $user->hasRole('super-admin'))) {
+            $impersonatableUsers = \App\Models\User::where('id', '!=', $user->id)
+                ->whereDoesntHave('roles', function ($query) {
+                    $query->whereIn('name', ['admin', 'super-admin']);
+                })
+                ->select('id', 'name', 'email')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->getRoleNames()->first() ?? 'user',
+                    ];
+                })
+                ->toArray();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user() ? [
-                    ...$request->user()->toArray(),
-                    'roles' => $request->user()->getRoleNames(),
-                    'permissions' => $request->user()->getPermissionNames(),
+                'user' => $user ? [
+                    ...$user->toArray(),
+                    'roles' => $user->getRoleNames(),
+                    'permissions' => $user->getPermissionNames(),
                 ] : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'isImpersonating' => $request->user() && session()->has('impersonated_by'),
+            'isImpersonating' => $user && session()->has('impersonated_by'),
+            'impersonatableUsers' => $impersonatableUsers,
         ];
     }
 }

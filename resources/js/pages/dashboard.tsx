@@ -2,9 +2,9 @@ import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { Users, UserCheck, MessageSquare, Clock, FileText, UserX, ChevronDown } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Head } from '@inertiajs/react';
+import { Users, MessageSquare, Clock, FileText } from 'lucide-react';
+import { useState } from 'react';
 
 interface TimelineCase {
     id: string;
@@ -27,13 +27,6 @@ interface DashboardProps {
     } | null;
     timelineCases?: TimelineCase[] | null;
     userRole?: string | null;
-    impersonatableUsers?: Array<{
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    }> | null;
-    isImpersonating?: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,36 +36,14 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard({ stats, timelineCases, userRole, impersonatableUsers, isImpersonating }: DashboardProps) {
+export default function Dashboard({ stats, timelineCases, userRole }: DashboardProps) {
     const [currentPage, setCurrentPage] = useState(1);
-    const [showImpersonateDropdown, setShowImpersonateDropdown] = useState(false);
     const itemsPerPage = 10;
-    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const paginatedCases = timelineCases ? 
         timelineCases.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
     
     const totalPages = timelineCases ? Math.ceil(timelineCases.length / itemsPerPage) : 0;
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setShowImpersonateDropdown(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleImpersonate = (userId: string) => {
-        router.get(`/impersonate/take/${userId}`);
-        setShowImpersonateDropdown(false);
-    };
-
-    const handleLeaveImpersonation = () => {
-        router.get('/impersonate/leave');
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

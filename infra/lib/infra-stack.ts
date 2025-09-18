@@ -8,10 +8,10 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
-export class LaravelUploadStack extends cdk.Stack {
+export class FamlinkStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    
+
     super(scope, id, props);
 
     // VPC
@@ -22,13 +22,13 @@ export class LaravelUploadStack extends cdk.Stack {
 
     // DB Credentials
     const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
-      username: 'pastgres',
+      username: 'postgres',
     });
 
     // RDS (PostgreSQL)
     const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
-      engine: rds.DatabaseInstanceEngine.postgres({ 
-        version: rds.PostgresEngineVersion.VER_15 
+      engine: rds.DatabaseInstanceEngine.postgres({
+        version: rds.PostgresEngineVersion.VER_15
       }),
       vpc,
       credentials: rds.Credentials.fromSecret(dbSecret),
@@ -71,14 +71,14 @@ export class LaravelUploadStack extends cdk.Stack {
     })); */
 
     // Fargate Service with Load Balancer
-    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'LaravelService', {
+    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'FamlinkService', {
       cluster,
       cpu: 512,
       desiredCount: 1,
       memoryLimitMiB: 1024,
       publicLoadBalancer: true,
       taskImageOptions: {
-        image: ecs.ContainerImage.fromAsset('./'), // Laravel Dockerfile in root
+        image: ecs.ContainerImage.fromRegistry('035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest'), // Laravel Dockerfile in root
         containerPort: 80,
         environment: {
           APP_ENV: 'production',
@@ -86,8 +86,8 @@ export class LaravelUploadStack extends cdk.Stack {
           DB_CONNECTION: 'pgsql',
           DB_HOST: db.dbInstanceEndpointAddress,
           DB_PORT: '5432',
-          DB_DATABASE: 'laravel',
-          DB_USERNAME: 'laraveluser',
+          DB_DATABASE: 'famlink',
+          DB_USERNAME: 'famlinkuser',
           FILESYSTEM_DRIVER: 's3',
           AWS_BUCKET: uploadBucket.bucketName,
         },

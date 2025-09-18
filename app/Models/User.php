@@ -75,4 +75,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(TimelineItem::class);
     }
+
+    /**
+     * Check if the user can impersonate another user.
+     */
+    public function canImpersonate(): bool
+    {
+        return $this->hasRole(['admin', 'super-admin']);
+    }
+
+    /**
+     * Check if the user can be impersonated.
+     */
+    public function canBeImpersonated(): bool
+    {
+        return ! $this->hasRole(['admin', 'super-admin']);
+    }
 }

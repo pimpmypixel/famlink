@@ -11,11 +11,14 @@ import { UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge'
 
 export function NavUser() {
-    const { auth, isImpersonating, userRole, impersonatableUsers } = usePage<SharedData>().props;
+    const { auth, isImpersonating, impersonatableUsers } = usePage<SharedData>().props;
     const isMobile = useIsMobile();
     const { state } = useSidebar();
     const [showImpersonateModal, setShowImpersonateModal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
+
+    // Check if user is admin
+    const isAdmin = auth?.user?.roles?.includes('admin') || auth?.user?.roles?.includes('super-admin');
 
     // Impersonation actions
     const handleImpersonate = (userId: string) => {
@@ -53,7 +56,7 @@ export function NavUser() {
         <SidebarMenu>
             <SidebarMenuItem>
                 {/* Impersonation Button Above User Menu */}
-                {userRole === 'admin' && (
+                {isAdmin && (
                     <div className="mb-2">
                         {isImpersonating ? (
                             <button

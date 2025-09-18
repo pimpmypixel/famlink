@@ -39,20 +39,42 @@ export class FamlinkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    // Create the S3 bucket
-    const uploadBucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
-      bucketName: `${this.account}-famlink-uploads`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
-      autoDeleteObjects: true, // dev only
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      cors: [
-        {
-          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.DELETE],
-          allowedOrigins: ['*'], // restrict later in production
-          allowedHeaders: ['*'],
-        },
-      ],
+    const bucketName = `${this.account}-famlink-uploads`;
+    let bucket: s3.IBucket;
+
+
+    try {
+      // Try to import existing bucket
+      bucket = s3.Bucket.fromBucketName(this, 'FamLinkUploadBucket', bucketName);
+      new cdk.CfnOutput(this, 'UploadsBucketImported', {
+        value: bucket.bucketName,
+      });
+    } catch (e) {
+      // Create the S3 bucket
+      bucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
+        bucketName,
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
+        autoDeleteObjects: true, // dev only
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        cors: [
+          {
+            allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.DELETE],
+            allowedOrigins: ['*'], // restrict later in production
+            allowedHeaders: ['*'],
+          },
+        ],
+      });
+  }
+
+    // IAM policy for Laravel app (EC2, ECS task, or Lambda role)
+    const bucketPolicy = new iam.PolicyStatement({
+      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
+      resources: [`${bucket.bucketArn}/*`],
     });
+
+    /* const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
+    });
+  }
 
     // IAM policy for Laravel app (EC2, ECS task, or Lambda role)
     const bucketPolicy = new iam.PolicyStatement({
@@ -89,7 +111,7 @@ export class FamlinkStack extends cdk.Stack {
           DB_DATABASE: 'famlink',
           DB_USERNAME: 'famlinkuser',
           FILESYSTEM_DRIVER: 's3',
-          AWS_BUCKET: uploadBucket.bucketName,
+          AWS_BUCKET: bucket.bucketName,
         },
         secrets: {
           DB_PASSWORD: ecs.Secret.fromSecretsManager(dbSecret, 'password'),
@@ -98,7 +120,7 @@ export class FamlinkStack extends cdk.Stack {
     });
 
     // Permissions
-    uploadBucket.grantReadWrite(fargateService.taskDefinition.taskRole);
+    bucket.grantReadWrite(fargateService.taskDefinition.taskRole);
     db.connections.allowDefaultPortFrom(fargateService.service);
 
     new cdk.CfnOutput(this, 'LoadBalancerURL', {
@@ -106,7 +128,7 @@ export class FamlinkStack extends cdk.Stack {
     });
     // Output bucket name for Laravel .env config
     new cdk.CfnOutput(this, 'UploadBucketName', {
-      value: uploadBucket.bucketName,
+      value: bucket.bucketName,
     });
   }
 }

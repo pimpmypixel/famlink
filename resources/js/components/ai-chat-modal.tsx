@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
 
 // Onboarding chat modal for welcome page
 interface AIChatModalProps {
@@ -16,16 +17,30 @@ interface AIChatModalProps {
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   const [messages, setMessages] = useState<{ id: string; role: string; content: string; timestamp?: string; isTyping?: boolean }[]>([]);
-  const [question, setQuestion] = useState<{ id: number; text: string } | null>(null);
+  const [question, setQuestion] = useState<{ key: string; text: string } | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isResumed, setIsResumed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to restart onboarding
+  const handleRestart = () => {
+    clearOnboardingSession();
+    setMessages([]);
+    setQuestion(null);
+    setInput("");
+    setCompleted(false);
+    setSessionId(null);
+    setIsResumed(false);
+    setError(null);
+    startOnboarding();
+  };
 
   // Function to create streaming words effect
   const streamText = (fullText: string, messageIndex: number, speed: number = 50) => {
@@ -83,7 +98,19 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
   React.useEffect(() => {
     if (open) {
-      startOnboarding();
+      const existingSession = getOnboardingSession();
+      if (existingSession) {
+        setIsResumed(true);
+        setMessages([{
+          id: `msg-${Date.now()}`,
+          role: "agent",
+          content: `🔄 Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
+          timestamp: new Date().toISOString()
+        }]);
+        resumeOnboarding(existingSession.sessionId);
+      } else {
+        startOnboarding();
+      }
     } else {
       // Clean up any ongoing typing effects
       if (typingTimeoutRef.current) {
@@ -96,6 +123,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       setCompleted(false);
       setSessionId(null);
       setIsTyping(false);
+      setIsResumed(false);
     }
   }, [open]);
 
@@ -136,6 +164,12 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           setSessionId(data.session_id);
           setCompleted(false);
           setInput('');
+          // Set cookie with session data
+          setOnboardingSession(data.session_id, {
+            answered: 0,
+            total: 16, // This should come from the backend
+            currentQuestionKey: data.question?.key,
+          });
           // Start with empty message that will be filled by streaming
           setMessages([{
             id: `msg-${Date.now()}`,
@@ -187,6 +221,86 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     }
   }
 
+  async function resumeOnboarding(existingSessionId: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+      // Use EventSource for streaming with resumed session
+      const eventSource = new EventSource(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true&_token=${csrfToken}`);
+
+      let currentMessage = '';
+      let currentQuestion = null;
+      let currentSessionId = null;
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'start') {
+          currentQuestion = data.question;
+          currentSessionId = data.session_id;
+          setQuestion(data.question);
+          setSessionId(data.session_id);
+          setCompleted(false);
+          setInput('');
+          // Update cookie with current session data
+          updateSessionActivity(data.session_id, {
+            answered: data.answers ? Object.keys(data.answers).length : 0,
+            total: 16,
+            currentQuestionKey: data.question?.key,
+          });
+          // Start with empty message that will be filled by streaming
+          setMessages([{
+            id: `msg-${Date.now()}`,
+            role: "agent",
+            content: '',
+            timestamp: new Date().toISOString(),
+            isTyping: true
+          }]);
+        } else if (data.type === 'chunk') {
+          currentMessage += data.content;
+          // For streaming effect, we'll handle this differently
+          // Just accumulate the message for now
+        } else if (data.type === 'complete') {
+          // Start streaming the accumulated message
+          if (currentMessage.trim()) {
+            // The message was already added in the 'start' event, so stream into index 0
+            streamText(currentMessage.trim(), 0);
+          }
+          eventSource.close();
+          setLoading(false);
+        } else if (data.type === 'error') {
+          setError(data.message || 'Der opstod en fejl med streaming.');
+          // Don't stop the chat, just show error and continue
+          if (data.fallback) {
+            setMessages([{
+              id: `msg-${Date.now()}`,
+              role: "agent",
+              content: data.fallback,
+              timestamp: new Date().toISOString()
+            }]);
+          }
+          eventSource.close();
+          setLoading(false);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        // Don't show error to user, just try to continue
+        // The chat should still work even if streaming fails
+        setLoading(false);
+        // Close the connection but don't stop the flow
+        eventSource.close();
+      };
+
+    } catch (err) {
+      setError("Kunne ikke genoptage onboarding chatten.");
+      setLoading(false);
+    }
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim() || !question || !sessionId) return;
@@ -213,7 +327,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           'X-CSRF-TOKEN': csrfToken || '',
         },
         body: JSON.stringify({
-          question_id: question.id,
+          question_key: question.key,
           answer: input.trim(),
           session_id: sessionId,
         }),
@@ -227,11 +341,14 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       const updatedSessionId = result.session_id || sessionId;
       setSessionId(updatedSessionId);
 
+      // Update session activity in cookie
+      updateSessionActivity(updatedSessionId);
+
       // Then use EventSource to stream the next question
       const eventSource = new EventSource(`/api/onboarding/stream/${updatedSessionId}?_token=${csrfToken}`);
 
       let currentMessage = '';
-      let nextQuestion: { id: number; text: string } | null = null;
+      let nextQuestion: { key: string; text: string } | null = null;
 
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -323,13 +440,29 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-full max-h-[90vh] p-0">
         <DialogHeader className="px-6 py-4 border-b bg-background">
-          <DialogTitle className="text-lg font-semibold">Onboarding chat</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            {completed
-              ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
-              : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
-            }
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-lg font-semibold">Onboarding chat</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {completed
+                  ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
+                  : isResumed
+                  ? "🔄 Genoptaget session - fortsæt hvor du slap"
+                  : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
+                }
+              </DialogDescription>
+            </div>
+            {!completed && (
+              <Button
+                onClick={handleRestart}
+                variant="outline"
+                size="sm"
+                className="ml-4"
+              >
+                🔄 Genstart
+              </Button>
+            )}
+          </div>
         </DialogHeader>
         <div className="flex flex-col h-[70vh] w-full p-6">
           <div className="flex-1 overflow-y-auto mb-4 bg-muted/30 rounded-lg p-4 border">

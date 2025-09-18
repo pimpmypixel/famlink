@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Agents\OnboardingAgent;
 use App\Models\Profile;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Vizra\VizraADK\System\AgentContext;
 
 class OnboardingController extends Controller
@@ -15,10 +18,28 @@ class OnboardingController extends Controller
     public function getQuestion(Request $request)
     {
         $sessionId = $request->input('session_id') ?: uniqid('onboarding_', true);
+        $isResumed = $request->input('resumed', false);
 
-        // Find profile for this session
-        $profile = Profile::where('session_id', $sessionId)->first();
-        $answers = $profile ? $profile->answers : [];
+        // Find or create profile for this session
+        $profile = Profile::firstOrCreate(
+            ['session_id' => $sessionId],
+            ['answers' => []]
+        );
+
+        // Create temporary user if profile doesn't have one
+        if (! $profile->user_id) {
+            $user = User::create([
+                'id' => (string) Str::uuid(),
+                'name' => 'Temporary User',
+                'email' => 'temp-'.$sessionId.'@famlink.temp',
+                'password' => Hash::make(Str::random(16)),
+            ]);
+            $user->assignRole('temporary');
+            $profile->user_id = $user->id;
+            $profile->save();
+        }
+
+        $answers = $profile->answers;
 
         // Load questions from playbook
         $questions = $this->loadQuestions();
@@ -27,7 +48,7 @@ class OnboardingController extends Controller
         // Find next unanswered question
         $nextQuestion = null;
         foreach ($questionList as $q) {
-            if (! isset($answers[$q['id']])) {
+            if (! isset($answers[$q['key']])) {
                 $nextQuestion = $q;
                 break;
             }
@@ -45,7 +66,7 @@ class OnboardingController extends Controller
         }
 
         // Use the agent to generate a personalized response with streaming
-        return $this->streamAgentResponse($sessionId, $nextQuestion, $answers, $questionList);
+        return $this->streamAgentResponse($sessionId, $nextQuestion, $answers, $questionList, $isResumed);
     }
 
     /**
@@ -54,11 +75,11 @@ class OnboardingController extends Controller
     public function submitAnswer(Request $request)
     {
         $sessionId = $request->input('session_id') ?: uniqid('onboarding_', true);
-        $questionId = $request->input('question_id');
+        $questionKey = $request->input('question_key');
         $answer = $request->input('answer');
 
-        if (! $questionId || $answer === null) {
-            return response()->json(['error' => 'Missing question_id or answer'], 422);
+        if (! $questionKey || $answer === null) {
+            return response()->json(['error' => 'Missing question_key or answer'], 422);
         }
 
         // Find or create profile for this session
@@ -67,10 +88,35 @@ class OnboardingController extends Controller
             ['answers' => []]
         );
 
+        // Create temporary user if this is the first time and profile doesn't have a user
+        if (! $profile->user_id) {
+            $user = User::create([
+                'id' => (string) Str::uuid(),
+                'name' => 'Temporary User', // Will be updated with real name
+                'email' => 'temp-'.$sessionId.'@famlink.temp', // Will be updated with real email
+                'password' => Hash::make(Str::random(16)),
+            ]);
+            $user->assignRole('temporary');
+            $profile->user_id = $user->id;
+            $profile->save();
+        }
+
         $answers = $profile->answers;
-        $answers[$questionId] = $answer;
+        $answers[$questionKey] = $answer;
         $profile->answers = $answers;
         $profile->save();
+
+        // Update user information based on the question answered
+        $user = $profile->user;
+        if ($user) {
+            if ($questionKey === 'name') { // Name question
+                $user->name = $answer;
+                $user->save();
+            } elseif ($questionKey === 'email') { // Email question
+                $user->email = $answer;
+                $user->save();
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -84,16 +130,33 @@ class OnboardingController extends Controller
      */
     public function streamAnswer(Request $request, string $sessionId)
     {
-        // Find profile for this session
-        $profile = Profile::where('session_id', $sessionId)->first();
-        $answers = $profile ? $profile->answers : [];
+        // Find or create profile for this session
+        $profile = Profile::firstOrCreate(
+            ['session_id' => $sessionId],
+            ['answers' => []]
+        );
+
+        // Create temporary user if profile doesn't have one
+        if (! $profile->user_id) {
+            $user = User::create([
+                'id' => (string) Str::uuid(),
+                'name' => 'Temporary User',
+                'email' => 'temp-'.$sessionId.'@famlink.temp',
+                'password' => Hash::make(Str::random(16)),
+            ]);
+            $user->assignRole('temporary');
+            $profile->user_id = $user->id;
+            $profile->save();
+        }
+
+        $answers = $profile->answers;
 
         // Load questions to find next one
         $questions = $this->loadQuestions();
         $questionList = $questions['questions'] ?? [];
         $nextQuestion = null;
         foreach ($questionList as $q) {
-            if (! isset($answers[$q['id']])) {
+            if (! isset($answers[$q['key']])) {
                 $nextQuestion = $q;
                 break;
             }
@@ -116,9 +179,9 @@ class OnboardingController extends Controller
     /**
      * Stream agent response for onboarding question
      */
-    protected function streamAgentResponse(string $sessionId, array $question, array $answers, array $allQuestions)
+    protected function streamAgentResponse(string $sessionId, array $question, array $answers, array $allQuestions, bool $isResumed = false)
     {
-        return response()->stream(function () use ($sessionId, $question, $answers, $allQuestions) {
+        return response()->stream(function () use ($sessionId, $question, $answers, $allQuestions, $isResumed) {
             try {
                 $agent = new OnboardingAgent;
 
@@ -126,10 +189,11 @@ class OnboardingController extends Controller
                 $context = new AgentContext($sessionId);
                 $context->setState('current_question', $question);
                 $context->setState('answers', $answers);
+                $context->setState('is_resumed', $isResumed);
                 $context->setState('progress', [
                     'answered' => count($answers),
                     'total' => count($allQuestions),
-                    'current' => $question['id'],
+                    'current' => $question['key'],
                 ]);
 
                 // Build conversation history
@@ -138,7 +202,7 @@ class OnboardingController extends Controller
                 // Add system context
                 $messages[] = [
                     'role' => 'system',
-                    'content' => "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['id']} ud af ".count($allQuestions).'. Stil spørgsmålet på en empatisk måde.',
+                    'content' => "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'. Stil spørgsmålet på en empatisk måde.',
                 ];
 
                 // Add previous answers as context
@@ -149,14 +213,22 @@ class OnboardingController extends Controller
                     ];
                 }
 
+                // Add resumption context if this is a resumed session
+                if ($isResumed) {
+                    $messages[] = [
+                        'role' => 'system',
+                        'content' => 'Dette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap.',
+                    ];
+                }
+
                 // Add the current question
                 $messages[] = [
                     'role' => 'user',
-                    'content' => "Stil spørgsmål {$question['id']}: {$question['text']}",
+                    'content' => "Stil spørgsmål {$question['key']}: {$question['text']}",
                 ];
 
                 // Get agent response - handle both streaming and non-streaming
-                $prompt = "Du er Famlinks onboarding-assistent. Stil spørgsmål {$question['id']} på en empatisk og støttende måde: {$question['text']}";
+                $prompt = "Du er Famlinks onboarding-assistent. Stil spørgsmål {$question['key']} på en empatisk og støttende måde: {$question['text']}";
                 $response = $agent->execute($prompt, $context);
 
                 // Send initial data
@@ -166,6 +238,7 @@ class OnboardingController extends Controller
                     'answers' => $answers,
                     'session_id' => $sessionId,
                     'completed' => false,
+                    'is_resumed' => $isResumed,
                 ])."\n\n";
                 ob_flush();
                 flush();
@@ -193,6 +266,7 @@ class OnboardingController extends Controller
                         'question' => $question,
                         'answers' => $answers,
                         'session_id' => $sessionId,
+                        'is_resumed' => $isResumed,
                     ])."\n\n";
                     ob_flush();
                     flush();
@@ -215,6 +289,7 @@ class OnboardingController extends Controller
                         'question' => $question,
                         'answers' => $answers,
                         'session_id' => $sessionId,
+                        'is_resumed' => $isResumed,
                     ])."\n\n";
                     ob_flush();
                     flush();
@@ -224,7 +299,7 @@ class OnboardingController extends Controller
                 \Log::error('OnboardingAgent streaming error', [
                     'error' => $e->getMessage(),
                     'session_id' => $sessionId,
-                    'question_id' => $question['id'],
+                    'question_key' => $question['key'],
                 ]);
 
                 // Send error and fallback
@@ -235,6 +310,7 @@ class OnboardingController extends Controller
                     'question' => $question,
                     'answers' => $answers,
                     'session_id' => $sessionId,
+                    'is_resumed' => $isResumed,
                 ])."\n\n";
                 ob_flush();
                 flush();
@@ -262,5 +338,29 @@ class OnboardingController extends Controller
         }
 
         return $questions;
+    }
+
+    /**
+     * Approve a user (change role from temporary to approved)
+     */
+    public function approveUser(Request $request, string $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->hasRole('temporary')) {
+            $user->removeRole('temporary');
+            $user->assignRole('approved');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User approved successfully',
+                'user' => $user,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'User is not in temporary status',
+        ], 400);
     }
 }

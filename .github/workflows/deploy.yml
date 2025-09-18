@@ -56,17 +56,17 @@ jobs:
       - name: Push Docker Image
         run: docker push 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest
 
-      - name: CDK Bootstrap
-        run: cdk bootstrap || true
-        working-directory: infra
+      # - name: CDK Bootstrap
+      #   run: cdk bootstrap || true
+      #   working-directory: infra
 
-      - name: CDK Ack
-        run: cdk acknowledge 34892; cdk acknowledge 34635
-        working-directory: infra
+      # - name: CDK Ack
+      #   run: cdk acknowledge 34892; cdk acknowledge 34635
+      #   working-directory: infra
 
-      - name: Deploy CDK Stack
-        run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
-        working-directory: infra
+      # - name: Deploy CDK Stack
+      #   run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
+      #   working-directory: infra
 
       # Run migrations
       - name: Run Laravel Migrations

@@ -23,13 +23,20 @@ class CheckImpersonationPermission
             abort(403, 'Unauthorized');
         }
 
+        $routeName = $request->route() ? $request->route()->getName() : null;
+
+        // Allow leaving/stop impersonation without requiring canImpersonate
+        if (in_array($routeName, ['impersonate.leave', 'impersonate.stop'])) {
+            return $next($request);
+        }
+
         // Check if current user can impersonate
         if (! $user->canImpersonate()) {
             abort(403, 'You do not have permission to impersonate users');
         }
 
         // For impersonation take route, check if target user can be impersonated
-        if ($request->route() && $request->route()->getName() === 'impersonate.take') {
+        if ($routeName === 'impersonate.take') {
             $targetUserId = $request->route('id');
             $targetUser = User::find($targetUserId);
 

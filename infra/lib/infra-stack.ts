@@ -5,8 +5,11 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
+import { TaskDefinition } from 'aws-cdk-lib/aws-ecs';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 
 export class FamlinkStack extends cdk.Stack {
@@ -21,15 +24,32 @@ export class FamlinkStack extends cdk.Stack {
     // ECS Cluster
     const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
 
-    // ECR Repository
-    const repository = new ecr.Repository(this, 'FamLinkRepository', {
-      repositoryName: 'famlink',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    const repository = ecr.Repository.fromRepositoryName(this, 'FamLinkRepository', 'famlink');
 
-    // DB Credentials
-    const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
-      username: 'famlinkuser',
+    // ECR Repository
+    // const repository = new ecr.Repository(this, 'FamLinkRepository', {
+    //   repositoryName: 'famlink',
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    // });
+
+    // // DB Credentials
+    // const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
+    //   username: 'famlinkuser',
+    // });
+
+    // Create a secret for DB credentials
+    const dbSecret = new Secret(this, 'DBCredentials', {
+      secretName: 'famlink-db-credentials',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({
+          username: 'famlinkuser',
+          host: 'famlink-db-host',
+          port: '3306',
+        }),
+        generateStringKey: 'password',
+        excludePunctuation: true,
+        includeSpace: false,
+      },
     });
 
     // App Key Secret
@@ -98,14 +118,13 @@ export class FamlinkStack extends cdk.Stack {
         environment: {
           APP_ENV: 'production',
           DB_CONNECTION: 'pgsql',
-          DB_HOST: db.dbInstanceEndpointAddress,
-          DB_PORT: '5432',
-          DB_DATABASE: 'famlink',
-          DB_USERNAME: 'famlinkuser',
           FILESYSTEM_DRIVER: 's3',
           AWS_BUCKET: bucket.bucketName,
         },
         secrets: {
+          DB_HOST: ecs.Secret.fromSecretsManager(dbSecret, 'host'),
+          DB_PORT: ecs.Secret.fromSecretsManager(dbSecret, 'port'),
+          DB_USERNAME: ecs.Secret.fromSecretsManager(dbSecret, 'username'),
           DB_PASSWORD: ecs.Secret.fromSecretsManager(dbSecret, 'password'),
           APP_KEY: ecs.Secret.fromSecretsManager(appKeySecret, 'APP_KEY'),
         }
@@ -116,16 +135,29 @@ export class FamlinkStack extends cdk.Stack {
     bucket.grantReadWrite(fargateService.taskDefinition.taskRole);
     db.connections.allowDefaultPortFrom(fargateService.service);
 
+    // Grant ECS task permission to read all relevant secrets
+    fargateService.taskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [dbSecret.secretArn, appKeySecret.secretArn],
+    }));
+
+
+    // Outputs
+
     new cdk.CfnOutput(this, 'LoadBalancerURL', {
       value: fargateService.loadBalancer.loadBalancerDnsName,
     });
-    // Output bucket name for Laravel .env config
     new cdk.CfnOutput(this, 'UploadBucketName', {
       value: bucket.bucketName,
     });
-    // Output ECR repository URI for GitHub Actions
     new cdk.CfnOutput(this, 'ECRRepositoryURI', {
       value: repository.repositoryUri,
+    });
+    new cdk.CfnOutput(this, 'DBSecretArn', {
+      value: dbSecret.secretArn,
+    });
+    new cdk.CfnOutput(this, 'AppKeySecretArn', {
+      value: appKeySecret.secretArn,
     });
   }
 }

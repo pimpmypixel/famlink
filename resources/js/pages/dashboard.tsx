@@ -10,7 +10,11 @@ interface TimelineCase {
     id: string;
     title: string;
     content: string;
-    category: string;
+    category: {
+        id: string;
+        name: string;
+        [key: string]: any;
+    };
     created_at: string;
     family_name: string;
     user_name: string;
@@ -158,36 +162,44 @@ export default function Dashboard({ stats, timelineCases, userRole }: DashboardP
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {paginatedCases.map((case_) => (
+                                                {paginatedCases.map((case_: TimelineCase) => (
                                                     <tr key={case_.id} className="border-b hover:bg-muted/50">
                                                         <td className="py-3 px-4">
-                                                            <div className="font-medium">{case_.title}</div>
-                                                            <div className="text-sm text-muted-foreground line-clamp-2">
-                                                                {case_.content}
+                                                            <div>
+                                                                <div className="font-medium">{case_.title}</div>
+                                                                <div className="text-sm text-muted-foreground line-clamp-2">{case_.content}</div>
                                                             </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-sm">
-                                                            {typeof case_.family_name === 'string' 
-                                                                ? case_.family_name 
-                                                                : 'Unknown Family'}
                                                         </td>
                                                         <td className="py-3 px-4 text-sm">
                                                             <div>
-                                                                {typeof case_.user_name === 'string' 
-                                                                    ? case_.user_name 
-                                                                    : 'Unknown User'}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground capitalize">
-                                                                {case_.user_role === 'far' ? 'Far' : 
-                                                                 case_.user_role === 'mor' ? 'Mor' : 
-                                                                 case_.user_role}
+                                                                {typeof case_.family_name === 'string'
+                                                                    ? case_.family_name
+                                                                    : (case_.family_name && typeof case_.family_name === 'object' && 'name' in case_.family_name)
+                                                                        ? (case_.family_name as { name: string }).name
+                                                                        : 'Unknown Family'}
                                                             </div>
                                                         </td>
-                                                        <td className="py-3 px-4 text-sm capitalize">{case_.category}</td>
                                                         <td className="py-3 px-4 text-sm">
-                                                            {typeof case_.created_at === 'string' 
-                                                                ? case_.created_at 
-                                                                : 'Unknown Date'}
+                                                            <div>
+                                                                {typeof case_.user_name === 'string'
+                                                                    ? case_.user_name
+                                                                    : (case_.user_name && typeof case_.user_name === 'object' && 'name' in case_.user_name)
+                                                                        ? (case_.user_name as { name: string }).name
+                                                                        : 'Unknown User'}
+                                                                <div className="text-xs text-muted-foreground capitalize">
+                                                                    {case_.user_role === 'far' ? 'Far' :
+                                                                     case_.user_role === 'mor' ? 'Mor' :
+                                                                     case_.user_role}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-sm capitalize">
+                                                            <div>{case_.category.name}</div>
+                                                        </td> 
+                                                        <td className="py-3 px-4 text-sm">
+                                                            <div>
+                                                                {typeof case_.created_at === 'string' ? case_.created_at : 'Unknown Date'}
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}

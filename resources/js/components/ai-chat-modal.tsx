@@ -15,23 +15,87 @@ interface AIChatModalProps {
 }
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
-  const [messages, setMessages] = useState<{ role: string; content: string; timestamp?: string }[]>([]);
+  const [messages, setMessages] = useState<{ id: string; role: string; content: string; timestamp?: string; isTyping?: boolean }[]>([]);
   const [question, setQuestion] = useState<{ id: number; text: string } | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to create streaming words effect
+  const streamText = (fullText: string, messageIndex: number, speed: number = 50) => {
+    setIsTyping(true);
+    let currentText = '';
+    const words = fullText.split(' ');
+    let wordIndex = 0;
+
+    const typeNextWord = () => {
+      if (wordIndex < words.length) {
+        currentText += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
+        wordIndex++;
+
+        setMessages(prev => {
+          const newMessages = [...prev];
+          if (newMessages[messageIndex]) {
+            newMessages[messageIndex] = {
+              ...newMessages[messageIndex],
+              content: currentText,
+              isTyping: true
+            };
+          }
+          return newMessages;
+        });
+
+        typingTimeoutRef.current = setTimeout(typeNextWord, speed);
+      } else {
+        // Finished typing
+        setMessages(prev => {
+          const newMessages = [...prev];
+          if (newMessages[messageIndex]) {
+            newMessages[messageIndex] = {
+              ...newMessages[messageIndex],
+              content: fullText,
+              isTyping: false
+            };
+          }
+          return newMessages;
+        });
+        setIsTyping(false);
+      }
+    };
+
+    typeNextWord();
+  };
+
+  // Cleanup typing timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     if (open) {
       startOnboarding();
     } else {
+      // Clean up any ongoing typing effects
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
       setMessages([]);
       setQuestion(null);
       setInput("");
       setCompleted(false);
+      setSessionId(null);
+      setIsTyping(false);
     }
   }, [open]);
 
@@ -41,89 +105,216 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
   // Focus input field after each question or message update
   React.useEffect(() => {
-    if (open && !completed && !loading && inputRef.current) {
+    if (open && !completed && !loading && !isTyping && inputRef.current) {
       // Small delay to ensure DOM has updated
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [question, messages, loading, open, completed]);
+  }, [question, messages, loading, open, completed, isTyping]);
 
   async function startOnboarding() {
     setLoading(true);
     setError(null);
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      const res = await fetch("/api/onboarding/question", {
-        method: "GET",
-        headers: {
-          "X-CSRF-TOKEN": csrfToken || ""
+
+      // Use EventSource for streaming
+      const eventSource = new EventSource(`/api/onboarding/question?_token=${csrfToken}`);
+
+      let currentMessage = '';
+      let currentQuestion = null;
+      let currentSessionId = null;
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'start') {
+          currentQuestion = data.question;
+          currentSessionId = data.session_id;
+          setQuestion(data.question);
+          setSessionId(data.session_id);
+          setCompleted(false);
+          setInput('');
+          // Start with empty message that will be filled by streaming
+          setMessages([{
+            id: `msg-${Date.now()}`,
+            role: "agent",
+            content: '',
+            timestamp: new Date().toISOString(),
+            isTyping: true
+          }]);
+        } else if (data.type === 'chunk') {
+          currentMessage += data.content;
+          // For streaming effect, we'll handle this differently
+          // Just accumulate the message for now
+        } else if (data.type === 'complete') {
+          // Start streaming the accumulated message
+          if (currentMessage.trim()) {
+            // The message was already added in the 'start' event, so stream into index 0
+            streamText(currentMessage.trim(), 0);
+          }
+          eventSource.close();
+          setLoading(false);
+        } else if (data.type === 'error') {
+          setError(data.message || 'Der opstod en fejl med streaming.');
+          // Don't stop the chat, just show error and continue
+          if (data.fallback) {
+            setMessages([{
+              id: `msg-${Date.now()}`,
+              role: "agent",
+              content: data.fallback,
+              timestamp: new Date().toISOString()
+            }]);
+          }
+          eventSource.close();
+          setLoading(false);
         }
-      });
-      const data = await res.json();
-      if (data.question) {
-        setQuestion(data.question);
-        setCompleted(false);
-        setInput(""); // Clear input for new question
-        // Use agent message if available, otherwise fallback to question text
-        const messageContent = data.agent_message || data.question.text;
-        setMessages([
-          { role: "agent", content: messageContent, timestamp: new Date().toISOString() }
-        ]);
-      } else {
-        setCompleted(true);
-        setMessages([
-          { role: "agent", content: data.message || "Tak for dine svar! Din profil er nu oprettet.", timestamp: new Date().toISOString() }
-        ]);
-      }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        // Don't show error to user, just try to continue
+        // The chat should still work even if streaming fails
+        setLoading(false);
+        // Close the connection but don't stop the flow
+        eventSource.close();
+      };
+
     } catch (err) {
-      setError("Kunne ikke hente onboarding spørgsmål.");
-    } finally {
+      setError("Kunne ikke starte onboarding chatten.");
       setLoading(false);
     }
   }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || !question) return;
+    if (!input.trim() || !question || !sessionId) return;
     setLoading(true);
     setError(null);
+
+    // Store the current message count before adding user message
+    const currentMessageCount = messages.length;
+
     // Show user answer
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: input.trim(), timestamp: new Date().toISOString() }
+      { id: `msg-${Date.now()}`, role: "user", content: input.trim(), timestamp: new Date().toISOString() }
     ]);
+
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      const res = await fetch("/api/onboarding/answer", {
-        method: "POST",
+
+      // First, submit the answer via POST
+      const response = await fetch('/api/onboarding/answer', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken || ""
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || '',
         },
-        body: JSON.stringify({ question_id: question.id, answer: input.trim() })
+        body: JSON.stringify({
+          question_id: question.id,
+          answer: input.trim(),
+          session_id: sessionId,
+        }),
       });
-      const data = await res.json();
-      if (data.next_question) {
-        setQuestion(data.next_question);
-        setInput(""); // Clear input for new question
-        // Use agent message if available, otherwise fallback to question text
-        const messageContent = data.agent_message || data.next_question.text;
-        setMessages((prev) => [
-          ...prev,
-          { role: "agent", content: messageContent, timestamp: new Date().toISOString() }
-        ]);
-      } else {
-        setCompleted(true);
-        setMessages((prev) => [
-          ...prev,
-          { role: "agent", content: data.message || "Tak for dine svar! Din profil er nu oprettet.", timestamp: new Date().toISOString() }
-        ]);
+
+      if (!response.ok) {
+        throw new Error('Failed to submit answer');
       }
-      setInput("");
+
+      const result = await response.json();
+      const updatedSessionId = result.session_id || sessionId;
+      setSessionId(updatedSessionId);
+
+      // Then use EventSource to stream the next question
+      const eventSource = new EventSource(`/api/onboarding/stream/${updatedSessionId}?_token=${csrfToken}`);
+
+      let currentMessage = '';
+      let nextQuestion: { id: number; text: string } | null = null;
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'start') {
+          nextQuestion = data.question;
+          setInput(''); // Clear input immediately
+        } else if (data.type === 'chunk') {
+          currentMessage += data.content;
+          // For streaming effect, accumulate but don't update UI yet
+        } else if (data.type === 'complete') {
+          // Check if onboarding is completed
+          if (data.completed === true) {
+            setCompleted(true);
+            // Add completion message with streaming effect
+            const completionMessage = data.message || "Tak for dine svar! Du er nu klar til at bruge Famlink. Velkommen! 🎉";
+            setMessages(prev => {
+              const newMessages = [...prev, {
+                id: `msg-${Date.now()}`,
+                role: "agent",
+                content: '',
+                timestamp: new Date().toISOString(),
+                isTyping: true
+              }];
+              // Start streaming into the newly added message
+              setTimeout(() => streamText(completionMessage, newMessages.length - 1), 0);
+              return newMessages;
+            });
+            eventSource.close();
+            setLoading(false);
+            return;
+          }
+
+          // Update with final content and set the next question
+          if (nextQuestion) {
+            setQuestion(nextQuestion);
+          }
+
+          // Start streaming the accumulated message
+          if (currentMessage.trim()) {
+            setMessages(prev => {
+              const newMessages = [...prev, {
+                id: `msg-${Date.now()}`,
+                role: "agent",
+                content: '',
+                timestamp: new Date().toISOString(),
+                isTyping: true
+              }];
+              const newMessageIndex = newMessages.length - 1;
+              // Start streaming into the newly added message
+              setTimeout(() => streamText(currentMessage.trim(), newMessageIndex), 0);
+              return newMessages;
+            });
+          }
+
+          eventSource.close();
+          setLoading(false);
+        } else if (data.type === 'error') {
+          setError(data.message || 'Der opstod en fejl med streaming.');
+          // Don't stop the chat, just show error and continue
+          if (data.fallback) {
+            setMessages(prev => [...prev, {
+              id: `msg-${Date.now()}`,
+              role: "agent",
+              content: data.fallback,
+              timestamp: new Date().toISOString()
+            }]);
+          }
+          eventSource.close();
+          setLoading(false);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource error:', error);
+        // Don't show error to user for EventSource errors, just continue
+        // The chat should still work even if streaming fails
+        setLoading(false);
+        eventSource.close();
+      };
+
     } catch (err) {
       setError("Kunne ikke sende svar.");
-    } finally {
       setLoading(false);
     }
   }
@@ -134,7 +325,10 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         <DialogHeader className="px-6 py-4 border-b bg-background">
           <DialogTitle className="text-lg font-semibold">Onboarding chat</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Besvar spørgsmålene for at oprette din profil og få personlig hjælp.
+            {completed
+              ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
+              : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
+            }
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col h-[70vh] w-full p-6">
@@ -151,6 +345,9 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   : "bg-background border text-foreground"
                   }`}>
                   <span className="whitespace-pre-wrap">{msg.content}</span>
+                  {msg.isTyping && (
+                    <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse"></span>
+                  )}
                 </div>
                 {msg.timestamp && (
                   <div className={`text-xs text-muted-foreground mt-1 ${msg.role === "user" ? "text-right" : "text-left"}`}>
@@ -179,17 +376,38 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Skriv dit svar..."
-                disabled={loading}
+                disabled={loading || isTyping}
                 autoFocus
               />
               <Button
                 type="submit"
-                disabled={loading || !input.trim()}
+                disabled={loading || !input.trim() || isTyping}
                 className="px-6 py-3"
               >
-                {loading ? "Sender..." : "Send"}
+                {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
               </Button>
             </form>
+          )}
+          {completed && (
+            <div className="text-center py-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-center gap-2 text-green-700">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Onboarding fuldført!</span>
+                </div>
+                <p className="text-sm text-green-600 mt-2">
+                  Tak for dine svar! Du kan nu begynde at bruge Famlink.
+                </p>
+              </div>
+              <Button
+                onClick={() => onOpenChange(false)}
+                className="px-6 py-2"
+              >
+                Luk chat
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>

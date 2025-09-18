@@ -10,11 +10,11 @@ use Vizra\VizraADK\System\AgentContext;
 class OnboardingController extends Controller
 {
     /**
-     * Get the next onboarding question for the session.
+     * Get the next onboarding question for the session with streaming.
      */
     public function getQuestion(Request $request)
     {
-        $sessionId = $request->session()->getId();
+        $sessionId = $request->input('session_id') ?: uniqid('onboarding_', true);
 
         // Find profile for this session
         $profile = Profile::where('session_id', $sessionId)->first();
@@ -44,24 +44,16 @@ class OnboardingController extends Controller
             ]);
         }
 
-        // Use the agent to generate a personalized response
-        $agentResponse = $this->getAgentResponse($sessionId, $nextQuestion, $answers, $questionList);
-
-        return response()->json([
-            'question' => $nextQuestion,
-            'agent_message' => $agentResponse,
-            'answers' => $answers,
-            'session_id' => $sessionId,
-            'completed' => false,
-        ]);
+        // Use the agent to generate a personalized response with streaming
+        return $this->streamAgentResponse($sessionId, $nextQuestion, $answers, $questionList);
     }
 
     /**
-     * Submit an answer for the current question.
+     * Submit an answer for the current question (non-streaming).
      */
     public function submitAnswer(Request $request)
     {
-        $sessionId = $request->session()->getId();
+        $sessionId = $request->input('session_id') ?: uniqid('onboarding_', true);
         $questionId = $request->input('question_id');
         $answer = $request->input('answer');
 
@@ -80,6 +72,22 @@ class OnboardingController extends Controller
         $profile->answers = $answers;
         $profile->save();
 
+        return response()->json([
+            'success' => true,
+            'session_id' => $sessionId,
+            'message' => 'Answer saved successfully',
+        ]);
+    }
+
+    /**
+     * Stream the next question response for a session.
+     */
+    public function streamAnswer(Request $request, string $sessionId)
+    {
+        // Find profile for this session
+        $profile = Profile::where('session_id', $sessionId)->first();
+        $answers = $profile ? $profile->answers : [];
+
         // Load questions to find next one
         $questions = $this->loadQuestions();
         $questionList = $questions['questions'] ?? [];
@@ -91,81 +99,153 @@ class OnboardingController extends Controller
             }
         }
 
-        $response = [
-            'success' => true,
-            'answers' => $answers,
-            'completed' => $nextQuestion === null,
-        ];
-
-        // If there's a next question, get agent response for it
-        if ($nextQuestion) {
-            $agentResponse = $this->getAgentResponse($sessionId, $nextQuestion, $answers, $questionList);
-            $response['next_question'] = $nextQuestion;
-            $response['agent_message'] = $agentResponse;
-        } else {
-            $response['message'] = 'Tak for dine svar! Du er nu klar til at bruge Famlink.';
+        // If no more questions, return completion
+        if ($nextQuestion === null) {
+            return response()->json([
+                'success' => true,
+                'answers' => $answers,
+                'completed' => true,
+                'message' => 'Tak for dine svar! Du er nu klar til at bruge Famlink.',
+            ]);
         }
 
-        return response()->json($response);
+        // Stream the next question response
+        return $this->streamAgentResponse($sessionId, $nextQuestion, $answers, $questionList);
     }
 
     /**
-     * Get a response from the OnboardingAgent
+     * Stream agent response for onboarding question
      */
-    protected function getAgentResponse(string $sessionId, array $question, array $answers, array $allQuestions): string
+    protected function streamAgentResponse(string $sessionId, array $question, array $answers, array $allQuestions)
     {
-        try {
-            $agent = new OnboardingAgent;
+        return response()->stream(function () use ($sessionId, $question, $answers, $allQuestions) {
+            try {
+                $agent = new OnboardingAgent;
 
-            // Create context with session data
-            $context = new AgentContext($sessionId);
-            $context->setState('current_question', $question);
-            $context->setState('answers', $answers);
-            $context->setState('progress', [
-                'answered' => count($answers),
-                'total' => count($allQuestions),
-                'current' => $question['id'],
-            ]);
+                // Create context with session data
+                $context = new AgentContext($sessionId);
+                $context->setState('current_question', $question);
+                $context->setState('answers', $answers);
+                $context->setState('progress', [
+                    'answered' => count($answers),
+                    'total' => count($allQuestions),
+                    'current' => $question['id'],
+                ]);
 
-            // Build conversation history
-            $messages = [];
+                // Build conversation history
+                $messages = [];
 
-            // Add system context
-            $messages[] = [
-                'role' => 'system',
-                'content' => "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['id']} ud af ".count($allQuestions).'. Stil spørgsmålet på en empatisk måde.',
-            ];
-
-            // Add previous answers as context
-            if (! empty($answers)) {
+                // Add system context
                 $messages[] = [
                     'role' => 'system',
-                    'content' => 'Tidligere svar: '.json_encode($answers, JSON_UNESCAPED_UNICODE),
+                    'content' => "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['id']} ud af ".count($allQuestions).'. Stil spørgsmålet på en empatisk måde.',
                 ];
+
+                // Add previous answers as context
+                if (! empty($answers)) {
+                    $messages[] = [
+                        'role' => 'system',
+                        'content' => 'Tidligere svar: '.json_encode($answers, JSON_UNESCAPED_UNICODE),
+                    ];
+                }
+
+                // Add the current question
+                $messages[] = [
+                    'role' => 'user',
+                    'content' => "Stil spørgsmål {$question['id']}: {$question['text']}",
+                ];
+
+                // Get agent response - handle both streaming and non-streaming
+                $prompt = "Du er Famlinks onboarding-assistent. Stil spørgsmål {$question['id']} på en empatisk og støttende måde: {$question['text']}";
+                $response = $agent->execute($prompt, $context);
+
+                // Send initial data
+                echo 'data: '.json_encode([
+                    'type' => 'start',
+                    'question' => $question,
+                    'answers' => $answers,
+                    'session_id' => $sessionId,
+                    'completed' => false,
+                ])."\n\n";
+                ob_flush();
+                flush();
+
+                // Check if response is a generator (streaming) or string (non-streaming)
+                if ($response instanceof \Generator) {
+                    // Handle streaming response
+                    $fullResponse = '';
+                    foreach ($response as $chunk) {
+                        if (isset($chunk['content'])) {
+                            $fullResponse .= $chunk['content'];
+                            echo 'data: '.json_encode([
+                                'type' => 'chunk',
+                                'content' => $chunk['content'],
+                            ])."\n\n";
+                            ob_flush();
+                            flush();
+                        }
+                    }
+
+                    // Send completion
+                    echo 'data: '.json_encode([
+                        'type' => 'complete',
+                        'full_response' => $fullResponse,
+                        'question' => $question,
+                        'answers' => $answers,
+                        'session_id' => $sessionId,
+                    ])."\n\n";
+                    ob_flush();
+                    flush();
+                } else {
+                    // Handle non-streaming response (fallback)
+                    $fullResponse = is_string($response) ? $response : $question['text'];
+
+                    // Send the full response as a single chunk
+                    echo 'data: '.json_encode([
+                        'type' => 'chunk',
+                        'content' => $fullResponse,
+                    ])."\n\n";
+                    ob_flush();
+                    flush();
+
+                    // Send completion
+                    echo 'data: '.json_encode([
+                        'type' => 'complete',
+                        'full_response' => $fullResponse,
+                        'question' => $question,
+                        'answers' => $answers,
+                        'session_id' => $sessionId,
+                    ])."\n\n";
+                    ob_flush();
+                    flush();
+                }
+
+            } catch (\Exception $e) {
+                \Log::error('OnboardingAgent streaming error', [
+                    'error' => $e->getMessage(),
+                    'session_id' => $sessionId,
+                    'question_id' => $question['id'],
+                ]);
+
+                // Send error and fallback
+                echo 'data: '.json_encode([
+                    'type' => 'error',
+                    'message' => 'Der opstod en fejl. Her er spørgsmålet:',
+                    'fallback' => $question['text'],
+                    'question' => $question,
+                    'answers' => $answers,
+                    'session_id' => $sessionId,
+                ])."\n\n";
+                ob_flush();
+                flush();
             }
-
-            // Add the current question
-            $messages[] = [
-                'role' => 'user',
-                'content' => "Stil spørgsmål {$question['id']}: {$question['text']}",
-            ];
-
-            // Get agent response
-            $prompt = "Du er Famlinks onboarding-assistent. Stil spørgsmål {$question['id']} på en empatisk og støttende måde: {$question['text']}";
-            $response = $agent->execute($prompt, $context);
-
-            return is_string($response) ? $response : $question['text'];
-
-        } catch (\Exception $e) {
-            // Fallback to direct question if agent fails
-            \Log::error('OnboardingAgent error', [
-                'error' => $e->getMessage(),
-                'session_id' => $sessionId,
-                'question_id' => $question['id'],
-            ]);
-
-            return $question['text'];
-        }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Headers' => 'Cache-Control',
+        ]);
     }
 
     /**

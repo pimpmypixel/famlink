@@ -12,6 +12,8 @@ class VerifyCsrfToken extends BaseVerifier
      * @var array<int, string>
      */
     protected $except = [
-        'api/onboarding/*',
+        'api/onboarding/question',
+        'api/onboarding/answer',
+        'api/onboarding/stream/*',
     ];
 }

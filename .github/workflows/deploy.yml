@@ -30,6 +30,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Get ECR Repository URI
+        id: ecr-uri
+        run: |
+          ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
+          if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
+            echo "Error: Could not find ECR repository URI in CDK outputs"
+            exit 1
+          fi
+          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
+          echo "Using ECR URI: $ECR_URI"
+
       - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
@@ -56,17 +67,6 @@ jobs:
       - name: Deploy CDK Stack
         run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
         working-directory: infra
-
-      - name: Get ECR Repository URI
-        id: ecr-uri
-        run: |
-          ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
-          if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
-            echo "Error: Could not find ECR repository URI in CDK outputs"
-            exit 1
-          fi
-          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
-          echo "Using ECR URI: $ECR_URI"
 
       # Run migrations
       - name: Run Laravel Migrations

@@ -2,7 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SpeedDial } from '@/components/speed-dial';
-import { MessageCircle, Settings, Info } from 'lucide-react';
+import { MessageCircle, Settings, MessageSquareText } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
@@ -26,21 +26,13 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                                 icon: MessageCircle,
                                 label: 'Ask AI',
                                 onClick: () => setAIModalOpen(true),
-                            },
-                            {
-                                icon: Settings,
-                                label: 'Settings',
-                                onClick: () => {/* settings logic here */},
-                            },
-                            {
-                                icon: Info,
-                                label: 'Info',
-                                onClick: () => {/* info logic here */},
-                            },
+                            }
                         ]}
                         direction="up"
-                        triggerSize="lg"
+                        triggerSize={32}
                         style="circle"
+                        triggerIcon={MessageSquareText}
+                        
                     />
                 </div>
                 {/* Large centered modal for AI chat */}

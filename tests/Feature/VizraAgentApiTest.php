@@ -70,9 +70,17 @@ test('returns messages for existing sessions', function () {
                 ],
             ],
             'total_sessions',
+            'sessions' => [
+                '*' => [
+                    'id',
+                    'session_id',
+                    'created_at',
+                ],
+            ],
             'note',
         ])
-        ->assertJsonCount(2, 'messages');
+        ->assertJsonCount(2, 'messages')
+        ->assertJsonCount(1, 'sessions');
 });
 
 test('messages are returned in chronological order', function () {

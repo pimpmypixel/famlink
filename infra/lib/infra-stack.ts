@@ -2,13 +2,45 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 export class LaravelUploadStack extends cdk.Stack {
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    
     super(scope, id, props);
 
+    // VPC
+    const vpc = new ec2.Vpc(this, 'FamLinkVpc', { maxAzs: 2 });
+
+    // ECS Cluster
+    const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
+
+    // DB Credentials
+    const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
+      username: 'pastgres',
+    });
+
+    // RDS (PostgreSQL)
+    const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
+      engine: rds.DatabaseInstanceEngine.postgres({ 
+        version: rds.PostgresEngineVersion.VER_15 
+      }),
+      vpc,
+      credentials: rds.Credentials.fromSecret(dbSecret),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
+      allocatedStorage: 20,
+      multiAz: false,
+      publiclyAccessible: false,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // Create the S3 bucket
-    const uploadBucket = new s3.Bucket(this, 'FamlinkUploadBucket', {
+    const uploadBucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
       bucketName: `${this.account}-famlink-uploads`,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
       autoDeleteObjects: true, // dev only
@@ -38,6 +70,40 @@ export class LaravelUploadStack extends cdk.Stack {
       resources: [`${uploadBucket.bucketArn}/*`],
     })); */
 
+    // Fargate Service with Load Balancer
+    const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'LaravelService', {
+      cluster,
+      cpu: 512,
+      desiredCount: 1,
+      memoryLimitMiB: 1024,
+      publicLoadBalancer: true,
+      taskImageOptions: {
+        image: ecs.ContainerImage.fromAsset('./'), // Laravel Dockerfile in root
+        containerPort: 80,
+        environment: {
+          APP_ENV: 'production',
+          APP_KEY: 'base64:YOUR_APP_KEY', // Ideally from Secrets Manager
+          DB_CONNECTION: 'pgsql',
+          DB_HOST: db.dbInstanceEndpointAddress,
+          DB_PORT: '5432',
+          DB_DATABASE: 'laravel',
+          DB_USERNAME: 'laraveluser',
+          FILESYSTEM_DRIVER: 's3',
+          AWS_BUCKET: uploadBucket.bucketName,
+        },
+        secrets: {
+          DB_PASSWORD: ecs.Secret.fromSecretsManager(dbSecret, 'password'),
+        }
+      }
+    });
+
+    // Permissions
+    uploadBucket.grantReadWrite(fargateService.taskDefinition.taskRole);
+    db.connections.allowDefaultPortFrom(fargateService.service);
+
+    new cdk.CfnOutput(this, 'LoadBalancerURL', {
+      value: fargateService.loadBalancer.loadBalancerDnsName,
+    });
     // Output bucket name for Laravel .env config
     new cdk.CfnOutput(this, 'UploadBucketName', {
       value: uploadBucket.bucketName,

@@ -43,7 +43,7 @@ class VizraAgentController extends Controller
 
             // Get all messages from these sessions, ordered by creation time
             $messages = AgentMessage::whereIn('agent_session_id', $sessionIds)
-                ->where('role','!=', 'tool') // Only include user messages for privacy
+                ->where('role', '!=', 'tool') // Only include user messages for privacy
                 ->orderBy('created_at', 'asc')
                 ->get(['role', 'content', 'created_at'])
                 ->map(function ($message) {
@@ -57,6 +57,13 @@ class VizraAgentController extends Controller
             return response()->json([
                 'messages' => $messages,
                 'total_sessions' => $sessions->count(),
+                'sessions' => $sessions->map(function ($session) {
+                    return [
+                        'id' => $session->id,
+                        'session_id' => $session->session_id,
+                        'created_at' => $session->created_at->toISOString(),
+                    ];
+                }),
                 'note' => 'Currently showing all messages for this agent. User-specific filtering may be limited due to Vizra ADK configuration.',
             ]);
 

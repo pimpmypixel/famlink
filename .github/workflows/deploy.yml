@@ -1,4 +1,4 @@
-name: Deploy Famlink Stack
+name: Deploy Fa      name: Deploy Famlink Stack
 
 on:
   push:
@@ -18,11 +18,110 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Install dependencies
-        run: npm install
+        run: bun install
+        working-directory: infra
 
       - name: Install AWS CDK
-        run: npm install -g aws-cdk
+        run: bun add -g aws-cdk
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: CDK Bootstrap
+        run: cdk bootstrap || true
+        working-directory: infra
+
+      - name: Deploy CDK Stack
+        run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        working-directory: infra
+
+      - name: Get ECR Repository URI
+        id: ecr-uri
+        run: |
+          ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
+          if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
+            echo "Error: Could not find ECR repository URI in CDK outputs"
+            exit 1
+          fi
+          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
+          echo "Using ECR URI: $ECR_URI"
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS \
+            --password-stdin ${{ steps.ecr-uri.outputs.ecr_uri }}
+
+      - name: Build Docker Image
+        run: docker build -t famlink .
+
+      - name: Tag Docker Image
+        run: docker tag famlink:latest ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
+
+      - name: Push Docker Image
+        run: docker push ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
+
+      # Run migrations
+      - name: Run Laravel Migrations
+        run: |
+          CLUSTER_NAME="FamLinkCluster"   # must match your CDK ECS cluster name
+          SERVICE_NAME="FamlinkService"   # must match your CDK ECS service name
+          CONTAINER_NAME="web"            # must match container name in CDK task definition
+
+          TASK_ARN=$(aws ecs list_tasks \
+            --cluster $CLUSTER_NAME \
+            --service-name $SERVICE_NAME \
+            --desired-status RUNNING \
+            --query 'taskArns[0]' \
+            --output text)
+
+          echo "Running migrations on task: $TASK_ARN"
+
+          aws ecs execute_command \
+            --cluster $CLUSTER_NAME \
+            --task $TASK_ARN \
+            --container $CONTAINER_NAME \
+            --command "php artisan migrate --force" \
+            --interactive
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: infra
+
+      - name: Install AWS CDK
+        run: bun add -g aws-cdk
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -35,22 +134,35 @@ jobs:
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
           | docker login --username AWS \
-            --password-stdin ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            --password-stdin ${{ steps.ecr-uri.outputs.ecr_uri }}
 
       - name: Build Docker Image
         run: docker build -t famlink .
 
       - name: Tag Docker Image
-        run: docker tag famlink:latest ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/famlink:latest
+        run: docker tag famlink:latest ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
 
       - name: Push Docker Image
-        run: docker push ${{ secrets.AWS_ACCT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/famlink:latest
+        run: docker push ${{ steps.ecr-uri.outputs.ecr_uri }}:latest
 
       - name: CDK Bootstrap
         run: cdk bootstrap || true
+        working-directory: infra
 
       - name: Deploy CDK Stack
-        run: cdk deploy --app --require-approval never
+        run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        working-directory: infra
+
+      - name: Get ECR Repository URI
+        id: ecr-uri
+        run: |
+          ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
+          if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
+            echo "Error: Could not find ECR repository URI in CDK outputs"
+            exit 1
+          fi
+          echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
+          echo "Using ECR URI: $ECR_URI"
 
       # Run migrations
       - name: Run Laravel Migrations

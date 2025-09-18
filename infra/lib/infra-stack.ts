@@ -7,6 +7,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
 
 export class FamlinkStack extends cdk.Stack {
 
@@ -20,9 +21,26 @@ export class FamlinkStack extends cdk.Stack {
     // ECS Cluster
     const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
 
+    // ECR Repository
+    const repository = new ecr.Repository(this, 'FamLinkRepository', {
+      repositoryName: 'famlink',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // DB Credentials
     const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
-      username: 'postgres',
+      username: 'famlinkuser',
+    });
+
+    // App Key Secret
+    const appKeySecret = new secretsmanager.Secret(this, 'AppKeySecret', {
+      secretName: 'famlink/app-key',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({}),
+        generateStringKey: 'APP_KEY',
+        excludePunctuation: true,
+        includeSpace: false,
+      },
     });
 
     // RDS (PostgreSQL)
@@ -39,47 +57,21 @@ export class FamlinkStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    const bucketName = `${this.account}-famlink-uploads`;
-    let bucket: s3.IBucket;
+    const bucketName = `famlink-uploads-${this.stackName.toLowerCase()}`;
 
-
-    try {
-      // Try to import existing bucket
-      bucket = s3.Bucket.fromBucketName(this, 'FamLinkUploadBucket', bucketName);
-      new cdk.CfnOutput(this, 'UploadsBucketImported', {
-        value: bucket.bucketName,
-      });
-    } catch (e) {
-      // Create the S3 bucket
-      bucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
-        bucketName,
-        removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
-        autoDeleteObjects: true, // dev only
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        cors: [
-          {
-            allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.DELETE],
-            allowedOrigins: ['*'], // restrict later in production
-            allowedHeaders: ['*'],
-          },
-        ],
-      });
-  }
-
-    // IAM policy for Laravel app (EC2, ECS task, or Lambda role)
-    const bucketPolicy = new iam.PolicyStatement({
-      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-      resources: [`${bucket.bucketArn}/*`],
-    });
-
-    /* const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
-    });
-  }
-
-    // IAM policy for Laravel app (EC2, ECS task, or Lambda role)
-    const bucketPolicy = new iam.PolicyStatement({
-      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-      resources: [`${uploadBucket.bucketArn}/*`],
+    // Create the S3 bucket
+    const bucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
+      bucketName,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
+      autoDeleteObjects: true, // dev only
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.DELETE],
+          allowedOrigins: ['*'], // restrict later in production
+          allowedHeaders: ['*'],
+        },
+      ],
     });
 
     /* const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
@@ -101,11 +93,10 @@ export class FamlinkStack extends cdk.Stack {
       publicLoadBalancer: true,
       taskImageOptions: {
         containerName: 'web',
-        image: ecs.ContainerImage.fromRegistry('035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest'), // Laravel Dockerfile in root
+        image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
         containerPort: 80,
         environment: {
           APP_ENV: 'production',
-          APP_KEY: 'base64:YOUR_APP_KEY', // Ideally from Secrets Manager
           DB_CONNECTION: 'pgsql',
           DB_HOST: db.dbInstanceEndpointAddress,
           DB_PORT: '5432',
@@ -116,6 +107,7 @@ export class FamlinkStack extends cdk.Stack {
         },
         secrets: {
           DB_PASSWORD: ecs.Secret.fromSecretsManager(dbSecret, 'password'),
+          APP_KEY: ecs.Secret.fromSecretsManager(appKeySecret, 'APP_KEY'),
         }
       }
     });
@@ -130,6 +122,10 @@ export class FamlinkStack extends cdk.Stack {
     // Output bucket name for Laravel .env config
     new cdk.CfnOutput(this, 'UploadBucketName', {
       value: bucket.bucketName,
+    });
+    // Output ECR repository URI for GitHub Actions
+    new cdk.CfnOutput(this, 'ECRRepositoryURI', {
+      value: repository.repositoryUri,
     });
   }
 }

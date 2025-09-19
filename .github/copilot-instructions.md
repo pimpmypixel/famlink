@@ -34,6 +34,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - **Build**: Vite 7.0.4 with Bun package manager
 - **Testing**: Pest 4.1.0
 - **Code Quality**: Laravel Pint 1.18, ESLint 9.17.0, Prettier 3.4.2
+- **AI Agents**: Vizra.ai with vector memory (pg_vector extension)
 
 ### Key Features (Current Implementation Status)
 - ✅ **Database Schema**: Comprehensive with UUIDs, relationships, JSON fields
@@ -201,6 +202,49 @@ const submit = () => form.post('/timeline', {
     ],
 ],
 ```
+
+### Vizra.ai AI Agent Integration
+**PRIORITY**: Leverage Vizra documentation at https://vizra.ai/docs/adk/concepts/architecture for full capabilities
+
+**Purpose**: Famlink uses Vizra.ai for intelligent Laravel AI agent functionality with persistent context and vector memory management.
+
+**Key Features**:
+- **Onboarding Agent**: Follows guests throughout their user lifetime
+- **Private Sessions**: Intelligent context management for personalized experiences
+- **Vector Memory**: PostgreSQL pg_vector extension for semantic search and memory
+- **Agent Types**: Multiple specialized agents (OnboardingSummaryAgent, CustomerSupportAgent, etc.)
+
+**Database Setup**:
+- PostgreSQL has pg_vector extension enabled
+- Vector memory tables created but not yet fully implemented
+- Requires vector embeddings for semantic context retrieval
+
+**Implementation Priority**:
+1. Complete vector memory table implementation
+2. Integrate semantic search for user context
+3. Implement persistent agent sessions
+4. Add vector-based recommendations
+
+**Agent Structure**:
+```php
+// Example agent implementation
+class OnboardingSummaryAgent extends Agent
+{
+    protected $fillable = ['user_id', 'session_data', 'vector_memory'];
+    
+    // Vector-based context retrieval
+    public function getRelevantContext(string $query): array
+    {
+        return $this->vectorSearch($query);
+    }
+}
+```
+
+**Usage Patterns**:
+- Agents persist across user sessions
+- Context accumulated throughout user journey
+- Vector similarity for intelligent responses
+- Private session isolation per user
 
 ### MCP Server Integration
 - **Laravel Boost**: Database queries, Tinker execution, route inspection

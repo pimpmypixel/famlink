@@ -76,7 +76,7 @@ class DashboardController extends Controller
             }
         }
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('authenticated/dashboard', [
             'stats' => $stats,
             'timelineCases' => $timelineCases,
             'userRole' => $user ? $user->getRoleNames()->first() : null,

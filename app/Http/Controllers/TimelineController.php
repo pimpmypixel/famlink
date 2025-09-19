@@ -15,7 +15,7 @@ class TimelineController extends Controller
 
         // Check if user has a family
         if (! $user->family) {
-            return Inertia::render('timeline_page', [
+            return Inertia::render('authenticated/timeline_page', [
                 'timelineItems' => [],
             ]);
         }
@@ -25,7 +25,7 @@ class TimelineController extends Controller
             ->whereIn('user_id', $user->family->users()->pluck('id'))
             ->get();
 
-        return Inertia::render('timeline_page', [
+        return Inertia::render('authenticated/timeline_page', [
             'timelineItems' => TimelineItemResource::collection($timelineItems)->resolve(),
         ]);
     }

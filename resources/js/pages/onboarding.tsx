@@ -5,6 +5,7 @@ import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, upd
 interface Question {
   key: string;
   text: string;
+  options?: string[];
 }
 
 interface Message {
@@ -413,11 +414,13 @@ export default function Onboarding() {
     }
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (e?: React.FormEvent, directAnswer?: string) => {
+    if (e) e.preventDefault();
 
-    await submitAnswer(input.trim());
+    const answerToSend = directAnswer || input.trim();
+    if (!answerToSend || isLoading) return;
+
+    await submitAnswer(answerToSend);
   };
 
   const handleRestart = () => {
@@ -438,6 +441,13 @@ export default function Onboarding() {
     if (isCompleted) {
       router.visit('/dashboard');
     }
+  };
+
+  const handleOptionClick = async (option: string) => {
+    if (isLoading) return;
+
+    // Submit immediately with the selected option
+    await handleSend(undefined, option);
   };
 
   return (
@@ -522,7 +532,24 @@ export default function Onboarding() {
 
           {!isCompleted ? (
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <form onSubmit={handleSend} className="flex gap-2">
+              {/* Option buttons */}
+              {currentQuestion?.options && currentQuestion.options.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {currentQuestion.options.map((option, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleOptionClick(option)}
+                      disabled={isLoading}
+                      className="px-3 py-2 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <form onSubmit={(e) => handleSend(e)} className="flex gap-2">
                 <input
                   type="text"
                   value={input}

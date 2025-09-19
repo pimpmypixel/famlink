@@ -356,7 +356,8 @@ class OnboardingController extends Controller
         if (file_exists($playbook)) {
             $json = file_get_contents($playbook);
             $data = json_decode($json, true) ?? [];
-            $questions = $data;
+            // The JSON file is a direct array of questions, so wrap it in the expected format
+            $questions = ['questions' => $data];
         }
 
         return $questions;

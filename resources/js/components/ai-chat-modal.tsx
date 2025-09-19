@@ -15,9 +15,15 @@ interface AIChatModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface Question {
+  key: string;
+  text: string;
+  options?: string[];
+}
+
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   const [messages, setMessages] = useState<{ id: string; role: string; content: string; timestamp?: string; isTyping?: boolean }[]>([]);
-  const [question, setQuestion] = useState<{ key: string; text: string } | null>(null);
+  const [question, setQuestion] = useState<{ key: string; text: string; options?: string[] } | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -417,9 +423,21 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     }
   }
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || !question || !sessionId) return;
+  // Function to handle option button clicks
+  const handleOptionClick = async (option: string) => {
+    if (!question || !sessionId || loading || isTyping) return;
+
+    // Submit immediately with the selected option
+    await handleSendWithOption(option);
+  };
+
+  // Modified handleSend to accept an optional direct answer
+  async function handleSend(e?: React.FormEvent, directAnswer?: string) {
+    if (e) e.preventDefault();
+
+    const answerToSend = directAnswer || input.trim();
+    if (!answerToSend || !question || !sessionId) return;
+
     setLoading(true);
     setError(null);
 
@@ -429,7 +447,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     // Show user answer
     setMessages((prev) => [
       ...prev,
-      { id: `msg-${Date.now()}`, role: "user", content: input.trim(), timestamp: new Date().toISOString() }
+      { id: `msg-${Date.now()}`, role: "user", content: answerToSend, timestamp: new Date().toISOString() }
     ]);
 
     try {
@@ -444,7 +462,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         },
         body: JSON.stringify({
           question_key: question.key,
-          answer: input.trim(),
+          answer: answerToSend,
           session_id: sessionId,
         }),
       });
@@ -554,6 +572,11 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     }
   }
 
+  // Helper function for option clicks
+  const handleSendWithOption = async (option: string) => {
+    await handleSend(undefined, option);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Toast Notification */}
@@ -635,8 +658,28 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
               {error}
             </div>
           )}
+
+          {/* Option buttons */}
+          {!completed && question?.options && question.options.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {question.options.map((option, index) => (
+                <Button
+                  key={index}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOptionClick(option)}
+                  disabled={loading || isTyping}
+                  className="text-xs px-3 py-2 h-auto whitespace-nowrap"
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          )}
+
           {!completed && (
-            <form onSubmit={handleSend} className="flex gap-3">
+            <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
               <input
                 ref={inputRef}
                 className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"

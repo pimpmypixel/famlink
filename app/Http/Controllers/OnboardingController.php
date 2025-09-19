@@ -7,6 +7,7 @@ use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Vizra\VizraADK\System\AgentContext;
 
@@ -56,12 +57,17 @@ class OnboardingController extends Controller
 
         // If no more questions, return completion status
         if ($nextQuestion === null) {
+            // Send completion email if user exists and has email
+            if ($profile->user && $profile->user->email) {
+                $this->sendCompletionEmail($profile->user, $answers);
+            }
+
             return response()->json([
                 'question' => null,
                 'answers' => $answers,
                 'session_id' => $sessionId,
                 'completed' => true,
-                'message' => 'Onboarding completed! Welcome to Famlink.',
+                'message' => 'Tak for dine svar! Du er nu klar til at bruge Famlink.',
             ]);
         }
 
@@ -118,10 +124,21 @@ class OnboardingController extends Controller
             }
         }
 
+        // Check if this completes the onboarding
+        $questions = $this->loadQuestions();
+        $questionList = $questions['questions'] ?? [];
+        $isCompleted = count($answers) >= count($questionList);
+
+        if ($isCompleted && $user && $user->email) {
+            // Send completion email
+            $this->sendCompletionEmail($user, $answers);
+        }
+
         return response()->json([
             'success' => true,
             'session_id' => $sessionId,
             'message' => 'Answer saved successfully',
+            'completed' => $isCompleted,
         ]);
     }
 
@@ -164,6 +181,11 @@ class OnboardingController extends Controller
 
         // If no more questions, return completion
         if ($nextQuestion === null) {
+            // Send completion email if user exists and has email
+            if ($profile->user && $profile->user->email) {
+                $this->sendCompletionEmail($profile->user, $answers);
+            }
+
             return response()->json([
                 'success' => true,
                 'answers' => $answers,
@@ -341,26 +363,91 @@ class OnboardingController extends Controller
     }
 
     /**
-     * Approve a user (change role from temporary to approved)
+     * Send completion email to user
      */
-    public function approveUser(Request $request, string $userId)
+    protected function sendCompletionEmail(User $user, array $answers): void
     {
-        $user = User::findOrFail($userId);
+        try {
+            Mail::raw(
+                $this->buildCompletionEmailContent($user, $answers),
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                            ->subject('Tak for din onboarding - Velkommen til Famlink!')
+                            ->from(config('mail.from.address'), config('mail.from.name'));
+                }
+            );
 
-        if ($user->hasRole('temporary')) {
-            $user->removeRole('temporary');
-            $user->assignRole('approved');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User approved successfully',
-                'user' => $user,
+            \Log::info('Onboarding completion email sent', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send onboarding completion email', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
             ]);
         }
+    }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'User is not in temporary status',
-        ], 400);
+    /**
+     * Build completion email content
+     */
+    protected function buildCompletionEmailContent(User $user, array $answers): string
+    {
+        $name = $answers['name'] ?? $user->name ?? 'Bruger';
+
+        return "Kære {$name},
+
+Tak for at du har gennemført Famlinks onboarding! 🎉
+
+Vi har modtaget dine svar og er glade for at byde dig velkommen til Famlink. Vi har noteret følgende oplysninger fra din onboarding:
+
+" . $this->formatAnswersForEmail($answers) . "
+
+Dit næste skridt:
+- Log ind på Famlink for at begynde at bruge platformen
+- Udforsk de forskellige funktioner, der kan hjælpe dig
+- Kontakt os hvis du har spørgsmål
+
+Vi håber, at Famlink kan være til gavn for dig og din situation.
+
+Med venlig hilsen,
+Famlink-teamet
+
+---
+Denne email blev sendt automatisk efter gennemført onboarding.";
+    }
+
+    /**
+     * Format answers for email
+     */
+    protected function formatAnswersForEmail(array $answers): string
+    {
+        $formatted = '';
+        foreach ($answers as $key => $answer) {
+            $questionText = $this->getQuestionTextByKey($key);
+            if ($questionText) {
+                $formatted .= "- {$questionText}: {$answer}\n";
+            }
+        }
+        return $formatted;
+    }
+
+    /**
+     * Get question text by key
+     */
+    protected function getQuestionTextByKey(string $key): ?string
+    {
+        $questions = $this->loadQuestions();
+        $questionList = $questions['questions'] ?? [];
+
+        foreach ($questionList as $question) {
+            if ($question['key'] === $key) {
+                return $question['text'];
+            }
+        }
+
+        return null;
     }
 }

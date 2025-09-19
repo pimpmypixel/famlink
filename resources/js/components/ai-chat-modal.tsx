@@ -29,6 +29,18 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  // Function to show toast
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    // Auto-hide toast after 5 seconds
+    setTimeout(() => setShowToast(false), 5000);
+  };
+
   // Function to restart onboarding
   const handleRestart = () => {
     clearOnboardingSession();
@@ -147,6 +159,37 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+      // First try to get the question - it might return JSON if completed
+      const response = await fetch('/api/onboarding/question', {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start onboarding');
+      }
+
+      // Check if response is JSON (completion) or event-stream
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.completed) {
+          setCompleted(true);
+          setMessages([{
+            id: `msg-${Date.now()}`,
+            role: "agent",
+            content: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            timestamp: new Date().toISOString()
+          }]);
+          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Use EventSource for streaming
       const eventSource = new EventSource(`/api/onboarding/question?_token=${csrfToken}`);
 
@@ -183,6 +226,27 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           // For streaming effect, we'll handle this differently
           // Just accumulate the message for now
         } else if (data.type === 'complete') {
+          // Check if onboarding is completed
+          if (data.completed === true) {
+            setCompleted(true);
+            // Add completion message with streaming effect
+            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+            setMessages([{
+              id: `msg-${Date.now()}`,
+              role: "agent",
+              content: '',
+              timestamp: new Date().toISOString(),
+              isTyping: true
+            }]);
+            // Start streaming into the newly added message
+            setTimeout(() => streamText(completionMessage, 0), 0);
+            // Show toast notification
+            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+            eventSource.close();
+            setLoading(false);
+            return;
+          }
+
           // Start streaming the accumulated message
           if (currentMessage.trim()) {
             // The message was already added in the 'start' event, so stream into index 0
@@ -227,6 +291,37 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+      // First try to get the question - it might return JSON if completed
+      const response = await fetch(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to resume onboarding');
+      }
+
+      // Check if response is JSON (completion) or event-stream
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.completed) {
+          setCompleted(true);
+          setMessages([{
+            id: `msg-${Date.now()}`,
+            role: "agent",
+            content: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            timestamp: new Date().toISOString()
+          }]);
+          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Use EventSource for streaming with resumed session
       const eventSource = new EventSource(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true&_token=${csrfToken}`);
 
@@ -263,6 +358,27 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           // For streaming effect, we'll handle this differently
           // Just accumulate the message for now
         } else if (data.type === 'complete') {
+          // Check if onboarding is completed
+          if (data.completed === true) {
+            setCompleted(true);
+            // Add completion message with streaming effect
+            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+            setMessages([{
+              id: `msg-${Date.now()}`,
+              role: "agent",
+              content: '',
+              timestamp: new Date().toISOString(),
+              isTyping: true
+            }]);
+            // Start streaming into the newly added message
+            setTimeout(() => streamText(completionMessage, 0), 0);
+            // Show toast notification
+            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+            eventSource.close();
+            setLoading(false);
+            return;
+          }
+
           // Start streaming the accumulated message
           if (currentMessage.trim()) {
             // The message was already added in the 'start' event, so stream into index 0
@@ -364,7 +480,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           if (data.completed === true) {
             setCompleted(true);
             // Add completion message with streaming effect
-            const completionMessage = data.message || "Tak for dine svar! Du er nu klar til at bruge Famlink. Velkommen! 🎉";
+            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
             setMessages(prev => {
               const newMessages = [...prev, {
                 id: `msg-${Date.now()}`,
@@ -377,6 +493,8 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
               setTimeout(() => streamText(completionMessage, newMessages.length - 1), 0);
               return newMessages;
             });
+            // Show toast notification
+            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
             eventSource.close();
             setLoading(false);
             return;
@@ -438,6 +556,22 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <span className="text-lg">✅</span>
+            <span className="font-medium">{toastMessage}</span>
+            <button
+              onClick={() => setShowToast(false)}
+              className="ml-2 text-white hover:text-green-100"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <DialogContent className="max-w-4xl w-full max-h-[90vh] p-0">
         <DialogHeader className="px-6 py-4 border-b bg-background">
           <div className="flex items-center justify-between">

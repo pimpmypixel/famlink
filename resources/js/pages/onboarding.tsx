@@ -24,10 +24,19 @@ export default function Onboarding() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isResumed, setIsResumed] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    // Auto-hide toast after 5 seconds
+    setTimeout(() => setShowToast(false), 5000);
   };
 
   useEffect(() => {
@@ -67,6 +76,23 @@ export default function Onboarding() {
 
       if (!response.ok) {
         throw new Error('Failed to start onboarding');
+      }
+
+      // Check if response is JSON (completion) or event-stream
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.completed) {
+          setIsCompleted(true);
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            sender: 'assistant',
+            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            timestamp: new Date()
+          }]);
+          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+        }
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -109,10 +135,12 @@ export default function Onboarding() {
                     setIsCompleted(true);
                     setMessages(prev => [...prev, {
                       id: Date.now(),
-                      sender: 'system',
-                      text: '🎉 Onboarding completed! Welcome to Famlink. You can now start using all features.',
+                      sender: 'assistant',
+                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
                       timestamp: new Date()
                     }]);
+                    // Show toast notification
+                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
                   }
                 }
               } catch (e) {
@@ -150,6 +178,23 @@ export default function Onboarding() {
 
       if (!response.ok) {
         throw new Error('Failed to resume onboarding');
+      }
+
+      // Check if response is JSON (completion) or event-stream
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.completed) {
+          setIsCompleted(true);
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            sender: 'assistant',
+            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            timestamp: new Date()
+          }]);
+          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+        }
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -192,10 +237,12 @@ export default function Onboarding() {
                     setIsCompleted(true);
                     setMessages(prev => [...prev, {
                       id: Date.now(),
-                      sender: 'system',
-                      text: '🎉 Onboarding completed! Welcome to Famlink. You can now start using all features.',
+                      sender: 'assistant',
+                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
                       timestamp: new Date()
                     }]);
+                    // Show toast notification
+                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
                   }
                 }
               } catch (e) {
@@ -293,6 +340,23 @@ export default function Onboarding() {
         throw new Error('Failed to get next question');
       }
 
+      // Check if response is JSON (completion) or event-stream
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.completed) {
+          setIsCompleted(true);
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            sender: 'assistant',
+            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            timestamp: new Date()
+          }]);
+          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+        }
+        return;
+      }
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -327,10 +391,12 @@ export default function Onboarding() {
                     setIsCompleted(true);
                     setMessages(prev => [...prev, {
                       id: Date.now(),
-                      sender: 'system',
-                      text: '🎉 Onboarding completed! Welcome to Famlink. You can now start using all features.',
+                      sender: 'assistant',
+                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
                       timestamp: new Date()
                     }]);
+                    // Show toast notification
+                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
                   }
                 }
               } catch (e) {
@@ -376,6 +442,22 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <span className="text-lg">✅</span>
+            <span className="font-medium">{toastMessage}</span>
+            <button
+              onClick={() => setShowToast(false)}
+              className="ml-2 text-white hover:text-green-100"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">

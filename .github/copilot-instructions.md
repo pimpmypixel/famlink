@@ -1,72 +1,176 @@
-<laravel-boost-guidelines>
-=== foundation rules ===
+# Famlink - Co-Parenting Timeline Platform
+## GitHub Copilot Instructions & Laravel Boost Guidelines
 
-# Laravel Boost Guidelines
+### Project Overview
+Famlink is a digital platform and logbook for separated parents in Danish family law cases involving custody and visitation. The platform helps document events, communications, and experiences to ensure fair and consistent decision-making for all parties (parents, social workers, and authorities).
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
+**Current Status**: Laravel 12.28.1 application with React 19.0.0 frontend using Inertia.js 2.1.6. The application has a comprehensive database schema with families, users, timeline_items with categories/tags, comments, and full Spatie Permission system. The backend foundation is solid - focus is now on frontend implementation and advanced features.
 
 ## Foundational Context
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4.12
-- inertiajs/inertia-laravel (INERTIA) - v2
-- laravel/framework (LARAVEL) - v12
-- laravel/prompts (PROMPTS) - v0
-- laravel/wayfinder (WAYFINDER) - v0
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA) - v2
-- react (REACT) - v19
-- tailwindcss (TAILWINDCSS) - v4
-- @laravel/vite-plugin-wayfinder (WAYFINDER) - v0
-- eslint (ESLINT) - v9
-- prettier (PRETTIER) - v3
+- **php** - 8.3.25
+- **inertiajs/inertia-laravel** (INERTIA) - v2.1.6
+- **laravel/framework** (LARAVEL) - v12.28.1
+- **laravel/prompts** (PROMPTS) - v0
+- **laravel/wayfinder** (WAYFINDER) - v0.1.9
+- **laravel/pint** (PINT) - v1.18
+- **laravel/sail** (SAIL) - v1.41
+- **pestphp/pest** (PEST) - v4.1
+- **phpunit/phpunit** (PHPUNIT) - v12
+- **@inertiajs/react** (INERTIA) - v2.1.6
+- **react** (REACT) - v19.0.0
+- **tailwindcss** (TAILWINDCSS) - v4.0.0
+- **@laravel/vite-plugin-wayfinder** (WAYFINDER) - v0.1.3
+- **eslint** (ESLINT) - v9.17.0
+- **prettier** (PRETTIER) - v3.4.2
 
+### Technology Stack (Verified Current Versions)
+- **Backend**: Laravel 12.28.1 (PHP 8.3.25)
+- **Frontend**: React 19.0.0 with TypeScript, Inertia.js 2.1.6
+- **Database**: PostgreSQL (production-ready)
+- **Authentication**: Laravel Breeze with Spatie Permissions 6.21.0
+- **Styling**: Tailwind CSS 4.0.0
+- **Build**: Vite 7.0.4 with Bun package manager
+- **Testing**: Pest 4.1.0
+- **Code Quality**: Laravel Pint 1.18, ESLint 9.17.0, Prettier 3.4.2
 
-## Conventions
+### Key Features (Current Implementation Status)
+- ✅ **Database Schema**: Comprehensive with UUIDs, relationships, JSON fields
+- ✅ **User Authentication**: Laravel Breeze with family relationships
+- ✅ **Timeline System**: Categories, tags, comments, attachments (backend)
+- ✅ **Spatie Permissions**: Fully configured role-based access system
+- ✅ **AWS S3 Integration**: File storage ready (league/flysystem-aws-s3-v3)
+- ❌ **Frontend Interface**: Timeline UI needs implementation
+- ❌ **File Upload UI**: Attachment functionality needs frontend
+- ❌ **Advanced Filtering**: Search and filter UI components
+- ❌ **Notification System**: Real-time notifications
+- ❌ **Calendar Integration**: Event coordination features
+
+### Development Environment
+- **Local Server**: Laravel Herd (https://famlink.test)
+- **Package Managers**: Composer (PHP), Bun (JavaScript)
+- **MCP Servers**: Laravel Boost, Browser, GitHub, shadcn, Herd
+- **IDE**: Kiro IDE with workspace-specific configuration
+
+### Comprehensive Database Schema
+```sql
+-- Core Tables (All Implemented)
+families (id, name, child_name, created_by, timestamps)
+users (id, name, email, email_verified_at, password, family_id, remember_token, timestamps)
+timeline_items (uuid, user_id, family_id, category_id, author, title, content, date, item_timestamp, is_urgent, attachments[JSON], linked_items[JSON], timestamps)
+categories (id, name, description, color, timestamps)
+tags (id, name, timestamps)
+timeline_item_tag (timeline_item_id, tag_id) -- Pivot table
+comments (id, timeline_item_id, user_id, content, parent_id, is_private, timestamps)
+profiles (id, user_id, ...) -- Extended user profiles
+permission_tables -- Spatie permissions (roles, permissions, model_has_permissions, etc.)
+```
+
+### Core Models and Relationships (Current Implementation)
+```php
+// User Model - Fully implemented with relationships
+class User extends Authenticatable
+{
+    use HasRoles; // Spatie Permissions
+    
+    protected $fillable = ['name', 'email', 'family_id'];
+    
+    public function family(): BelongsTo;
+    public function timelineItems(): HasMany;
+    public function profile(): HasOne;
+    public function comments(): HasMany;
+}
+
+// TimelineItem Model - Comprehensive implementation
+class TimelineItem extends Model
+{
+    use HasUuids; // UUID primary keys
+    
+    protected $fillable = [
+        'user_id', 'family_id', 'category_id', 'author',
+        'title', 'content', 'date', 'item_timestamp',
+        'is_urgent', 'attachments', 'linked_items'
+    ];
+    
+    protected $casts = [
+        'date' => 'date',
+        'item_timestamp' => 'datetime',
+        'is_urgent' => 'boolean',
+        'attachments' => 'array',
+        'linked_items' => 'array',
+    ];
+    
+    public function user(): BelongsTo;
+    public function family(): BelongsTo;
+    public function category(): BelongsTo;
+    public function tags(): BelongsToMany;
+    public function comments(): HasMany;
+}
+
+// Comment Model - Nested comment system
+class Comment extends Model
+{
+    protected $fillable = [
+        'timeline_item_id', 'user_id', 'content',
+        'parent_id', 'is_private'
+    ];
+    
+    public function timelineItem(): BelongsTo;
+    public function user(): BelongsTo;
+    public function replies(): HasMany; // Nested comments
+}
+```
+
+---
+
+## Laravel Boost Guidelines
+
+The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
+
+### Conventions
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 
-## Verification Scripts
+### Verification Scripts
 - Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.
 
-## Application Structure & Architecture
+### Application Structure & Architecture
 - Stick to existing directory structure - don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
-## Frontend Bundling
+### Frontend Bundling
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `bun run build`, `bun run dev`, or `composer run dev`. Ask them.
 
-## Replies
+### Replies
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
-## Documentation Files
+### Documentation Files
 - You must only create documentation files if explicitly requested by the user.
 
+---
 
-=== boost rules ===
+## Laravel Boost MCP Server Integration
 
-## Laravel Boost
+### Laravel Boost
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
 
-## Artisan
+### Artisan
 - Use the `list-artisan-commands` tool when you need to call an Artisan command to double check the available parameters.
 
-## URLs
+### URLs
 - Whenever you share a project URL with the user you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain / IP, and port.
 
-## Tinker / Debugging
+### Tinker / Debugging
 - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
 - Use the `database-query` tool when you only need to read from the database.
 
-## Reading Browser Logs With the `browser-logs` Tool
+### Reading Browser Logs With the `browser-logs` Tool
 - You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
 - Only recent browser logs will be useful - ignore old logs.
 
-## Searching Documentation (Critically Important)
+### Searching Documentation (Critically Important)
 - Boost comes with a powerful `search-docs` tool you should use before any other approaches. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation specific for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
 - The 'search-docs' tool is perfect for all Laravel related packages, including Laravel, Inertia, Livewire, Filament, Tailwind, Pest, Nova, Nightwatch, etc.
 - You must use this tool to search for Laravel-ecosystem documentation before falling back to other approaches.
@@ -83,69 +187,63 @@ This application is a Laravel application and its main Laravel ecosystems packag
 4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit"
 5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms
 
+---
 
-=== php rules ===
+## PHP Development Rules
 
-## PHP
-
+### PHP
 - Always use curly braces for control structures, even if it has one line.
 
 ### Constructors
 - Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+  ```php
+  public function __construct(public GitHub $github) { }
+  ```
 - Do not allow empty `__construct()` methods with zero parameters.
 
 ### Type Declarations
 - Always use explicit return type declarations for methods and functions.
 - Use appropriate PHP type hints for method parameters.
 
-<code-snippet name="Explicit Return Types and Method Params" lang="php">
+```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
     ...
 }
-</code-snippet>
+```
 
-## Comments
+### Comments
 - Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
 
-## PHPDoc Blocks
+### PHPDoc Blocks
 - Add useful array shape type definitions for arrays when appropriate.
 
-## Enums
+### Enums
 - Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
 
+---
 
-=== herd rules ===
+## Laravel Development Rules
 
-## Laravel Herd
-
+### Laravel Herd
 - The application is served by Laravel Herd and will be available at: https?://[kebab-case-project-dir].test. Use the `get-absolute-url` tool to generate URLs for the user to ensure valid URLs.
 - You must not run any commands to make the site available via HTTP(s). It is _always_ available through Laravel Herd.
 
-
-=== inertia-laravel/core rules ===
-
-## Inertia Core
-
+### Inertia Core
 - Inertia.js components should be placed in the `resources/js/Pages` directory unless specified differently in the JS bundler (vite.config.js).
 - Use `Inertia::render()` for server-side routing instead of traditional Blade views.
 - Use `search-docs` for accurate guidance on all things Inertia.
 
-<code-snippet lang="php" name="Inertia::render Example">
+```php
 // routes/web.php example
 Route::get('/users', function () {
     return Inertia::render('Users/Index', [
         'users' => User::all()
     ]);
 });
-</code-snippet>
+```
 
-
-=== inertia-laravel/v2 rules ===
-
-## Inertia v2
-
+### Inertia v2
 - Make use of all Inertia features from v1 & v2. Check the documentation before making any changes to ensure we are taking the correct approach.
 
 ### Inertia v2 New Features
@@ -163,11 +261,7 @@ Route::get('/users', function () {
 - Forms can also be built using the `useForm` helper for more programmatic control, or to follow existing conventions. Use `search-docs` with a query of `useForm helper` for guidance.
 - `resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` are available on the `<Form>` component. Use `search-docs` with a query of 'form component resetting' for guidance.
 
-
-=== laravel/core rules ===
-
-## Do Things the Laravel Way
-
+### Laravel Core
 - Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
 - If you're creating a generic PHP class, use `artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
@@ -209,11 +303,7 @@ Route::get('/users', function () {
 ### Vite Error
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `bun run build` or ask the user to run `bun run dev` or `composer run dev`.
 
-
-=== laravel/v12 rules ===
-
-## Laravel 12
-
+### Laravel 12
 - Use the `search-docs` tool to get version specific documentation.
 - Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
@@ -222,7 +312,7 @@ Route::get('/users', function () {
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
 - **No app\Console\Kernel.php** - use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- **Commands auto-register** - files in `app/Console/Commands/` are automatically available and do not require manual registration.
+- **Commands auto-register** - files in `app/Console\Commands/` are automatically available and do not require manual registration.
 
 ### Database
 - When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
@@ -231,20 +321,15 @@ Route::get('/users', function () {
 ### Models
 - Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
+---
 
-=== pint/core rules ===
+## Code Quality & Testing
 
-## Laravel Pint Code Formatter
-
+### Laravel Pint Code Formatter
 - You must run `vendor/bin/pint --dirty` before finalizing changes to ensure your code matches the project's expected style.
 - Do not run `vendor/bin/pint --test`, simply run `vendor/bin/pint` to fix any formatting issues.
 
-
-=== pest/core rules ===
-
-## Pest
-
-### Testing
+### Pest Testing
 - If you need to verify a feature is working, write or update a Unit / Feature test.
 
 ### Pest Tests
@@ -253,11 +338,11 @@ Route::get('/users', function () {
 - Tests should test all of the happy paths, failure paths, and weird paths.
 - Tests live in the `tests/Feature` and `tests/Unit` directories.
 - Pest tests look and behave like this:
-<code-snippet name="Basic Pest Test Example" lang="php">
+```php
 it('is true', function () {
     expect(true)->toBeTrue();
 });
-</code-snippet>
+```
 
 ### Running Tests
 - Run the minimal number of tests using an appropriate filter before finalizing code edits.
@@ -268,13 +353,13 @@ it('is true', function () {
 
 ### Pest Assertions
 - When asserting status codes on a response, use the specific method like `assertForbidden` and `assertNotFound` instead of using `assertStatus(403)` or similar, e.g.:
-<code-snippet name="Pest Example Asserting postJson Response" lang="php">
+```php
 it('returns all', function () {
     $response = $this->postJson('/api/docs', []);
 
     $response->assertSuccessful();
 });
-</code-snippet>
+```
 
 ### Mocking
 - Mocking can be very helpful when appropriate.
@@ -284,20 +369,16 @@ it('returns all', function () {
 ### Datasets
 - Use datasets in Pest to simplify tests which have a lot of duplicated data. This is often the case when testing validation rules, so consider going with this solution when writing tests for validation rules.
 
-<code-snippet name="Pest Dataset Example" lang="php">
+```php
 it('has emails', function (string $email) {
     expect($email)->not->toBeEmpty();
 })->with([
     'james' => 'james@laravel.com',
     'taylor' => 'taylor@laravel.com',
 ]);
-</code-snippet>
+```
 
-
-=== pest/v4 rules ===
-
-## Pest 4
-
+### Pest 4
 - Pest v4 is a huge upgrade to Pest and offers: browser testing, smoke testing, visual regression testing, test sharding, and faster type coverage.
 - Browser testing is incredibly powerful and useful for this project.
 - Browser tests should live in `tests/Browser/`.
@@ -312,8 +393,7 @@ it('has emails', function (string $email) {
 - Take screenshots or pause tests for debugging when appropriate.
 
 ### Example Tests
-
-<code-snippet name="Pest Browser Test Example" lang="php">
+```php
 it('may reset the password', function () {
     Notification::fake();
 
@@ -330,35 +410,25 @@ it('may reset the password', function () {
 
     Notification::assertSent(ResetPassword::class);
 });
-</code-snippet>
 
-<code-snippet name="Pest Smoke Testing Example" lang="php">
 $pages = visit(['/', '/about', '/contact']);
-
 $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
-</code-snippet>
+```
 
+---
 
-=== inertia-react/core rules ===
+## Frontend Development Rules
 
-## Inertia + React
-
+### Inertia + React
 - Use `router.visit()` or `<Link>` for navigation instead of traditional links.
 
-<code-snippet name="Inertia Client Navigation" lang="react">
-
+```react
 import { Link } from '@inertiajs/react'
 <Link href="/">Home</Link>
+```
 
-</code-snippet>
-
-
-=== inertia-react/v2/forms rules ===
-
-## Inertia + React Forms
-
-<code-snippet name="`<Form>` Component Example" lang="react">
-
+### Inertia + React Forms
+```react
 import { Form } from '@inertiajs/react'
 
 export default () => (
@@ -387,14 +457,9 @@ export default () => (
     )}
     </Form>
 )
+```
 
-</code-snippet>
-
-
-=== tailwindcss/core rules ===
-
-## Tailwind Core
-
+### Tailwind CSS Core
 - Use Tailwind CSS classes to style HTML, check and use existing tailwind conventions within the project before writing your own.
 - Offer to extract repeated patterns into components that match the project's conventions (i.e. Blade, JSX, Vue, etc..)
 - Think through class placement, order, priority, and defaults - remove redundant classes, add classes to parent or child carefully to limit repetition, group elements logically
@@ -403,34 +468,28 @@ export default () => (
 ### Spacing
 - When listing items, use gap utilities for spacing, don't use margins.
 
-    <code-snippet name="Valid Flex Gap Spacing Example" lang="html">
-        <div class="flex gap-8">
-            <div>Superior</div>
-            <div>Michigan</div>
-            <div>Erie</div>
-        </div>
-    </code-snippet>
-
+```html
+<div class="flex gap-8">
+    <div>Superior</div>
+    <div>Michigan</div>
+    <div>Erie</div>
+</div>
+```
 
 ### Dark Mode
 - If existing pages and components support dark mode, new pages and components must support dark mode in a similar way, typically using `dark:`.
 
-
-=== tailwindcss/v4 rules ===
-
-## Tailwind 4
-
+### Tailwind 4
 - Always use Tailwind CSS v4 - do not use the deprecated utilities.
 - `corePlugins` is not supported in Tailwind v4.
 - In Tailwind v4, you import Tailwind using a regular CSS `@import` statement, not using the `@tailwind` directives used in v3:
 
-<code-snippet name="Tailwind v4 Import Tailwind Diff" lang="diff"
-   - @tailwind base;
-   - @tailwind components;
-   - @tailwind utilities;
-   + @import "tailwindcss";
-</code-snippet>
-
+```diff
+- @tailwind base;
+- @tailwind components;
+- @tailwind utilities;
++ @import "tailwindcss";
+```
 
 ### Replaced Utilities
 - Tailwind v4 removed deprecated utilities. Do not use the deprecated option - use the replacement.
@@ -450,11 +509,168 @@ export default () => (
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 
+---
 
-=== tests rules ===
+## Development Priorities & Workflows
+
+### Immediate Focus (Frontend Implementation)
+1. **Timeline Interface**: Build React components for timeline display
+2. **CRUD Operations**: Create/edit/delete timeline items
+3. **Category/Tag UI**: Filtering and organization interface
+4. **Comment System**: Nested comment UI and interactions
+
+### Next Phase (Advanced Features)
+1. **File Attachments**: Upload UI with drag-and-drop
+2. **Search & Filtering**: Advanced search capabilities
+3. **Notifications**: Real-time notification system
+4. **Calendar Integration**: Event coordination features
+
+### Future Phase (Polish & Scale)
+1. **PDF Export**: Report generation for legal purposes
+2. **Mobile Optimization**: Responsive design improvements
+3. **Performance**: Pagination, caching, optimization
+4. **MitID Integration**: Danish government authentication
+
+### Development Guidelines
+
+#### Laravel Best Practices
+- Use UUIDs for timeline items (already implemented)
+- Leverage Eloquent relationships extensively
+- Implement Form Request validation classes
+- Use Spatie Permissions for role-based access
+- Follow PSR-12 coding standards
+
+#### React/Inertia.js Patterns
+- Use Inertia.js forms for seamless SPA experience
+- Implement proper TypeScript interfaces
+- Use kebab-case for component files, PascalCase for components
+- Follow Radix UI + shadcn/ui component patterns
+- Handle loading states and error boundaries
+
+#### Database Design Principles
+- JSON columns for flexible data (attachments, linked_items)
+- Proper foreign key relationships and constraints
+- Indexing strategy for performance
+- Migration best practices with rollback capability
+
+### Common Development Workflows
+
+#### Adding New Timeline Features
+1. **Database**: Create migration if schema changes needed
+2. **Model**: Update Eloquent model with relationships/casts
+3. **Controller**: Implement CRUD operations with Inertia responses
+4. **Frontend**: Create React components and Inertia pages
+5. **Routes**: Add web routes with proper middleware
+6. **Testing**: Write Pest feature tests
+
+#### File Upload Implementation
+1. **Storage**: Configure AWS S3 disk in `config/filesystems.php`
+2. **Model**: Use JSON cast for attachments array
+3. **Controller**: Handle file validation and storage
+4. **Frontend**: Implement drag-and-drop upload component
+5. **Security**: Validate file types, sizes, and scan for malware
+
+#### Permission System Usage
+1. **Roles**: Define roles (parent, consultant, admin)
+2. **Permissions**: Create specific permissions for actions
+3. **Middleware**: Use `role` and `permission` middleware
+4. **Policies**: Implement authorization policies for models
+5. **UI**: Show/hide features based on user permissions
+
+### MCP Server Integration
+The workspace uses several MCP servers for enhanced development:
+
+#### Laravel Boost (`php artisan boost:mcp`)
+- `application-info`: Get current app state and packages
+- `database-schema`: View database structure and relationships
+- `list-routes`: See all application routes and middleware
+- `read-log-entries`: Check application logs for errors
+- `tinker`: Execute PHP code in Laravel context
+- `search-docs`: Search Laravel ecosystem documentation
+
+#### Browser MCP (`npx @browsermcp/mcp@latest`)
+- `browser_navigate`: Test pages in browser
+- `browser_snapshot`: Capture UI state for debugging
+- `browser_get_console_logs`: Debug JavaScript/React errors
+
+#### GitHub MCP (Docker)
+- Repository management and code search
+- Issue and PR management
+- Requires `GITHUB_PERSONAL_ACCESS_TOKEN` in `.env`
+
+### Quality Assurance
+
+#### Code Quality Commands
+```bash
+# PHP
+./vendor/bin/pint              # Format code
+./vendor/bin/pint --test       # Check formatting
+
+# JavaScript/TypeScript
+bun run format                 # Format with Prettier
+bun run lint                   # ESLint checking
+bun run types                  # TypeScript checking
+```
+
+#### Testing Strategy
+```bash
+# Run all tests
+composer test
+
+# Run specific test
+php artisan test --filter=TimelineTest
+
+# Generate test coverage
+php artisan test --coverage
+```
+
+### Deployment Considerations
+
+#### Production Environment
+- **Database**: PostgreSQL (already configured)
+- **Cache**: Database driver (configured)
+- **Queue**: Database driver (configured)
+- **Broadcasting**: Reverb for real-time features
+- **File Storage**: AWS S3 (league/flysystem-aws-s3-v3 installed)
+
+#### Security Requirements
+- GDPR and NIS2 compliance for Danish market
+- Secure file storage with access controls
+- Audit logging for legal compliance
+- Environment-based configuration management
+
+### Getting Started with Development
+
+1. **Environment Setup**
+   ```bash
+   composer install
+   bun install
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+2. **Database Setup**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
+
+3. **Development Server**
+   ```bash
+   composer dev  # Starts Laravel, Vite, queue, and logs
+   ```
+
+4. **MCP Configuration**
+   - Ensure `.env` has `GITHUB_PERSONAL_ACCESS_TOKEN`
+   - Kiro IDE will automatically connect to MCP servers
+
+---
 
 ## Test Enforcement
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
-</laravel-boost-guidelines>
+
+---
+
+This consolidated instruction set provides comprehensive context for developing Famlink's co-parenting timeline platform. The focus has shifted from basic setup to implementing the comprehensive frontend interface and advanced features that will make this a production-ready co-parenting platform.

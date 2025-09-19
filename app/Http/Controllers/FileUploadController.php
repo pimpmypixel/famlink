@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DeleteAttachmentRequest;
 use App\Http\Requests\FileUploadRequest;
 use App\Models\TimelineItem;
+use App\Services\FileVectorizationService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FileUploadController extends Controller
 {
+    public function __construct(
+        private FileVectorizationService $vectorizationService
+    ) {}
+
     public function upload(FileUploadRequest $request, string $timelineItemId)
     {
         $timelineItem = TimelineItem::findOrFail($timelineItemId);
@@ -38,9 +43,8 @@ class FileUploadController extends Controller
         $region = config('filesystems.disks.s3.region', 'us-east-1');
         $url = "https://{$bucket}.s3.{$region}.amazonaws.com/{$path}";
 
-        // Update timeline item attachments
-        $attachments = $timelineItem->attachments ?? [];
-        $attachments[] = [
+        // Prepare attachment data
+        $attachment = [
             'id' => Str::uuid(),
             'original_name' => $originalName,
             'filename' => $filename,
@@ -51,7 +55,22 @@ class FileUploadController extends Controller
             'uploaded_at' => now()->toISOString(),
         ];
 
+        // Update timeline item attachments
+        $attachments = $timelineItem->attachments ?? [];
+        $attachments[] = $attachment;
         $timelineItem->update(['attachments' => $attachments]);
+
+        // Process file for vectorization (async/background processing)
+        try {
+            $this->vectorizationService->processUploadedFile($attachment, $timelineItem);
+        } catch (\Exception $e) {
+            // Log error but don't fail the upload
+            \Illuminate\Support\Facades\Log::error('File vectorization failed', [
+                'file' => $originalName,
+                'timeline_item_id' => $timelineItemId,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return back()->with('success', 'File uploaded successfully!');
     }

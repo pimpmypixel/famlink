@@ -272,7 +272,178 @@ profiles (id, user_id, ...) -- Extended user profiles
 permission_tables -- Spatie permissions (roles, permissions, model_has_permissions, etc.)
 ```
 
-### Core Models and Relationships (Current Implementation)
+## Database Seeding & Testing Infrastructure
+
+### Comprehensive Seeder Architecture
+The application includes a robust seeding system that creates hundreds of realistic test records for comprehensive testing and development:
+
+#### DatabaseSeeder.php
+```php
+public function run(): void
+{
+    $this->call(FamilySeeder::class);
+    $this->call(RolesSeeder::class);
+    $this->call(PermissionsSeeder::class);  // NEW: Granular permissions
+    $this->call(UserSeeder::class);
+    $this->call(TimelineItemSeeder::class);
+}
+```
+
+#### FamilySeeder.php
+- **Creates**: 55 families with diverse Danish names
+- **Features**: Realistic child names, varied family structures
+- **Purpose**: Provides comprehensive family data for testing relationships
+
+#### UserSeeder.php
+- **Creates**: 144 total users (3 admins, 12 social workers, 58 fathers, 59 mothers, 12 consultants)
+- **Features**: Proper role assignments, family relationships, realistic Danish names
+- **Purpose**: Complete user ecosystem for permission and relationship testing
+
+#### TimelineItemSeeder.php
+- **Creates**: 224 timeline items with extensive relationships
+- **Features**: 
+  - 24 base items with realistic Danish family law content
+  - 200+ generated items with varied categories and tags
+  - Extensive comment threads with nested replies (1,236 total comments)
+  - Family-scoped content distribution
+  - Urgent item flagging (10% probability)
+- **Purpose**: Comprehensive timeline data for performance and feature testing
+
+#### PermissionsSeeder.php (NEW)
+- **Creates**: 50+ granular permissions across user and agent contexts
+- **Features**:
+  - User permissions (timeline, comments, files, admin, etc.)
+  - Agent permissions (AI agent capabilities, vector memory, file analysis)
+  - Role-based permission assignment
+  - Agent-specific roles (file-analysis-agent, onboarding-agent, etc.)
+- **Purpose**: Complete permission system for secure multi-user testing
+
+### Seeder Testing Commands
+```bash
+# Run all seeders
+php artisan db:seed
+
+# Run specific seeder
+php artisan db:seed --class=TimelineItemSeeder
+
+# Fresh database with seeders
+php artisan migrate:fresh --seed
+
+# Check seeded data counts
+php artisan tinker --execute="
+echo 'Timeline Items: ' . App\Models\TimelineItem::count();
+echo 'Comments: ' . App\Models\Comment::count();
+echo 'Users: ' . App\Models\User::count();
+echo 'Families: ' . App\Models\Family::count();
+"
+```
+
+### Optimized Laravel Resources
+
+#### TimelineItemResource.php
+- **Features**: Conditional loading, pagination support, metadata inclusion
+- **Performance**: Efficient relationship loading, proper null handling
+- **Usage**: 
+```php
+// With pagination
+TimelineItemResource::collection(
+    TimelineItem::paginate(20)
+);
+
+// With conditional includes
+TimelineItemResource::collection(
+    TimelineItem::with(['user', 'comments'])->get()
+);
+```
+
+#### CommentResource.php
+- **Features**: Nested reply support, user role information, privacy handling
+- **Performance**: Lazy loading of replies, efficient relationship queries
+- **Usage**: Automatic inclusion in timeline item responses
+
+#### TimelineItemCollection.php (NEW)
+- **Features**: Pagination metadata, filter information, relationship counts
+- **Performance**: Optimized for large datasets with proper pagination
+- **Usage**: 
+```php
+return new TimelineItemCollection(
+    TimelineItem::with(['user', 'category', 'tags'])
+        ->paginate(request('per_page', 20))
+);
+```
+
+### Granular Permissions System
+
+#### User Permission Categories
+- **Timeline Permissions**: CRUD operations, urgent item handling, private content access
+- **Comment Permissions**: Create, edit, delete with ownership and privacy controls
+- **File Permissions**: Upload, download, delete with size and type restrictions
+- **User Management**: View, manage, impersonate with role-based restrictions
+- **Family Permissions**: Member management, timeline access, settings control
+- **Administrative**: Analytics, system settings, audit logs, backup management
+
+#### Agent Permission Categories (AI Agents)
+- **Vector Memory**: Create embeddings, search, manage persistent context
+- **File Analysis**: Process uploads, extract content, generate insights
+- **Timeline Analysis**: Pattern recognition, insight generation, prediction
+- **User Context**: Access behavior data, personalize responses, generate insights
+- **Tool Execution**: Timeline tools, user tools, file tools, search capabilities
+- **Session Management**: Persistent sessions, context history, agent lifecycle
+
+#### Permission Implementation
+```php
+// Check user permissions
+$user->can('create-timeline-item');
+$user->can('edit-own-timeline-item');
+$user->can('view-private-comments');
+
+// Check agent permissions
+$agent->can('access-vector-memory');
+$agent->can('analyze-uploaded-files');
+$agent->can('generate-user-insights');
+
+// Role-based middleware
+Route::middleware(['role:admin'])->group(function () {
+    // Admin-only routes
+});
+
+Route::middleware(['permission:manage-users'])->group(function () {
+    // User management routes
+});
+```
+
+#### Agent Roles & Permissions
+- **file-analysis-agent**: File processing, vector embeddings, content analysis
+- **onboarding-agent**: User context, behavior analysis, personalized responses
+- **customer-support-agent**: Timeline insights, session management, external integration
+- **onboarding-summary-agent**: Comprehensive user analysis, pattern recognition
+- **ai-agent**: Base permissions for all AI agents (vector memory, API responses)
+
+### Testing with Seeded Data
+```bash
+# Test with comprehensive data
+php artisan test --filter=TimelineTest
+
+# Test permissions
+php artisan test tests/Feature/PermissionTest.php
+
+# Test API resources
+php artisan test tests/Feature/Api/TimelineApiTest.php
+
+# Performance testing
+php artisan test tests/Feature/PerformanceTest.php
+```
+
+### Development Workflow with Seeders
+1. **Database Reset**: `php artisan migrate:fresh --seed`
+2. **Verify Data**: Check record counts and relationships
+3. **Test Features**: Run tests with realistic data volumes
+4. **Performance Check**: Validate API responses with optimized resources
+5. **Permission Testing**: Test role-based access with comprehensive user set
+
+---
+
+## Laravel Boost Guidelines
 ```php
 // User Model - Fully implemented with relationships
 class User extends Authenticatable
@@ -1463,4 +1634,239 @@ php artisan test --coverage
 
 ---
 
-This consolidated instruction set provides comprehensive context for developing Famlink's co-parenting timeline platform. The focus has shifted from basic setup to implementing the comprehensive frontend interface and advanced features that will make this a production-ready co-parenting platform.
+This consolidated instruction set provides comprehensive context for developing Famlink's co-parenting timeline platform. The focus has shifted from basic setup to implementing the comprehensive frontend interface and advanced features that will make this a production-ready co-parenting platform.---
+
+## Vectorization Integration & AI Features
+
+### File Vectorization Service
+The application includes comprehensive file processing capabilities for AI-powered document analysis:
+
+#### FileVectorizationService.php
+- **Purpose**: Processes uploaded files and creates vector embeddings for semantic search
+- **Supported Formats**: PDF, Word (.docx), Excel (.xlsx), plain text files
+- **Vector Storage**: Uses PostgreSQL pg_vector extension for efficient similarity search
+- **Integration**: Works with multiple embedding providers (OpenAI, Cohere, Ollama, Gemini)
+
+#### Implementation Pattern
+```php
+// Process uploaded file for vectorization
+$fileVectorizationService = new FileVectorizationService();
+$result = $fileVectorizationService->processFile($uploadedFile, $userId);
+
+// Search for similar content
+$similarContent = $fileVectorizationService->semanticSearch($query, $userId, $limit = 10);
+```
+
+### AI Agent Architecture
+
+#### Specialized Agents
+- **FileAnalysisAgent**: Processes uploaded documents, extracts insights, generates summaries
+- **OnboardingAgent**: Provides personalized user guidance throughout the journey
+- **CustomerSupportAgent**: Handles user queries with context-aware responses
+- **OnboardingSummaryAgent**: Analyzes user behavior patterns and provides comprehensive insights
+
+#### Agent Tools
+- **FileSearchTool**: Semantic search across uploaded documents
+- **TimelineTool**: Access and analyze timeline data
+- **UserTool**: Retrieve user context and preferences
+- **VectorMemoryTool**: Manage persistent vector memory
+
+#### Agent Permissions
+```php
+// Check agent permissions
+$agent->can('access-vector-memory');
+$agent->can('analyze-uploaded-files');
+$agent->can('generate-user-insights');
+
+// Agent-specific middleware
+Route::middleware(['role:file-analysis-agent'])->group(function () {
+    // Agent-only routes
+});
+```
+
+### Vector Memory Management
+
+#### VectorMemoryManager
+- **Purpose**: Manages persistent vector embeddings for users and agents
+- **Features**: Semantic search, context retrieval, memory consolidation
+- **Database**: Uses pg_vector extension for efficient similarity queries
+
+#### Usage Patterns
+```php
+// Store user interaction in vector memory
+$vectorMemory->storeInteraction($userId, $content, $metadata);
+
+// Retrieve relevant context for AI responses
+$context = $vectorMemory->getRelevantContext($userId, $query, $limit = 5);
+
+// Search across user's document history
+$results = $vectorMemory->searchUserDocuments($userId, $searchQuery);
+```
+
+---
+
+## API Performance & Optimization
+
+### Optimized Resource Classes
+
+#### TimelineItemResource Performance Features
+- **Conditional Loading**: Relationships loaded only when requested
+- **Pagination Support**: Efficient handling of large datasets
+- **Metadata Inclusion**: Request context and filtering information
+- **Efficient Serialization**: Optimized JSON structure for frontend consumption
+
+#### Usage with Performance Optimizations
+```php
+// Efficient loading with conditional relationships
+$timelineItems = TimelineItem::with([
+    'user:id,name,email',
+    'category:id,name' => function ($query) {
+        $query->select('id', 'name');
+    },
+    'tags:id,name'
+])
+->when($request->has('include_comments'), function ($query) {
+    return $query->with(['comments' => function ($subQuery) {
+        $subQuery->with('user:id,name')->latest()->limit(5);
+    }]);
+})
+->paginate(20);
+
+// Return optimized resource
+return new TimelineItemCollection($timelineItems);
+```
+
+### Database Query Optimization
+
+#### N+1 Query Prevention
+```php
+// Bad - causes N+1 queries
+$timelineItems = TimelineItem::all();
+foreach ($timelineItems as $item) {
+    echo $item->user->name; // N+1 query
+}
+
+// Good - eager loading
+$timelineItems = TimelineItem::with('user:id,name')->get();
+foreach ($timelineItems as $item) {
+    echo $item->user->name; // No additional queries
+}
+```
+
+#### Family-Scoped Queries
+```php
+// Always scope queries to user's family for security
+$user = auth()->user();
+$timelineItems = TimelineItem::whereIn('family_id', $user->family->users()->pluck('id'))
+    ->with(['user', 'comments.user'])
+    ->orderBy('item_timestamp', 'desc')
+    ->paginate(20);
+```
+
+### Caching Strategies
+
+#### Database Query Caching
+```php
+// Cache expensive queries
+$timelineItems = Cache::remember("timeline.{$user->id}", 3600, function () use ($user) {
+    return TimelineItem::whereIn('family_id', $user->family->users()->pluck('id'))
+        ->with(['user', 'category', 'tags'])
+        ->orderBy('item_timestamp', 'desc')
+        ->get();
+});
+```
+
+#### Permission Caching
+```php
+// Spatie Permission automatically caches permissions
+// Clear cache when permissions change
+app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+```
+
+### Performance Testing Commands
+
+#### API Response Time Testing
+```bash
+# Test API endpoints with realistic data
+php artisan test --filter=ApiPerformanceTest
+
+# Load testing with seeded data
+php artisan test tests/Feature/PerformanceTest.php
+```
+
+#### Database Query Analysis
+```php
+// Use Laravel Debugbar or Telescope for query analysis
+// Check query execution time and N+1 problems
+
+// Manual query analysis
+DB::listen(function ($query) {
+    if ($query->time > 100) { // Log slow queries
+        Log::warning('Slow query detected', [
+            'sql' => $query->sql,
+            'time' => $query->time,
+            'bindings' => $query->bindings
+        ]);
+    }
+});
+```
+
+### Frontend Performance Optimization
+
+#### Inertia.js Deferred Props
+```tsx
+// Defer heavy data loading
+export default function Timeline({ timelineItems, stats }) {
+    return (
+        <div>
+            {/* Immediate content */}
+            <TimelineList items={timelineItems} />
+            
+            {/* Deferred content */}
+            <WhenVisible fallback={<StatsSkeleton />}>
+                <TimelineStats stats={stats} />
+            </WhenVisible>
+        </div>
+    );
+}
+```
+
+#### React.memo for Component Optimization
+```tsx
+const TimelineItem = React.memo(({ item, onUpdate }) => {
+    return (
+        <div className="timeline-item">
+            <h3>{item.title}</h3>
+            <p>{item.content}</p>
+        </div>
+    );
+});
+```
+
+### Monitoring & Profiling
+
+#### Application Monitoring
+```php
+// Log performance metrics
+Log::info('API Response Time', [
+    'endpoint' => request()->path(),
+    'method' => request()->method(),
+    'duration' => microtime(true) - LARAVEL_START,
+    'user_id' => auth()->id()
+]);
+```
+
+#### Database Monitoring
+```php
+// Monitor database connections
+DB::listen(function ($query) {
+    $metrics = [
+        'query' => $query->sql,
+        'time' => $query->time,
+        'connection' => DB::getName()
+    ];
+    
+    // Send to monitoring service
+    app(MonitoringService::class)->recordQuery($metrics);
+});
+```

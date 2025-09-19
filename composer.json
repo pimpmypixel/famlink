@@ -16,7 +16,10 @@
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
         "league/flysystem-aws-s3-v3": "^3.29",
+        "phpoffice/phpspreadsheet": "^5.1",
+        "phpoffice/phpword": "^1.4",
         "prism-php/prism": "^0.84.0",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-permission": "^6.21",
         "vizra/vizra-adk": "^0.0.29"
     },

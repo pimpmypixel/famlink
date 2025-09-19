@@ -1,0 +1,357 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+class PermissionsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Clear existing permissions and roles
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // User Permissions
+        $userPermissions = [
+            // Timeline permissions
+            'view-timeline',
+            'create-timeline-item',
+            'edit-own-timeline-item',
+            'edit-any-timeline-item',
+            'delete-own-timeline-item',
+            'delete-any-timeline-item',
+            'view-private-timeline-items',
+
+            // Comment permissions
+            'create-comment',
+            'edit-own-comment',
+            'edit-any-comment',
+            'delete-own-comment',
+            'delete-any-comment',
+            'view-private-comments',
+
+            // Category and Tag permissions
+            'manage-categories',
+            'manage-tags',
+
+            // File permissions
+            'upload-files',
+            'download-files',
+            'delete-own-files',
+            'delete-any-files',
+            'view-file-attachments',
+
+            // User management permissions
+            'view-users',
+            'manage-users',
+            'impersonate-users',
+
+            // Family permissions
+            'view-family-members',
+            'manage-family-members',
+            'view-family-timeline',
+            'manage-family-settings',
+
+            // Profile permissions
+            'view-own-profile',
+            'edit-own-profile',
+            'view-any-profile',
+            'edit-any-profile',
+
+            // Notification permissions
+            'receive-notifications',
+            'send-notifications',
+            'manage-notifications',
+
+            // Search permissions
+            'search-timeline',
+            'search-files',
+            'advanced-search',
+
+            // Export permissions
+            'export-timeline',
+            'export-reports',
+            'export-family-data',
+
+            // Admin permissions
+            'view-analytics',
+            'manage-system-settings',
+            'view-audit-logs',
+            'manage-backups',
+        ];
+
+        // Agent Permissions (for AI agents)
+        $agentPermissions = [
+            // Vector memory permissions
+            'access-vector-memory',
+            'create-vector-embeddings',
+            'search-vector-memory',
+            'manage-vector-memory',
+
+            // File analysis permissions
+            'analyze-uploaded-files',
+            'extract-file-content',
+            'process-file-metadata',
+            'generate-file-insights',
+
+            // Timeline analysis permissions
+            'analyze-timeline-patterns',
+            'generate-timeline-insights',
+            'predict-timeline-events',
+            'summarize-timeline-data',
+
+            // User context permissions
+            'access-user-context',
+            'analyze-user-behavior',
+            'generate-user-insights',
+            'personalize-responses',
+
+            // Tool execution permissions
+            'execute-timeline-tools',
+            'execute-user-tools',
+            'execute-file-tools',
+            'execute-search-tools',
+
+            // Session management permissions
+            'manage-agent-sessions',
+            'persist-session-data',
+            'access-session-history',
+
+            // Integration permissions
+            'integrate-external-services',
+            'process-external-data',
+            'generate-api-responses',
+
+            // Learning permissions
+            'learn-from-interactions',
+            'update-knowledge-base',
+            'improve-response-quality',
+        ];
+
+        // Create all permissions
+        $allPermissions = array_merge($userPermissions, $agentPermissions);
+        foreach ($allPermissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Assign permissions to roles
+        $this->assignPermissionsToRoles();
+    }
+
+    /**
+     * Assign permissions to existing roles
+     */
+    private function assignPermissionsToRoles(): void
+    {
+        // Admin role - all permissions
+        $adminRole = Role::where('name', 'admin')->first();
+        if ($adminRole) {
+            $adminRole->givePermissionTo(Permission::all());
+        }
+
+        // Social worker (myndighed) permissions
+        $socialWorkerRole = Role::where('name', 'myndighed')->first();
+        if ($socialWorkerRole) {
+            $socialWorkerPermissions = [
+                'view-timeline',
+                'create-timeline-item',
+                'edit-own-timeline-item',
+                'create-comment',
+                'edit-own-comment',
+                'delete-own-comment',
+                'upload-files',
+                'download-files',
+                'view-family-members',
+                'view-family-timeline',
+                'view-own-profile',
+                'edit-own-profile',
+                'receive-notifications',
+                'send-notifications',
+                'search-timeline',
+                'export-timeline',
+                'export-reports',
+                'view-analytics',
+                'view-audit-logs',
+            ];
+            $socialWorkerRole->givePermissionTo($socialWorkerPermissions);
+        }
+
+        // Parent (far/mor) permissions
+        $parentRoles = Role::whereIn('name', ['far', 'mor'])->get();
+        foreach ($parentRoles as $parentRole) {
+            $parentPermissions = [
+                'view-timeline',
+                'create-timeline-item',
+                'edit-own-timeline-item',
+                'delete-own-timeline-item',
+                'create-comment',
+                'edit-own-comment',
+                'delete-own-comment',
+                'upload-files',
+                'download-files',
+                'delete-own-files',
+                'view-family-members',
+                'view-family-timeline',
+                'manage-family-members',
+                'view-own-profile',
+                'edit-own-profile',
+                'receive-notifications',
+                'search-timeline',
+                'search-files',
+                'export-timeline',
+                'export-family-data',
+            ];
+            $parentRole->givePermissionTo($parentPermissions);
+        }
+
+        // Consultant (andet) permissions
+        $consultantRole = Role::where('name', 'andet')->first();
+        if ($consultantRole) {
+            $consultantPermissions = [
+                'view-timeline',
+                'create-timeline-item',
+                'edit-own-timeline-item',
+                'create-comment',
+                'edit-own-comment',
+                'upload-files',
+                'download-files',
+                'view-family-members',
+                'view-family-timeline',
+                'view-own-profile',
+                'edit-own-profile',
+                'receive-notifications',
+                'search-timeline',
+                'export-timeline',
+            ];
+            $consultantRole->givePermissionTo($consultantPermissions);
+        }
+
+        // Temporary user permissions (limited access)
+        $temporaryRole = Role::where('name', 'temporary')->first();
+        if ($temporaryRole) {
+            $temporaryPermissions = [
+                'view-timeline',
+                'view-own-profile',
+                'receive-notifications',
+            ];
+            $temporaryRole->givePermissionTo($temporaryPermissions);
+        }
+
+        // Approved user permissions (standard access)
+        $approvedRole = Role::where('name', 'approved')->first();
+        if ($approvedRole) {
+            $approvedPermissions = [
+                'view-timeline',
+                'create-timeline-item',
+                'edit-own-timeline-item',
+                'create-comment',
+                'edit-own-comment',
+                'upload-files',
+                'download-files',
+                'view-family-members',
+                'view-family-timeline',
+                'view-own-profile',
+                'edit-own-profile',
+                'receive-notifications',
+                'search-timeline',
+            ];
+            $approvedRole->givePermissionTo($approvedPermissions);
+        }
+
+        // Create agent roles and assign permissions
+        $this->createAgentRoles();
+    }
+
+    /**
+     * Create agent roles and assign permissions
+     */
+    private function createAgentRoles(): void
+    {
+        // File Analysis Agent role
+        $fileAnalysisRole = Role::firstOrCreate(['name' => 'file-analysis-agent']);
+        $fileAnalysisPermissions = [
+            'access-vector-memory',
+            'create-vector-embeddings',
+            'search-vector-memory',
+            'analyze-uploaded-files',
+            'extract-file-content',
+            'process-file-metadata',
+            'generate-file-insights',
+            'execute-file-tools',
+            'manage-agent-sessions',
+            'persist-session-data',
+            'learn-from-interactions',
+            'update-knowledge-base',
+        ];
+        $fileAnalysisRole->givePermissionTo($fileAnalysisPermissions);
+
+        // Onboarding Agent role
+        $onboardingRole = Role::firstOrCreate(['name' => 'onboarding-agent']);
+        $onboardingPermissions = [
+            'access-user-context',
+            'analyze-user-behavior',
+            'generate-user-insights',
+            'personalize-responses',
+            'manage-agent-sessions',
+            'persist-session-data',
+            'access-session-history',
+            'learn-from-interactions',
+            'update-knowledge-base',
+            'improve-response-quality',
+        ];
+        $onboardingRole->givePermissionTo($onboardingPermissions);
+
+        // Customer Support Agent role
+        $supportRole = Role::firstOrCreate(['name' => 'customer-support-agent']);
+        $supportPermissions = [
+            'access-user-context',
+            'analyze-timeline-patterns',
+            'generate-timeline-insights',
+            'execute-timeline-tools',
+            'execute-user-tools',
+            'manage-agent-sessions',
+            'persist-session-data',
+            'access-session-history',
+            'integrate-external-services',
+            'generate-api-responses',
+            'learn-from-interactions',
+            'improve-response-quality',
+        ];
+        $supportRole->givePermissionTo($supportPermissions);
+
+        // Onboarding Summary Agent role
+        $summaryRole = Role::firstOrCreate(['name' => 'onboarding-summary-agent']);
+        $summaryPermissions = [
+            'access-user-context',
+            'analyze-user-behavior',
+            'analyze-timeline-patterns',
+            'generate-user-insights',
+            'generate-timeline-insights',
+            'summarize-timeline-data',
+            'manage-agent-sessions',
+            'persist-session-data',
+            'access-session-history',
+            'learn-from-interactions',
+            'update-knowledge-base',
+        ];
+        $summaryRole->givePermissionTo($summaryPermissions);
+
+        // General AI Agent role (base permissions for all agents)
+        $generalAgentRole = Role::firstOrCreate(['name' => 'ai-agent']);
+        $generalAgentPermissions = [
+            'access-vector-memory',
+            'search-vector-memory',
+            'manage-agent-sessions',
+            'persist-session-data',
+            'learn-from-interactions',
+            'generate-api-responses',
+        ];
+        $generalAgentRole->givePermissionTo($generalAgentPermissions);
+    }
+}

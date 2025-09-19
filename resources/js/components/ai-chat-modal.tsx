@@ -122,7 +122,8 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         setMessages([{
           id: `msg-${Date.now()}`,
           role: "agent",
-          content: `🔄 Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
+          content: `🔄 Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.`,
+
           timestamp: new Date().toISOString()
         }]);
         resumeOnboarding(existingSession.sessionId);
@@ -474,6 +475,29 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       const result = await response.json();
       const updatedSessionId = result.session_id || sessionId;
       setSessionId(updatedSessionId);
+
+      // Check if onboarding is completed from the POST response
+      if (result.completed === true) {
+        setCompleted(true);
+        // Add completion message with streaming effect
+        const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+        setMessages(prev => {
+          const newMessages = [...prev, {
+            id: `msg-${Date.now()}`,
+            role: "agent",
+            content: '',
+            timestamp: new Date().toISOString(),
+            isTyping: true
+          }];
+          // Start streaming into the newly added message
+          setTimeout(() => streamText(completionMessage, newMessages.length - 1), 0);
+          return newMessages;
+        });
+        // Show toast notification
+        showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+        setLoading(false);
+        return;
+      }
 
       // Update session activity in cookie
       updateSessionActivity(updatedSessionId);

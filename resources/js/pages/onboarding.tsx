@@ -217,10 +217,10 @@ export default function Onboarding() {
                 const data = JSON.parse(line.slice(6));
 
                 if (data.type === 'start') {
-                  setSessionId(data.session_id);
+                  // Don't override sessionId for resumed sessions
                   setCurrentQuestion(data.question);
                   // Update cookie with current session data
-                  updateSessionActivity(data.session_id, {
+                  updateSessionActivity(existingSessionId, {
                     answered: data.answers ? Object.keys(data.answers).length : 0,
                     total: 16,
                     currentQuestionKey: data.question?.key,
@@ -277,6 +277,9 @@ export default function Onboarding() {
     try {
       setIsLoading(true);
 
+      // Clear input immediately when starting to submit
+      setInput('');
+
       // Add user message to chat
       setMessages(prev => [...prev, {
         id: Date.now(),
@@ -305,9 +308,6 @@ export default function Onboarding() {
 
       const result = await response.json();
 
-      // Clear input
-      setInput('');
-
       // Update session activity in cookie
       updateSessionActivity(sessionId);
 
@@ -316,6 +316,8 @@ export default function Onboarding() {
 
     } catch (error) {
       console.error('Error submitting answer:', error);
+      // Restore the input if there was an error
+      setInput(answer);
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
@@ -329,7 +331,7 @@ export default function Onboarding() {
 
   const getNextQuestion = async () => {
     try {
-      const response = await fetch('/api/onboarding/question', {
+      const response = await fetch(`/api/onboarding/question?session_id=${sessionId}`, {
         method: 'GET',
         headers: {
           'Accept': 'text/event-stream',
@@ -377,7 +379,10 @@ export default function Onboarding() {
                 const data = JSON.parse(line.slice(6));
 
                 if (data.type === 'start') {
-                  setSessionId(data.session_id);
+                  // Only update sessionId if we don't have one yet
+                  if (!sessionId) {
+                    setSessionId(data.session_id);
+                  }
                   setCurrentQuestion(data.question);
                 } else if (data.type === 'chunk') {
                   setMessages(prev => [...prev, {

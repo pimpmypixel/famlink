@@ -7,6 +7,7 @@ use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Vizra\VizraADK\System\AgentContext;
@@ -44,7 +45,7 @@ class OnboardingController extends Controller
 
         // Load questions from playbook
         $questions = $this->loadQuestions();
-        $questionList = $questions['questions'] ?? [];
+        $questionList = $questions ?? [];
 
         // Find next unanswered question
         $nextQuestion = null;
@@ -119,14 +120,44 @@ class OnboardingController extends Controller
                 $user->name = $answer;
                 $user->save();
             } elseif ($questionKey === 'email') { // Email question
-                $user->email = $answer;
-                $user->save();
+                // Check if email already exists
+                $existingUser = User::where('email', $answer)->first();
+
+                if ($existingUser) {
+                    // If the existing user is also temporary, allow the merge
+                    if ($existingUser->hasRole('temporary')) {
+                        // Merge the temporary accounts - keep the current profile but update user
+                        $oldUserId = $user->id;
+                        $profile->user_id = $existingUser->id;
+                        $profile->save();
+
+                        // Delete the old temporary user
+                        $user->delete();
+
+                        // Update the existing temporary user with the new information
+                        $existingUser->name = $profile->answers['name'] ?? $existingUser->name;
+                        $existingUser->save();
+
+                        // Update the user reference for the rest of this method
+                        $user = $existingUser;
+                    } else {
+                        // Email belongs to a regular user - don't allow temporary user to claim it
+                        return response()->json([
+                            'error' => 'Denne email-adresse er allerede registreret. Brug venligst en anden email-adresse eller log ind med denne konto.',
+                            'email_taken' => true,
+                        ], 422);
+                    }
+                } else {
+                    // Email is available, update the user
+                    $user->email = $answer;
+                    $user->save();
+                }
             }
         }
 
         // Check if this completes the onboarding
         $questions = $this->loadQuestions();
-        $questionList = $questions['questions'] ?? [];
+        $questionList = $questions ?? [];
         $isCompleted = count($answers) >= count($questionList);
 
         if ($isCompleted && $user && $user->email) {
@@ -170,7 +201,7 @@ class OnboardingController extends Controller
 
         // Load questions to find next one
         $questions = $this->loadQuestions();
-        $questionList = $questions['questions'] ?? [];
+        $questionList = $questions ?? [];
         $nextQuestion = null;
         foreach ($questionList as $q) {
             if (! isset($answers[$q['key']])) {
@@ -221,10 +252,23 @@ class OnboardingController extends Controller
                 // Build conversation history
                 $messages = [];
 
-                // Add system context
+                // Determine if this is the first question ever for this session
+                $isFirstQuestionEver = empty($answers) && $question['key'] === 'name';
+
+                // Add system context with greeting logic
+                $systemContent = "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.';
+
+                if ($isFirstQuestionEver) {
+                    $systemContent .= ' Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv.';
+                } else {
+                    $systemContent .= ' Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener.';
+                }
+
+                $systemContent .= ' Stil spørgsmålet på en empatisk måde.';
+
                 $messages[] = [
                     'role' => 'system',
-                    'content' => "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'. Stil spørgsmålet på en empatisk måde.',
+                    'content' => $systemContent,
                 ];
 
                 // Add previous answers as context
@@ -318,7 +362,7 @@ class OnboardingController extends Controller
                 }
 
             } catch (\Exception $e) {
-                \Log::error('OnboardingAgent streaming error', [
+                Log::error('OnboardingAgent streaming error', [
                     'error' => $e->getMessage(),
                     'session_id' => $sessionId,
                     'question_key' => $question['key'],
@@ -355,9 +399,9 @@ class OnboardingController extends Controller
         $playbook = storage_path('app/onboarding_playbook.json');
         if (file_exists($playbook)) {
             $json = file_get_contents($playbook);
-            $data = json_decode($json, true) ?? [];
+            $questions = json_decode($json, true) ?? [];
             // The JSON file is a direct array of questions, so wrap it in the expected format
-            $questions = ['questions' => $data];
+            // $questions = ['questions' => $data];
         }
 
         return $questions;
@@ -378,12 +422,12 @@ class OnboardingController extends Controller
                 }
             );
 
-            \Log::info('Onboarding completion email sent', [
+            Log::info('Onboarding completion email sent', [
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to send onboarding completion email', [
+            Log::error('Failed to send onboarding completion email', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'error' => $e->getMessage(),
@@ -441,7 +485,7 @@ Denne email blev sendt automatisk efter gennemført onboarding.";
     protected function getQuestionTextByKey(string $key): ?string
     {
         $questions = $this->loadQuestions();
-        $questionList = $questions['questions'] ?? [];
+        $questionList = $questions ?? [];
 
         foreach ($questionList as $question) {
             if ($question['key'] === $key) {

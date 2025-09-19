@@ -2,7 +2,7 @@
 
 namespace App\Agents;
 
-use Log;
+use Illuminate\Support\Facades\Log;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
 use Vizra\VizraADK\System\AgentContext;
 
@@ -10,9 +10,15 @@ class OnboardingAgent extends BaseLlmAgent
 {
     protected string $name = 'onboarding_agent';
 
-    protected string $model = 'gemini-2.5-flash-lite';
+    protected ?string $provider = 'mistral';
+    protected string $model = 'ministral-8b-2410';
+    protected null|float $temperature = 0.7;
+    protected bool $includeConversationHistory = true;
+    // protected string $model = 'gemini-2.5-flash-lite';
+    // protected string $model = 'openai/gpt-4-turbo';
 
-    protected string $description = 'Famlink Onboarding Agent that guides users through personalized onboarding questions';
+
+    protected string $description = 'Famlink Onboarding Agent that guides users through personalized onboarding questions from a playbook.';
 
     /**
      * Agent instructions hierarchy (first found wins):
@@ -23,14 +29,13 @@ class OnboardingAgent extends BaseLlmAgent
      *
      * Using fallback instructions to avoid Blade template issues
      */
-    protected string $instructions = 'Du er Famlinks onboarding-assistent, der hjælper nye brugere med at komme godt i gang.
+    protected string $instructions = 'Du er Famlinks onboarding-assistent, der hjælper nye brugere med at komme godt om bord.
 
-VIGTIGT: Du skal ALTID starte med det første spørgsmål fra playbooken og guide brugeren gennem alle spørgsmålene én efter én.
+VIGTIGT: Du skal ALTID guide brugeren gennem alle spørgsmålene i playbooken i rækkefølge.
 
 RETNINGSLINJER:
-- Start ALTID med spørgsmål 1 og vent på svar
-- Gå systematisk gennem spørgsmålene i rækkefølge
-- Hvis svaret er længere end et par ord, så forstå svaret, vær empatisk og støttende
+- Sig hej, byd velkommen og introducer dig selv KUN ved det allerførste spørgsmål
+- Hvis brugerens svar er længere end et par ord, så forstå svaret, vær empatisk og støttende
 - Kommuniker på dansk
 - Hvis brugeren afviger, før du har stillet alle spørgsmål, forsøg at bringe samtalen tilbage til det næste spørgsmål
 - Hvis brugeren siger "spring over" eller lignende, skal du respektere det og gå videre til næste spørgsmål
@@ -73,12 +78,12 @@ RETNINGSLINJER:
             // Initialize with first question if not already set
             $allState = $context->getAllState();
             if (! isset($allState['current_question'])) {
-                $firstQuestion = $playbookData['questions'][0] ?? null;
+                $firstQuestion = $playbookData[0] ?? null;
                 if ($firstQuestion) {
                     $context->setState('current_question', $firstQuestion);
                     $context->setState('progress', [
                         'answered' => 0,
-                        'total' => count($playbookData['questions']),
+                        'total' => count($playbookData),
                         'current' => $firstQuestion['key'],
                     ]);
                     $context->setState('answers', []);

@@ -143,74 +143,11 @@ jobs:
         echo "📦 Creating deployment archive..."
         pwd
         ls -la
-        echo "Checking if docker-compose.yml exists..."
-        ls -la docker-compose.yml || echo "docker-compose.yml not found!"
         echo "Checking disk space..."
         df -h .
         echo "Creating archive with tar..."
-        echo "Files to be included:"
-        echo "  - app/"
-        echo "  - artisan"
-        echo "  - bootstrap/"
-        echo "  - composer.json"
-        echo "  - composer.lock"
-        echo "  - config/"
-        echo "  - database/"
-        echo "  - docker-compose.yml"
-        echo "  - Dockerfile"
-        echo "  - package.json"
-        echo "  - phpunit.xml"
-        echo "  - public/"
-        echo "  - resources/"
-        echo "  - routes/"
-        echo "  - storage/"
-        echo "  - tests/"
-        echo "  - tsconfig.json"
-        echo "  - vendor/"
-        echo "  - vite.config.ts"
-        echo "  - .env.example"
-        echo "  - .editorconfig"
-        echo "  - .env"
-        echo "  - .gitignore"
-        echo "  - .prettierrc"
-        echo "  - bun.lock"
-        echo "  - components.json"
-        echo "  - eslint.config.js"
-        echo "  - README.md"
-        echo "  - setup-famlink-casaos.sh"
-        tar -czf famlink-deployment.tar.gz \
-          app/ \
-          artisan \
-          bootstrap/ \
-          composer.json \
-          composer.lock \
-          config/ \
-          database/ \
-          docker-compose.yml \
-          Dockerfile \
-          package.json \
-          phpunit.xml \
-          public/ \
-          resources/ \
-          routes/ \
-          storage/ \
-          tests/ \
-          tsconfig.json \
-          vendor/ \
-          vite.config.ts \
-          .env.example \
-          .editorconfig \
-          .env \
-          .gitignore \
-          .prettierrc \
-          bun.lock \
-          components.json \
-          eslint.config.js \
-          README.md \
-          setup-famlink-casaos.sh
+        tar -czf famlink-deployment.tar.gz * .[^.]* --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='tests' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='.env*' --exclude='*.log'
         echo "✅ Archive creation completed"
-        echo "Verifying archive contents..."
-        tar -tzf famlink-deployment.tar.gz | grep docker-compose || echo "docker-compose.yml not found in archive!"
         ls -lh famlink-deployment.tar.gz || echo "Archive not found"
         echo "Archive size check:"
         du -sh famlink-deployment.tar.gz || echo "Could not check archive size"
@@ -266,13 +203,6 @@ jobs:
           
           echo "📁 Extracting deployment archive..."
           sudo tar -xzf famlink-deployment.tar.gz -C current/
-          
-          echo "🔍 Verifying extraction..."
-          ls -la current/ | head -10
-          echo "Checking for docker-compose.yml in current directory..."
-          ls -la current/docker-compose.yml || echo "docker-compose.yml not found in current!"
-          echo "Checking current working directory structure..."
-          pwd && ls -la
           
           # Copy environment file
           if [ -f ".env.production" ]; then

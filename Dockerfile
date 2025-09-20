@@ -17,7 +17,7 @@ RUN if [ -f "bun.lockb" ]; then \
 # Copy source files for building
 COPY resources/ resources/
 COPY public/ public/
-COPY vite.config.js ./
+COPY vite.config.ts ./
 COPY tailwind.config.js* ./
 COPY tsconfig.json* ./
 COPY postcss.config.js* ./

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
+import { RefreshCw, Mail, CheckCircle } from 'lucide-react';
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
 
 interface Question {
@@ -26,14 +27,14 @@ export default function Onboarding() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isResumed, setIsResumed] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState<React.ReactNode>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const showToastNotification = (message: string) => {
+  const showToastNotification = (message: React.ReactNode) => {
     setToastMessage(message);
     setShowToast(true);
     // Auto-hide toast after 5 seconds
@@ -54,7 +55,7 @@ export default function Onboarding() {
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
-        text: `🔄 Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
+        text: `Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
         timestamp: new Date()
       }]);
       resumeOnboarding(existingSession.sessionId);
@@ -91,7 +92,7 @@ export default function Onboarding() {
             text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
             timestamp: new Date()
           }]);
-          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
         }
         return;
       }
@@ -141,7 +142,7 @@ export default function Onboarding() {
                       timestamp: new Date()
                     }]);
                     // Show toast notification
-                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+                    showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
               } catch (e) {
@@ -193,7 +194,7 @@ export default function Onboarding() {
             text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
             timestamp: new Date()
           }]);
-          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
         }
         return;
       }
@@ -243,7 +244,7 @@ export default function Onboarding() {
                       timestamp: new Date()
                     }]);
                     // Show toast notification
-                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+                    showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
               } catch (e) {
@@ -355,7 +356,7 @@ export default function Onboarding() {
             text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
             timestamp: new Date()
           }]);
-          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
         }
         return;
       }
@@ -402,7 +403,7 @@ export default function Onboarding() {
                       timestamp: new Date()
                     }]);
                     // Show toast notification
-                    showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+                    showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
               } catch (e) {
@@ -461,7 +462,7 @@ export default function Onboarding() {
       {showToast && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
           <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-            <span className="text-lg">✅</span>
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
             <span className="font-medium">{toastMessage}</span>
             <button
               onClick={() => setShowToast(false)}
@@ -481,8 +482,9 @@ export default function Onboarding() {
                 Famlink Onboarding
               </h1>
               {isResumed && (
-                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                  🔄 Resumed session
+                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                  <RefreshCw className="w-4 h-4" />
+                  Resumed session
                 </p>
               )}
               {currentQuestion && (
@@ -497,7 +499,8 @@ export default function Onboarding() {
                 className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition"
                 title="Restart onboarding"
               >
-                🔄 Restart
+                <RefreshCw className="w-4 h-4 mr-1 inline" />
+                Restart
               </button>
             )}
           </div>

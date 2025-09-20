@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
+import { RefreshCw, Mail, CheckCircle, Sparkles, MessageSquare, Shield, Users, FileText, Clock } from 'lucide-react';
 
 // Onboarding chat modal for welcome page
 interface AIChatModalProps {
@@ -22,7 +23,7 @@ interface Question {
 }
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
-  const [messages, setMessages] = useState<{ id: string; role: string; content: string; timestamp?: string; isTyping?: boolean }[]>([]);
+  const [messages, setMessages] = useState<{ id: string; role: string; content: React.ReactNode; timestamp?: string; isTyping?: boolean }[]>([]);
   const [question, setQuestion] = useState<{ key: string; text: string; options?: string[] } | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,10 +38,10 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState<React.ReactNode>('');
 
   // Function to show toast
-  const showToastNotification = (message: string) => {
+  const showToastNotification = (message: React.ReactNode) => {
     setToastMessage(message);
     setShowToast(true);
     // Auto-hide toast after 5 seconds
@@ -61,10 +62,10 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   };
 
   // Function to create streaming words effect
-  const streamText = (fullText: string, messageIndex: number, speed: number = 50) => {
+  const streamText = (fullText: React.ReactNode, messageIndex: number, speed: number = 50) => {
     setIsTyping(true);
     let currentText = '';
-    const words = fullText.split(' ');
+    const words = typeof fullText === 'string' ? fullText.split(' ') : [''];
     let wordIndex = 0;
 
     const typeNextWord = () => {
@@ -122,7 +123,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         setMessages([{
           id: `msg-${Date.now()}`,
           role: "agent",
-          content: `🔄 Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.`,
+          content: <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.</span>,
 
           timestamp: new Date().toISOString()
         }]);
@@ -191,7 +192,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             content: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
             timestamp: new Date().toISOString()
           }]);
-          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
           setLoading(false);
           return;
         }
@@ -237,7 +238,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           if (data.completed === true) {
             setCompleted(true);
             // Add completion message with streaming effect
-            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+            const completionMessage = <span className="flex items-center gap-1">Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. <Sparkles className="w-4 h-4" /></span>;
             setMessages([{
               id: `msg-${Date.now()}`,
               role: "agent",
@@ -248,7 +249,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             // Start streaming into the newly added message
             setTimeout(() => streamText(completionMessage, 0), 0);
             // Show toast notification
-            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+            showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
             eventSource.close();
             setLoading(false);
             return;
@@ -323,7 +324,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             content: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
             timestamp: new Date().toISOString()
           }]);
-          showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+          showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
           setLoading(false);
           return;
         }
@@ -369,7 +370,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           if (data.completed === true) {
             setCompleted(true);
             // Add completion message with streaming effect
-            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+            const completionMessage = <span className="flex items-center gap-1">Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. <Sparkles className="w-4 h-4" /></span>;
             setMessages([{
               id: `msg-${Date.now()}`,
               role: "agent",
@@ -380,7 +381,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             // Start streaming into the newly added message
             setTimeout(() => streamText(completionMessage, 0), 0);
             // Show toast notification
-            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+            showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
             eventSource.close();
             setLoading(false);
             return;
@@ -480,7 +481,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       if (result.completed === true) {
         setCompleted(true);
         // Add completion message with streaming effect
-        const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+        const completionMessage = <span className="flex items-center gap-1">Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. <Sparkles className="w-4 h-4" /></span>;
         setMessages(prev => {
           const newMessages = [...prev, {
             id: `msg-${Date.now()}`,
@@ -494,7 +495,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           return newMessages;
         });
         // Show toast notification
-        showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+        showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
         setLoading(false);
         return;
       }
@@ -522,7 +523,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           if (data.completed === true) {
             setCompleted(true);
             // Add completion message with streaming effect
-            const completionMessage = "Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. 🎉";
+            const completionMessage = <span className="flex items-center gap-1">Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering. <Sparkles className="w-4 h-4" /></span>;
             setMessages(prev => {
               const newMessages = [...prev, {
                 id: `msg-${Date.now()}`,
@@ -536,7 +537,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
               return newMessages;
             });
             // Show toast notification
-            showToastNotification('📧 En email er blevet sendt til dig med en opsummering af dine svar!');
+            showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
             eventSource.close();
             setLoading(false);
             return;
@@ -606,12 +607,12 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
-          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-            <span className="text-lg">✅</span>
-            <span className="font-medium">{toastMessage}</span>
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg border border-green-600 flex items-center gap-3 max-w-md">
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium text-sm">{toastMessage}</span>
             <button
               onClick={() => setShowToast(false)}
-              className="ml-2 text-white hover:text-green-100"
+              className="ml-2 text-white hover:text-green-100 transition-colors"
             >
               ✕
             </button>
@@ -619,16 +620,19 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         </div>
       )}
 
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] p-0">
-        <DialogHeader className="px-6 py-4 border-b bg-background">
-          <div className="flex items-center justify-between">
+      <DialogContent className="w-[95vw] md:w-[80vw] lg:w-[70vw] max-w-none h-[95vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl p-0">
+        <DialogHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4 from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+          <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <DialogTitle className="text-lg font-semibold">Onboarding chat</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+              <DialogTitle className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                <MessageSquare className="w-6 h-6" />
+                Onboarding Chat
+              </DialogTitle>
+              <DialogDescription className="text-sm text-blue-700 dark:text-blue-300">
                 {completed
                   ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
                   : isResumed
-                  ? "🔄 Genoptaget session - fortsæt hvor du slap"
+                  ? <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Genoptaget session - fortsæt hvor du slap</span>
                   : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
                 }
               </DialogDescription>
@@ -638,25 +642,30 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 onClick={handleRestart}
                 variant="outline"
                 size="sm"
-                className="ml-4"
+                className="ml-4 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-950"
               >
-                🔄 Genstart
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Genstart
               </Button>
             )}
           </div>
         </DialogHeader>
-        <div className="flex flex-col h-[70vh] w-full p-6">
-          <div className="flex-1 overflow-y-auto mb-4 bg-muted/30 rounded-lg p-4 border">
+        <div className="flex flex-col h-[70vh] w-full">
+          <div className="flex-1 overflow-y-auto mb-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mx-6 mt-6">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <p className="text-sm">Start onboarding chatten</p>
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p className="text-sm font-medium">Start onboarding chatten</p>
+                <p className="text-xs text-gray-400 mt-1">Besvar spørgsmålene for at komme i gang</p>
               </div>
             )}
             {messages.map((msg, idx) => (
               <div key={idx} className={`mb-4 ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                <div className={`inline-block max-w-[80%] px-4 py-2 rounded-lg text-sm ${msg.role === "user"
-                  ? "bg-primary text-primary-foreground ml-auto"
-                  : "bg-background border text-foreground"
+                <div className={`inline-block max-w-[80%] px-4 py-3 rounded-lg text-sm shadow-sm ${msg.role === "user"
+                  ? "bg-blue-600 text-white ml-auto border border-blue-700"
+                  : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"
                   }`}>
                   <span className="whitespace-pre-wrap">{msg.content}</span>
                   {msg.isTyping && (
@@ -664,7 +673,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   )}
                 </div>
                 {msg.timestamp && (
-                  <div className={`text-xs text-muted-foreground mt-1 ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                  <div className={`text-xs text-gray-500 dark:text-gray-400 mt-1 ${msg.role === "user" ? "text-right" : "text-left"}`}>
                     {new Date(msg.timestamp).toLocaleString('da-DK', {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -678,14 +687,19 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             <div ref={messagesEndRef} />
           </div>
           {error && (
-            <div className="text-red-500 mb-2 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
-              {error}
+            <div className="mx-6 mb-4 text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
+              </div>
             </div>
           )}
 
           {/* Option buttons */}
           {!completed && question?.options && question.options.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="mx-6 mb-4 flex flex-wrap gap-2">
               {question.options.map((option, index) => (
                 <Button
                   key={index}
@@ -694,7 +708,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   size="sm"
                   onClick={() => handleOptionClick(option)}
                   disabled={loading || isTyping}
-                  className="text-xs px-3 py-2 h-auto whitespace-nowrap"
+                  className="text-xs px-3 py-2 h-auto whitespace-nowrap border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950 hover:border-blue-300 dark:hover:border-blue-600"
                 >
                   {option}
                 </Button>
@@ -703,46 +717,96 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           )}
 
           {!completed && (
-            <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
-              <input
-                ref={inputRef}
-                className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Skriv dit svar..."
-                disabled={loading || isTyping}
-                autoFocus
-              />
-              <Button
-                type="submit"
-                disabled={loading || !input.trim() || isTyping}
-                className="px-6 py-3"
-              >
-                {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
-              </Button>
-            </form>
+            <div className="mx-6 mb-6">
+              <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
+                <input
+                  ref={inputRef}
+                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Skriv dit svar..."
+                  disabled={loading || isTyping}
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  disabled={loading || !input.trim() || isTyping}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
+                >
+                  {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
+                </Button>
+              </form>
+            </div>
           )}
           {completed && (
-            <div className="text-center py-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-center gap-2 text-green-700">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <div className="mx-6 mb-6 text-center">
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-6 mb-6">
+                <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-400 mb-3">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="font-medium">Onboarding fuldført!</span>
+                  <span className="text-lg font-semibold">Onboarding fuldført!</span>
                 </div>
-                <p className="text-sm text-green-600 mt-2">
+                <p className="text-sm text-green-600 dark:text-green-400">
                   Tak for dine svar! Du kan nu begynde at bruge Famlink.
                 </p>
               </div>
               <Button
                 onClick={() => onOpenChange(false)}
-                className="px-6 py-2"
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
               >
                 Luk chat
               </Button>
             </div>
           )}
+        </div>
+
+        {/* Helpful Footer */}
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-6 py-3 rounded-b-lg">
+          <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                <span>Sikker onboarding</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                <span>Personlig assistance</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                <span>Intelligente svar</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>Session gemmes</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MessageSquare className="w-3 h-3" />
+                <span>AI-drevet onboarding</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                <span>Famlink Platform</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                <span>24/7 Support</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                <span>GDPR Compliant</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                <span>Family Focused</span>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

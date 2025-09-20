@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { X, Mic } from "lucide-react"
+import { X, Mic, RefreshCw, AlertCircle, FileText, Mic2, Lightbulb } from "lucide-react"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 
 interface AddItemModalProps {
@@ -97,8 +97,9 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
           <DialogDescription>
             Opret en ny post som {currentUser.name} ({currentUser.role})
             <br />
-            <span className="text-xs text-muted-foreground mt-1 block">
-              💡 Brug mikrofon-knappen til at diktere tekst direkte i feltet nedenfor
+            <span className="text-xs text-muted-foreground mt-1 block flex items-center gap-1">
+              <Lightbulb className="w-3 h-3" />
+              Brug mikrofon-knappen til at diktere tekst direkte i feltet nedenfor
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -195,23 +196,27 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
                   {isRecording && <span className="sr-only">Lytter...</span>}
                 </Button>
                 {isRecording && (
-                  <span className="text-xs text-red-500 font-medium">
-                    🎤 Lytter{retryCount > 0 ? ` (Retry ${retryCount})` : ''}
+                  <span className="text-xs text-red-500 font-medium flex items-center gap-1">
+                    <Mic2 className="w-3 h-3" />
+                    Lytter{retryCount > 0 ? ` (Retry ${retryCount})` : ''}
                   </span>
                 )}
                 {error && typeof error === 'string' && error.includes('retrying') && (
-                  <span className="text-xs text-orange-500 font-medium">
-                    🔄 {error}
+                  <span className="text-xs text-orange-500 font-medium flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3" />
+                    {error}
                   </span>
                 )}
                 {error && typeof error === 'string' && !error.includes('retrying') && (
-                  <span className="text-xs text-red-600 font-medium">
-                    ❌ Error: {error}
+                  <span className="text-xs text-red-600 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Error: {error}
                   </span>
                 )}
                 {transcript && !error && (
-                  <span className="text-xs text-green-600">
-                    📝 {transcript.length} tegn
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <FileText className="w-3 h-3" />
+                    {transcript.length} tegn
                   </span>
                 )}
               </div>

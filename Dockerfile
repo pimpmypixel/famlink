@@ -9,7 +9,9 @@ COPY bun.lock* ./
 
 # Install dependencies with Bun (if available) or npm
 RUN if [ -f "bun.lock" ]; then \
-        npm install -g bun && bun install; \
+        echo "Attempting to install Bun..." && \
+        (npm install -g bun 2>/dev/null && echo "Bun installed successfully" && bun install) || \
+        (echo "Bun installation failed, falling back to npm..." && npm ci); \
     else \
         npm ci; \
     fi
@@ -24,7 +26,8 @@ COPY postcss.config.js* ./
 
 # Build production assets
 RUN if [ -f "bun.lock" ]; then \
-        bun run build; \
+        (command -v bun >/dev/null 2>&1 && bun run build) || \
+        npm run build; \
     else \
         npm run build; \
     fi

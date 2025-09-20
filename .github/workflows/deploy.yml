@@ -143,9 +143,41 @@ jobs:
         echo "📦 Creating deployment archive..."
         pwd
         ls -la
+        echo "Checking if docker-compose.yml exists..."
+        ls -la docker-compose.yml || echo "docker-compose.yml not found!"
         echo "Checking disk space..."
         df -h .
         echo "Creating archive with tar..."
+        echo "Files to be included:"
+        echo "  - app/"
+        echo "  - artisan"
+        echo "  - bootstrap/"
+        echo "  - composer.json"
+        echo "  - composer.lock"
+        echo "  - config/"
+        echo "  - database/"
+        echo "  - docker-compose.yml"
+        echo "  - Dockerfile"
+        echo "  - package.json"
+        echo "  - phpunit.xml"
+        echo "  - public/"
+        echo "  - resources/"
+        echo "  - routes/"
+        echo "  - storage/"
+        echo "  - tests/"
+        echo "  - tsconfig.json"
+        echo "  - vendor/"
+        echo "  - vite.config.ts"
+        echo "  - .env.example"
+        echo "  - .editorconfig"
+        echo "  - .env"
+        echo "  - .gitignore"
+        echo "  - .prettierrc"
+        echo "  - bun.lock"
+        echo "  - components.json"
+        echo "  - eslint.config.js"
+        echo "  - README.md"
+        echo "  - setup-famlink-casaos.sh"
         tar -czf famlink-deployment.tar.gz \
           app/ \
           artisan \
@@ -177,6 +209,8 @@ jobs:
           README.md \
           setup-famlink-casaos.sh
         echo "✅ Archive creation completed"
+        echo "Verifying archive contents..."
+        tar -tzf famlink-deployment.tar.gz | grep docker-compose || echo "docker-compose.yml not found in archive!"
         ls -lh famlink-deployment.tar.gz || echo "Archive not found"
         echo "Archive size check:"
         du -sh famlink-deployment.tar.gz || echo "Could not check archive size"

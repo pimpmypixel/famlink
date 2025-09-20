@@ -197,6 +197,7 @@ jobs:
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || '22' }}
+        timeout: 30m
         script: |
           set -e
           cd ${{ env.DEPLOYMENT_PATH }}
@@ -257,6 +258,7 @@ jobs:
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || '22' }}
+        timeout: 10m
         script: |
           cd ${{ env.DEPLOYMENT_PATH }}/current
           

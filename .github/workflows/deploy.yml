@@ -265,7 +265,14 @@ jobs:
           cd ${{ env.DEPLOYMENT_PATH }}
           
           echo "📁 Extracting deployment archive..."
-          sudo tar -xzf famlink-deployment.tar.gz -C current/ --strip-components=1
+          sudo tar -xzf famlink-deployment.tar.gz -C current/
+          
+          echo "🔍 Verifying extraction..."
+          ls -la current/ | head -10
+          echo "Checking for docker-compose.yml in current directory..."
+          ls -la current/docker-compose.yml || echo "docker-compose.yml not found in current!"
+          echo "Checking current working directory structure..."
+          pwd && ls -la
           
           # Copy environment file
           if [ -f ".env.production" ]; then

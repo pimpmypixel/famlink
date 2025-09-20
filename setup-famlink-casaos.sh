@@ -97,7 +97,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v "docker compose" &> /dev/null; then
     echo -e "${RED}❌ Docker Compose is not installed. Please install Docker Compose first.${NC}"
     exit 1
 fi
@@ -157,17 +157,17 @@ APP_DIR="/DATA/AppData/famlink/current"
 case "$1" in
     "logs")
         echo "📋 Application logs:"
-        docker-compose -f "$APP_DIR/docker-compose.yml" logs -f
+        docker compose -f "$APP_DIR/docker-compose.yml" logs -f
         ;;
     "restart")
         echo "🔄 Restarting application..."
         cd "$APP_DIR"
-        docker-compose restart
+        docker compose restart
         ;;
     "status")
         echo "📊 Application status:"
         cd "$APP_DIR"
-        docker-compose ps
+        docker compose ps
         ;;
     "update-ssl")
         echo "🔒 SSL certificate will be handled by Nginx Proxy Manager"

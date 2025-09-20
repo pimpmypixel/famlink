@@ -15,6 +15,7 @@ use Vizra\VizraADK\Services\VectorMemoryManager;
 class FileVectorizationService
 {
     protected VectorMemoryManager $vectorManager;
+    protected ?PdfParser $pdfParser = null;
     protected array $supportedTypes = [
         'pdf' => 'processPdf',
         'doc' => 'processWord',
@@ -25,9 +26,10 @@ class FileVectorizationService
         'md' => 'processText',
     ];
 
-    public function __construct(VectorMemoryManager $vectorManager)
+    public function __construct(VectorMemoryManager $vectorManager, ?PdfParser $pdfParser = null)
     {
         $this->vectorManager = $vectorManager;
+        $this->pdfParser = $pdfParser;
     }
 
     /**
@@ -85,7 +87,7 @@ class FileVectorizationService
     protected function processPdf(string $content, string $filename): string
     {
         try {
-            $pdfParser = new PdfParser();
+            $pdfParser = $this->pdfParser ?? new PdfParser();
             $pdf = $pdfParser->parseContent($content);
             return $pdf->getText();
         } catch (\Exception $e) {

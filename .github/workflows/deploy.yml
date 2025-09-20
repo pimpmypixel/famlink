@@ -158,7 +158,7 @@ jobs:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        port: ${{ secrets.SSH_PORT || '22' }}
         script: |
           set -e
           
@@ -174,7 +174,7 @@ jobs:
             sudo mv current deployments/backup-$(date +%Y%m%d-%H%M%S)
             
             # Keep only last 3 backups
-            sudo find deployments/ -name "backup-*" -type d | sort -r | tail -n +4 | xargs sudo rm -rf
+            sudo find deployments/ -name "backup-*" -type d | sort -r | tail -n +4 | xargs sudo rm -rf 2>/dev/null || true
           fi
           
           # Create new deployment directory
@@ -186,34 +186,40 @@ jobs:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        port: ${{ secrets.SSH_PORT || '22' }}
         source: "famlink-deployment.tar.gz"
         target: "${{ env.DEPLOYMENT_PATH }}/"
         
-    - name: Extract and start application
+    - name: Extract and configure application
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        port: ${{ secrets.SSH_PORT || '22' }}
         script: |
           set -e
           cd ${{ env.DEPLOYMENT_PATH }}
           
           echo "📁 Extracting deployment archive..."
-          sudo tar -xzf famlink-deployment.tar.gz -C current/
+          sudo tar -xzf famlink-deployment.tar.gz -C current/ --strip-components=1
           
           # Copy environment file
-          if [ -f .env.production ]; then
+          if [ -f ".env.production" ]; then
             sudo cp .env.production current/.env
+            echo "✅ Using existing .env.production"
           else
             echo "⚠️  No .env.production found, using .env.example"
             sudo cp current/.env.example current/.env
+            # Update environment for production
+            sudo sed -i 's/APP_ENV=.*/APP_ENV=production/' current/.env
+            sudo sed -i 's/APP_DEBUG=.*/APP_DEBUG=false/' current/.env
+            sudo sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' current/.env
+            sudo sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/html/database/database.sqlite|' current/.env
           fi
           
           # Create required directories
-          sudo mkdir -p current/database current/storage/app/public current/storage/logs
+          sudo mkdir -p current/database current/storage/app/public current/storage/logs current/bootstrap/cache
           
           # Create SQLite database if it doesn't exist
           if [ ! -f current/database/database.sqlite ]; then
@@ -229,10 +235,10 @@ jobs:
           cd current
           
           # Stop existing containers
-          sudo docker-compose down --remove-orphans || true
+          sudo docker compose down --remove-orphans 2>/dev/null || true
           
           # Start new containers
-          sudo docker-compose up -d --build
+          sudo docker compose up -d --build
           
           # Wait for containers to be ready
           echo "⏳ Waiting for application to be ready..."
@@ -250,25 +256,40 @@ jobs:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        port: ${{ secrets.SSH_PORT || '22' }}
         script: |
           cd ${{ env.DEPLOYMENT_PATH }}/current
           
-          # Check if containers are running
-          if ! sudo docker-compose ps | grep -q "Up"; then
+          echo "🔍 Checking container status..."
+          if ! sudo docker compose ps | grep -q "Up"; then
             echo "❌ Deployment failed - containers not running"
-            sudo docker-compose logs
+            echo "📋 Container logs:"
+            sudo docker compose logs
             exit 1
           fi
           
-          # Test application health
-          sleep 10
-          CONTAINER_IP=$(sudo docker inspect famlink-app | grep -i ipaddress | tail -1 | cut -d '"' -f 4)
+          echo "📊 Container status:"
+          sudo docker compose ps
           
-          if curl -f "http://$CONTAINER_IP/" > /dev/null 2>&1; then
-            echo "✅ Health check passed - Application is running!"
+          # Wait a bit more for the application to fully start
+          sleep 15
+          
+          # Test application health by checking if the container is responding
+          CONTAINER_NAME=$(sudo docker compose ps --format "table {{.Names}}" | grep famlink-app | head -1)
+          
+          if [ -n "$CONTAINER_NAME" ]; then
+            echo "🔍 Testing application health in container: $CONTAINER_NAME"
+            
+            # Try to execute a simple health check inside the container
+            if sudo docker exec $CONTAINER_NAME curl -f http://localhost/ > /dev/null 2>&1; then
+              echo "✅ Health check passed - Application is running!"
+              echo "🌐 Application should be accessible via Nginx Proxy Manager"
+            else
+              echo "⚠️  Container is running but application may not be fully ready yet"
+              echo "📋 Checking Laravel logs:"
+              sudo docker exec $CONTAINER_NAME tail -20 /var/www/html/storage/logs/laravel.log 2>/dev/null || echo "No Laravel logs found"
+            fi
           else
-            echo "❌ Health check failed - Application not responding"
-            sudo docker-compose logs famlink-app
+            echo "❌ Could not find famlink-app container"
             exit 1
           fi

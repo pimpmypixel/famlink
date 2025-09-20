@@ -14,7 +14,8 @@ test('file vectorization service processes PDF files', function () {
 
     // Mock the vector manager
     $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);
-    $vectorManagerMock->shouldReceive('store')->andReturn(true);
+    $vectorManagerMock->shouldReceive('store')
+        ->andReturn(true);
 
     $vectorizationService = new FileVectorizationService($vectorManagerMock);
 
@@ -33,12 +34,22 @@ test('file vectorization service processes PDF files', function () {
     ];
 
     // Mock Storage facade properly
-    Storage::shouldReceive('disk')
-        ->with('s3')
-        ->andReturnSelf();
-    Storage::shouldReceive('get')
+    $storageMock = \Mockery::mock();
+    $storageMock->shouldReceive('get')
         ->with($attachment['path'])
         ->andReturn($pdfContent);
+    
+    Storage::shouldReceive('disk')
+        ->with('s3')
+        ->andReturn($storageMock);
+
+    // Mock PDF parser
+    $pdfParserMock = \Mockery::mock(\Smalot\PdfParser\Parser::class);
+    $pdfDocumentMock = \Mockery::mock(\Smalot\PdfParser\Document::class);
+    $pdfDocumentMock->shouldReceive('getText')->andReturn($pdfContent);
+    $pdfParserMock->shouldReceive('parseContent')->andReturn($pdfDocumentMock);
+
+    $vectorizationService = new FileVectorizationService($vectorManagerMock, $pdfParserMock);
 
     $result = $vectorizationService->processUploadedFile($attachment, $timelineItem);
 
@@ -51,7 +62,8 @@ test('file vectorization service processes Word documents', function () {
 
     // Mock the vector manager
     $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);
-    $vectorManagerMock->shouldReceive('store')->andReturn(true);
+    $vectorManagerMock->shouldReceive('store')
+        ->andReturn(true);
 
     $vectorizationService = new FileVectorizationService($vectorManagerMock);
 
@@ -70,12 +82,14 @@ test('file vectorization service processes Word documents', function () {
     ];
 
     // Mock Storage facade properly
-    Storage::shouldReceive('disk')
-        ->with('s3')
-        ->andReturnSelf();
-    Storage::shouldReceive('get')
+    $storageMock = \Mockery::mock();
+    $storageMock->shouldReceive('get')
         ->with($attachment['path'])
         ->andReturn($wordContent);
+    
+    Storage::shouldReceive('disk')
+        ->with('s3')
+        ->andReturn($storageMock);
 
     $result = $vectorizationService->processUploadedFile($attachment, $timelineItem);
 
@@ -181,4 +195,21 @@ test('file vectorization service chunks text content', function () {
     foreach ($chunks as $chunk) {
         expect(strlen($chunk))->toBeLessThanOrEqual(120); // chunk size + overlap
     }
+});
+
+test('debug pdf processing', function () {
+    $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);
+    $vectorizationService = new FileVectorizationService($vectorManagerMock);
+
+    $pdfContent = 'This is test PDF content for vectorization.';
+
+    // Use reflection to access protected method
+    $reflection = new \ReflectionClass($vectorizationService);
+    $method = $reflection->getMethod('processPdf');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($vectorizationService, $pdfContent, 'test.pdf');
+    
+    dump('PDF processing result:', $result);
+    expect($result)->toBeString();
 });

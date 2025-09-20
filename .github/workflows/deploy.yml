@@ -197,7 +197,7 @@ jobs:
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || '22' }}
-        timeout: 30m
+        timeout: 45m
         script: |
           set -e
           cd ${{ env.DEPLOYMENT_PATH }}

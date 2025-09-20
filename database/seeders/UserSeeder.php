@@ -190,11 +190,13 @@ class UserSeeder extends Seeder
             $user->assignRole($roles[array_rand($roles)]);
         }
 
-        $this->command->info('Created users: ' . User::count() . ' total');
-        $this->command->info('- Admins: ' . User::role('admin')->count());
-        $this->command->info('- Social Workers: ' . User::role('myndighed')->count());
-        $this->command->info('- Fathers: ' . User::role('far')->count());
-        $this->command->info('- Mothers: ' . User::role('mor')->count());
-        $this->command->info('- Other users: ' . User::role(['andet', 'temporary', 'approved'])->count());
+        if ($this->command) {
+            $this->command->info('Created users: ' . User::count() . ' total');
+            $this->command->info('- Admins: ' . User::role('admin')->count());
+            $this->command->info('- Social Workers: ' . User::role('myndighed')->count());
+            $this->command->info('- Fathers: ' . User::role('far')->count());
+            $this->command->info('- Mothers: ' . User::role('mor')->count());
+            $this->command->info('- Other users: ' . User::role(['andet', 'temporary', 'approved'])->count());
+        }
     }
 }

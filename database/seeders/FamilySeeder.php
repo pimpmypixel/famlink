@@ -94,6 +94,8 @@ class FamilySeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Created ' . count($familyData) . ' families with diverse Danish names');
+        if ($this->command) {
+            $this->command->info('Created ' . count($familyData) . ' families with diverse Danish names');
+        }
     }
 }

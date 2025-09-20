@@ -5,10 +5,10 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY bun.lockb* ./
+COPY bun.lock* ./
 
 # Install dependencies with Bun (if available) or npm
-RUN if [ -f "bun.lockb" ]; then \
+RUN if [ -f "bun.lock" ]; then \
         npm install -g bun && bun install; \
     else \
         npm ci; \
@@ -23,7 +23,7 @@ COPY tsconfig.json* ./
 COPY postcss.config.js* ./
 
 # Build production assets
-RUN if [ -f "bun.lockb" ]; then \
+RUN if [ -f "bun.lock" ]; then \
         bun run build; \
     else \
         npm run build; \

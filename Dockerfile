@@ -40,6 +40,27 @@ WORKDIR /app
 # Copy composer files
 COPY composer.json composer.lock ./
 
+# Install system dependencies needed for PHP extensions in vendor stage
+RUN apk add --no-cache \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    && rm -rf /var/cache/apk/*
+
+# Install PHP extensions needed for Composer
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_pgsql \
+        pdo_sqlite \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd
+
 # Install PHP dependencies optimized for production
 RUN composer install \
     --no-dev \

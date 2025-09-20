@@ -1,15 +1,53 @@
-# Stage 1: Build PHP dependencies
-FROM composer:2 AS vendor
-WORKDIR /app
-COPY composer.json composer.lock ./
-RUN composer install \
---optimize-autoloader \
---no-interaction \
---no-scripts
-# --no-dev \
+# Stage 1: Build Node.js assets
+FROM node:20-alpine AS node-builder
 
-# Stage 2: Application runtime
-FROM php:8.4-fpm-alpine
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY bun.lockb* ./
+
+# Install dependencies with Bun (if available) or npm
+RUN if [ -f "bun.lockb" ]; then \
+        npm install -g bun && bun install; \
+    else \
+        npm ci; \
+    fi
+
+# Copy source files for building
+COPY resources/ resources/
+COPY public/ public/
+COPY vite.config.js ./
+COPY tailwind.config.js* ./
+COPY tsconfig.json* ./
+COPY postcss.config.js* ./
+
+# Build production assets
+RUN if [ -f "bun.lockb" ]; then \
+        bun run build; \
+    else \
+        npm run build; \
+    fi
+
+# Stage 2: Build PHP dependencies
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+# Copy composer files
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies optimized for production
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts \
+    --prefer-dist \
+    --no-cache
+
+# Stage 3: Application runtime
+FROM php:8.4-fpm-alpine AS runtime
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -24,31 +62,74 @@ RUN apk add --no-cache \
     zip \
     unzip \
     postgresql-dev \
+    sqlite-dev \
     git \
-    supervisor
+    supervisor \
+    tzdata \
+    && rm -rf /var/cache/apk/*
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo pdo_pgsql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_pgsql \
+        pdo_sqlite \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        opcache
+
+# Configure OPcache for production
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.fast_shutdown=1'; \
+} > /usr/local/etc/php/conf.d/opcache.ini
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel source
+# Create required directories
+RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views \
+    && mkdir -p bootstrap/cache
+
+# Copy application source
 COPY . .
 
-# Copy vendor deps from builder
+# Copy built assets from node-builder
+COPY --from=node-builder /app/public/build ./public/build
+
+# Copy vendor dependencies from composer stage
 COPY --from=vendor /app/vendor ./vendor
 
-# Copy Nginx and Supervisor configs
+# Copy configuration files
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Set timezone
+ENV TZ=Europe/Copenhagen
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Fix permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Create startup script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
 
 EXPOSE 80
 
-# Run Supervisor (to manage php-fpm + nginx)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Use startup script instead of direct supervisord
+CMD ["/start.sh"]

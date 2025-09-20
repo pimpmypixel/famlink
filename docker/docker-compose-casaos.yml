@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  famlink-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: famlink-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      # Persistent storage for uploads and logs
+      - ./storage/app:/var/www/html/storage/app
+      - ./storage/logs:/var/www/html/storage/logs
+      # SQLite database (if using SQLite)
+      - ./database/database.sqlite:/var/www/html/database/database.sqlite
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
+      - APP_URL=https://test-famlink.spoons.dk
+      - DB_CONNECTION=${DB_CONNECTION:-sqlite}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-/var/www/html/database/database.sqlite}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=sync
+      - TZ=Europe/Copenhagen
+    depends_on:
+      - db
+    networks:
+      - famlink-network
+      - nginx-proxy-manager
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:16-alpine
+    container_name: famlink-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-famlink}
+      POSTGRES_USER: ${DB_USERNAME:-famlink_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - famlink-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-famlink_user} -d ${DB_DATABASE:-famlink}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Add Redis for better performance (comment out if not needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: famlink-redis
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - famlink-network
+
+volumes:
+  db_data:
+    driver: local
+  # redis_data:
+  #   driver: local
+
+networks:
+  famlink-network:
+    driver: bridge
+    internal: false
+  nginx-proxy-manager:
+    external: true

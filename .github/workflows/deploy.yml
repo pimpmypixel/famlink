@@ -1,92 +1,240 @@
-name: Deploy Famlink Stack
+# .github/workflows/deploy.yml
+name: Deploy FamLink to CasaOS
 
 on:
   push:
-    branches:
-      - deploy
+    branches: [ main, production ]
+  workflow_dispatch:
+
+env:
+  DEPLOYMENT_PATH: /DATA/AppData/famlink
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: mbstring, dom, fileinfo, pgsql, sqlite3, gd, bcmath
+        coverage: none
+        
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+        
+    - name: Cache Bun dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: ${{ runner.os }}-bun-
+        
+    - name: Install Composer dependencies
+      run: composer install --no-dev --optimize-autoloader --no-interaction
+      
+    - name: Install Bun dependencies
+      run: bun install --frozen-lockfile
+      
+    - name: Create testing environment
+      run: |
+        cp .env.example .env.testing
+        php artisan key:generate --env=testing
+        
+    - name: Run tests
+      run: php artisan test --parallel
+      
+    - name: Build production assets
+      run: bun run build
+      
+    - name: Optimize Laravel
+      run: |
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-
-      - name: Install dependencies
-        run: bun install
-        working-directory: infra
-
-      - name: Install AWS CDK
-        run: bun add -g aws-cdk
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      # - name: Get ECR Repository URI
-      #   id: ecr-uri
-      #   run: |
-      #     ECR_URI=$(jq -r '.FamlinkStack.ECRRepositoryURI' infra/cdk-outputs.json)
-      #     if [ -z "$ECR_URI" ] || [ "$ECR_URI" = "null" ]; then
-      #       echo "Error: Could not find ECR repository URI in CDK outputs"
-      #       exit 1
-      #     fi
-      #     echo "ecr_uri=$ECR_URI" >> $GITHUB_OUTPUT
-      #     echo "Using ECR URI: $ECR_URI"
-
-      - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-          | docker login --username AWS \
-            --password-stdin 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink
-
-      - name: Build Docker Image
-        run: docker build -t famlink .
-
-      - name: Tag Docker Image
-        run: docker tag famlink:latest 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest
-
-      - name: Push Docker Image
-        run: docker push 035338517878.dkr.ecr.eu-central-1.amazonaws.com/famlink:latest
-
-      # - name: CDK Bootstrap
-      #   run: cdk bootstrap || true
-      #   working-directory: infra
-
-      # - name: CDK Ack
-      #   run: cdk acknowledge 34892; cdk acknowledge 34635
-      #   working-directory: infra
-
-      # - name: Deploy CDK Stack
-      #   run: cdk deploy --require-approval never --outputs-file cdk-outputs.json
-      #   working-directory: infra
-
-      # Run migrations
-      - name: Run Laravel Migrations
-        run: |
-          CLUSTER_NAME="FamLinkCluster"   # must match your CDK ECS cluster name
-          SERVICE_NAME="FamlinkService"   # must match your CDK ECS service name
-          CONTAINER_NAME="web"            # must match container name in CDK task definition
-
-          TASK_ARN=$(aws ecs list-tasks \
-            --cluster $CLUSTER_NAME \
-            --service-name $SERVICE_NAME \
-            --desired-status RUNNING \
-            --query 'taskArns[0]' \
-            --output text)
-
-          echo "Running migrations on task: $TASK_ARN"
-
-          aws ecs execute-command \
-            --cluster $CLUSTER_NAME \
-            --task $TASK_ARN \
-            --container $CONTAINER_NAME \
-            --command "php artisan migrate --force" \
-            --interactive
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: mbstring, dom, fileinfo, pgsql, sqlite3
+        coverage: none
+        
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      
+    - name: Install dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader --no-interaction
+        bun install --frozen-lockfile
+        
+    - name: Build production assets
+      run: bun run build
+      
+    - name: Optimize Laravel
+      run: |
+        php artisan config:cache
+        php artisan route:cache  
+        php artisan view:cache
+        
+    - name: Create deployment archive
+      run: |
+        tar -czf famlink-deployment.tar.gz \
+          --exclude='.git' \
+          --exclude='node_modules' \
+          --exclude='.github' \
+          --exclude='tests' \
+          --exclude='storage/logs/*' \
+          --exclude='storage/framework/cache/*' \
+          --exclude='storage/framework/sessions/*' \
+          --exclude='storage/framework/views/*' \
+          --exclude='.env*' \
+          --exclude='*.log' \
+          .
+          
+    - name: Deploy to CasaOS
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CASAOS_HOST }}
+        username: ${{ secrets.CASAOS_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          set -e
+          
+          echo "🚀 Starting deployment to CasaOS..."
+          
+          # Create deployment directory
+          sudo mkdir -p ${{ env.DEPLOYMENT_PATH }}/deployments
+          cd ${{ env.DEPLOYMENT_PATH }}
+          
+          # Backup current deployment
+          if [ -d "current" ]; then
+            echo "📦 Backing up current deployment..."
+            sudo mv current deployments/backup-$(date +%Y%m%d-%H%M%S)
+            
+            # Keep only last 3 backups
+            sudo find deployments/ -name "backup-*" -type d | sort -r | tail -n +4 | xargs sudo rm -rf
+          fi
+          
+          # Create new deployment directory
+          sudo mkdir -p current
+          
+    - name: Upload deployment archive
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.CASAOS_HOST }}
+        username: ${{ secrets.CASAOS_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        source: "famlink-deployment.tar.gz"
+        target: "${{ env.DEPLOYMENT_PATH }}/"
+        
+    - name: Extract and start application
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CASAOS_HOST }}
+        username: ${{ secrets.CASAOS_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          set -e
+          cd ${{ env.DEPLOYMENT_PATH }}
+          
+          echo "📁 Extracting deployment archive..."
+          sudo tar -xzf famlink-deployment.tar.gz -C current/
+          
+          # Copy environment file
+          if [ -f .env.production ]; then
+            sudo cp .env.production current/.env
+          else
+            echo "⚠️  No .env.production found, using .env.example"
+            sudo cp current/.env.example current/.env
+          fi
+          
+          # Create required directories
+          sudo mkdir -p current/database current/storage/app/public current/storage/logs
+          
+          # Create SQLite database if it doesn't exist
+          if [ ! -f current/database/database.sqlite ]; then
+            sudo touch current/database/database.sqlite
+            sudo chmod 664 current/database/database.sqlite
+          fi
+          
+          # Set proper permissions
+          sudo chown -R 1000:1000 current/
+          sudo chmod -R 775 current/storage current/bootstrap/cache
+          
+          echo "🐳 Starting Docker containers..."
+          cd current
+          
+          # Stop existing containers
+          sudo docker-compose down --remove-orphans || true
+          
+          # Start new containers
+          sudo docker-compose up -d --build
+          
+          # Wait for containers to be ready
+          echo "⏳ Waiting for application to be ready..."
+          sleep 30
+          
+          # Clean up
+          cd ..
+          sudo rm -f famlink-deployment.tar.gz
+          
+          echo "✅ Deployment completed successfully!"
+          
+    - name: Health check
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CASAOS_HOST }}
+        username: ${{ secrets.CASAOS_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd ${{ env.DEPLOYMENT_PATH }}/current
+          
+          # Check if containers are running
+          if ! sudo docker-compose ps | grep -q "Up"; then
+            echo "❌ Deployment failed - containers not running"
+            sudo docker-compose logs
+            exit 1
+          fi
+          
+          # Test application health
+          sleep 10
+          CONTAINER_IP=$(sudo docker inspect famlink-app | grep -i ipaddress | tail -1 | cut -d '"' -f 4)
+          
+          if curl -f "http://$CONTAINER_IP/" > /dev/null 2>&1; then
+            echo "✅ Health check passed - Application is running!"
+          else
+            echo "❌ Health check failed - Application not responding"
+            sudo docker-compose logs famlink-app
+            exit 1
+          fi

@@ -32,6 +32,27 @@ RUN if [ -f "bun.lock" ]; then \
 # Stage 2: Build PHP dependencies
 FROM composer:2 AS vendor
 
+# Install system dependencies needed for PHP extensions
+RUN apk add --no-cache \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    && rm -rf /var/cache/apk/*
+
+# Install PHP extensions needed for Composer
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_pgsql \
+        pdo_sqlite \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd
+
 WORKDIR /app
 
 # Copy composer files

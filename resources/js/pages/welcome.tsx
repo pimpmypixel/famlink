@@ -89,6 +89,9 @@ export default function Welcome() {
                     {/* Trust Indicators */}
                     <div className="max-w-7xl mx-auto mb-8">
                         <div className="bg-white rounded-lg shadow-md p-6 border border-slate-200">
+                            <div className="text-center mb-4">
+                                <span className="text-lg font-bold tracking-wide text-blue-700">Din stemme, din styrke</span>
+                            </div>
                             <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <Shield className="h-5 w-5 text-green-600" />
@@ -123,10 +126,13 @@ export default function Welcome() {
                         
                         <div className="max-w-5xl mx-auto text-center relative z-10">
                             <div className="mb-6">
-                                <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-200 px-4 py-2 rounded-full text-sm font-medium border border-blue-500/30">
-                                    <Shield className="h-4 w-4" />
-                                    Officiel Platform for Familie- og Forældremyndighedssager
-                                </span>
+                                <div className="flex flex-col items-center gap-2 mb-4">
+                                    <span className="text-lg font-bold tracking-wide text-blue-200">Din stemme, din styrke</span>
+                                    <span className="inline-flex items-center gap-2 bg-blue-600/20 text-blue-200 px-4 py-2 rounded-full text-sm font-medium border border-blue-500/30">
+                                        <Shield className="h-4 w-4" />
+                                        Officiel Platform for Familie- og Forældremyndighedssager
+                                    </span>
+                                </div>
                             </div>
                             
                             <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
@@ -173,7 +179,10 @@ export default function Welcome() {
 
                     {/* Core Features */}
                     <section className="max-w-6xl mx-auto px-6 py-20">
-                        <div className="text-center mb-16">
+                        <div className="text-center mb-12">
+                            <div className="mb-4">
+                                <span className="text-xl font-bold tracking-wide text-blue-300">Din stemme, din styrke</span>
+                            </div>
                             <h2 className="text-3xl font-bold text-slate-800 mb-4">Officielle Tjenester og Sikkerhed</h2>
                             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
                                 Vores platform lever op til de højeste standarder for sikkerhed, juridisk gyldighed og brugervenlighed
@@ -264,6 +273,9 @@ export default function Welcome() {
                     <section className="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-16 px-6">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-12">
+                                <div className="mb-4">
+                                    <span className="text-xl font-bold tracking-wide text-blue-300">Din stemme, din styrke</span>
+                                </div>
                                 <h2 className="text-3xl font-bold mb-4">Officiel Platform med Fuld Myndighedsstøtte</h2>
                                 <p className="text-lg text-slate-300 max-w-3xl mx-auto">
                                     Familie Link er udviklet i samarbejde med Social- og Ældreministeriet og lever op til alle danske standarder for digitale offentlige tjenester

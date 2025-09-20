@@ -57,12 +57,20 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                 </SidebarMenu>
                 
-                {/* Discreet trust indicators in sidebar */}
-                <div className="px-3 py-2 border-t border-sidebar-border/50">
-                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                        <Shield className="h-3 w-3 text-blue-600" />
-                        <span>Officiel Platform</span>
-                        <Lock className="h-3 w-3 text-green-600" />
+                {/* Enhanced trust indicators with Danish slogan */}
+                <div className="px-3 py-3 border-t border-sidebar-border/50 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+                    <div className="flex flex-col items-center gap-2 text-center">
+                        <div className="text-sm font-bold text-blue-700 tracking-wide">Din stemme, din styrke</div>
+                        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <Shield className="h-3 w-3 text-blue-600" />
+                                <span>Officiel Platform</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Lock className="h-3 w-3 text-green-600" />
+                                <span>Sikker</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </SidebarHeader>

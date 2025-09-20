@@ -25,20 +25,22 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
     return (
         <>
-            {/* Official Status Banner - Discreet version for authenticated users */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 px-4 border-b border-blue-700">
-                <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                            <span className="font-medium">Officiel Platform</span>
+            {/* Official Status Banner - Enhanced Danish branding */}
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white py-3 px-4 border-b border-blue-500/30 shadow-sm">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold tracking-wide">Din stemme, din styrke</span>
+                            <span className="text-xs text-blue-100/80 font-medium">Officiel Platform</span>
                         </div>
-                        <div className="hidden md:flex items-center gap-1 text-blue-100">
-                            <span>•</span>
-                            <span>Sikker & Krypteret</span>
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className="w-1 h-1 bg-blue-300 rounded-full"></div>
+                            <span className="text-xs text-blue-100 font-medium">Sikker & Krypteret</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 text-blue-100">
-                        <span>Ministerie-godkendt</span>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-blue-100 font-medium">Ministerie-godkendt</span>
                     </div>
                 </div>
             </div>

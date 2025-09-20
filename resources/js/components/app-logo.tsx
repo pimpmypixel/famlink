@@ -12,7 +12,7 @@ export default function AppLogo({ className }: { className?: string }) {
             </div>
             <div className="ml-2 grid flex-1 text-left text-sm">
                 <span className="mb-0.5 truncate leading-tight font-bold text-slate-800">Familie Link</span>
-                <span className="text-xs text-slate-600 font-medium">Officiel Platform</span>
+                <span className="text-xs text-blue-600 font-semibold tracking-wide">Din stemme, din styrke</span>
             </div>
         </>
     );

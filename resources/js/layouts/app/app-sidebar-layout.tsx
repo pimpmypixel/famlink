@@ -16,7 +16,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
     return (
         <AppShell variant="sidebar">
             <AppSidebar />
-            <AppContent variant="sidebar" className="overflow-x-hidden">
+            <AppContent variant="sidebar" className="overflow-x-hidden bg-gradient-to-br from-slate-50 to-blue-50">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
                 <div style={{ position: 'fixed', bottom: '5%', right: '5%', zIndex: 50 }}>
@@ -29,7 +29,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                             }
                         ]}
                         direction="up"
-                        triggerSize={32}
+                        triggerSize="default"
                         style="circle"
                         triggerIcon={MessageSquareText}
                         

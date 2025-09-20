@@ -47,7 +47,8 @@ class HandleInertiaRequests extends Middleware
                 ->whereDoesntHave('roles', function ($query) {
                     $query->whereIn('name', ['admin', 'super-admin']);
                 })
-                ->select('id', 'name', 'email')
+                ->with('family') // Load family relationship
+                ->select('id', 'name', 'email', 'family_id')
                 ->get()
                 ->map(function ($user) {
                     return [
@@ -55,6 +56,7 @@ class HandleInertiaRequests extends Middleware
                         'name' => $user->name,
                         'email' => $user->email,
                         'role' => $user->getRoleNames()->first() ?? 'user',
+                        'family_name' => $user->family?->name ?? 'No Family',
                     ];
                 })
                 ->toArray();

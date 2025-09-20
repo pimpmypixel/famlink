@@ -11,9 +11,9 @@ COPY bun.lock* ./
 RUN if [ -f "bun.lock" ]; then \
         echo "Attempting to install Bun..." && \
         (npm install -g bun 2>/dev/null && echo "Bun installed successfully" && bun install) || \
-        (echo "Bun installation failed, falling back to npm..." && npm ci); \
+        (echo "Bun installation failed, falling back to npm..." && npm install); \
     else \
-        npm ci; \
+        npm install; \
     fi
 
 # Copy source files for building

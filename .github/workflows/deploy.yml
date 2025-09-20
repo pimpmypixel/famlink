@@ -146,7 +146,36 @@ jobs:
         echo "Checking disk space..."
         df -h .
         echo "Creating archive with tar..."
-        tar --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='tests' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='.env*' --exclude='*.log' -czf famlink-deployment.tar.gz * .[^.]* docker-compose.yml
+        tar -czf famlink-deployment.tar.gz \
+          app/ \
+          artisan \
+          bootstrap/ \
+          composer.json \
+          composer.lock \
+          config/ \
+          database/ \
+          docker-compose.yml \
+          Dockerfile \
+          package.json \
+          phpunit.xml \
+          public/ \
+          resources/ \
+          routes/ \
+          storage/ \
+          tests/ \
+          tsconfig.json \
+          vendor/ \
+          vite.config.ts \
+          .env.example \
+          .editorconfig \
+          .env \
+          .gitignore \
+          .prettierrc \
+          bun.lock \
+          components.json \
+          eslint.config.js \
+          README.md \
+          setup-famlink-casaos.sh
         echo "✅ Archive creation completed"
         ls -lh famlink-deployment.tar.gz || echo "Archive not found"
         echo "Archive size check:"

@@ -35,27 +35,6 @@ RUN if [ -f "bun.lock" ]; then \
 # Stage 2: Build PHP dependencies
 FROM composer:2 AS vendor
 
-# Install system dependencies needed for PHP extensions
-RUN apk add --no-cache \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    && rm -rf /var/cache/apk/*
-
-# Install PHP extensions needed for Composer
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        pdo \
-        pdo_pgsql \
-        pdo_sqlite \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd
-
 WORKDIR /app
 
 # Copy composer files
@@ -73,16 +52,16 @@ RUN composer install \
 # Stage 3: Application runtime
 FROM php:8.4-fpm-alpine AS runtime
 
-# Install system dependencies
+# Install system dependencies (much faster than compiling extensions)
 RUN apk add --no-cache \
     bash \
     nginx \
     curl \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
+    freetype \
+    libjpeg-turbo \
+    libpng \
+    oniguruma \
+    libxml2 \
     zip \
     unzip \
     postgresql-dev \
@@ -92,8 +71,14 @@ RUN apk add --no-cache \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+# Install PHP extensions (use pre-built where possible)
+RUN apk add --no-cache --virtual .build-deps \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        oniguruma-dev \
+        libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
         pdo_pgsql \
@@ -103,7 +88,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         pcntl \
         bcmath \
         gd \
-        opcache
+        opcache \
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/*
 
 # Configure OPcache for production
 RUN { \

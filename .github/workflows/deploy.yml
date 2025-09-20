@@ -141,21 +141,12 @@ jobs:
     - name: Create deployment archive
       run: |
         echo "📦 Creating deployment archive..."
+        pwd
         ls -la
-        tar -czf famlink-deployment.tar.gz \
-          --exclude='.git' \
-          --exclude='node_modules' \
-          --exclude='.github' \
-          --exclude='tests' \
-          --exclude='storage/logs/*' \
-          --exclude='storage/framework/cache/*' \
-          --exclude='storage/framework/sessions/*' \
-          --exclude='storage/framework/views/*' \
-          --exclude='.env*' \
-          --exclude='*.log' \
-          .
-        echo "✅ Archive created successfully"
-        ls -lh famlink-deployment.tar.gz
+        echo "Creating archive with tar..."
+        tar -czf famlink-deployment.tar.gz . --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='tests' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='.env*' --exclude='*.log'
+        echo "✅ Archive creation completed"
+        ls -lh famlink-deployment.tar.gz || echo "Archive not found"
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0

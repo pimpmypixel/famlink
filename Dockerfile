@@ -55,6 +55,22 @@ FROM --platform=$BUILDPLATFORM composer:2 AS vendor
 
 WORKDIR /app
 
+# Install system dependencies needed for PHP extensions
+RUN apk add --no-cache \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    icu-dev \
+    php84 \
+    php84-dev \
+    && rm -rf /var/cache/apk/*
+
+# Install PHP GD extension in vendor stage
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd
+
 # Copy composer files
 COPY composer.json composer.lock ./
 

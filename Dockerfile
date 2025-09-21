@@ -26,9 +26,6 @@ WORKDIR /app
 # Copy dependency files first for better caching
 COPY composer.json composer.lock package*.json bun.lock* ./
 
-# Copy Wayfinder-generated types from vendor stage
-COPY --from=vendor /app/resources/js/types/wayfinder.d.ts resources/js/types/wayfinder.d.ts
-
 # Install Node.js dependencies with fallback
 RUN if [ -f "bun.lock" ] || [ -f "bun.lockb" ]; then \
         echo "Using Bun..." && \

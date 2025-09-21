@@ -17,6 +17,9 @@ class TimelineItemSeeder extends Seeder
      */
     public function run(): void
     {
+        // Fix any existing timeline items without categories
+        $this->fixExistingItemsWithoutCategories();
+
         // Create base timeline data (existing items)
         $baseTimelineData = $this->getBaseTimelineData();
 
@@ -40,6 +43,37 @@ class TimelineItemSeeder extends Seeder
 
         // Create comments and replies
         $this->createCommentsAndReplies($timelineItems, $socialWorkers);
+    }
+
+    /**
+     * Fix any existing timeline items that don't have categories assigned
+     */
+    private function fixExistingItemsWithoutCategories(): void
+    {
+        $itemsWithoutCategories = TimelineItem::whereNull('category_id')->get();
+
+        if ($itemsWithoutCategories->isEmpty()) {
+            return;
+        }
+
+        $this->command->info("Found {$itemsWithoutCategories->count()} timeline items without categories. Fixing...");
+
+        // Get or create default categories
+        $defaultCategories = [
+            'familieret' => Category::firstOrCreate(['name' => 'familieret']),
+            'korrespondance' => Category::firstOrCreate(['name' => 'korrespondance']),
+            'barnet' => Category::firstOrCreate(['name' => 'barnet']),
+            'rapport' => Category::firstOrCreate(['name' => 'rapport']),
+        ];
+
+        foreach ($itemsWithoutCategories as $item) {
+            // Assign a random category based on content analysis or just pick one
+            $category = collect($defaultCategories)->random();
+
+            $item->update(['category_id' => $category->id]);
+        }
+
+        $this->command->info("Fixed {$itemsWithoutCategories->count()} timeline items with categories.");
     }
 
     /**
@@ -329,10 +363,19 @@ class TimelineItemSeeder extends Seeder
             $randomUser = $allUsers->random();
             $familyId = $randomUser->family_id ?? $families->random()->id;
 
+            // Ensure category exists and get its ID
+            $categoryName = $item['category'];
+            if (!isset($categories[$categoryName])) {
+                // Create category if it doesn't exist
+                $category = Category::firstOrCreate(['name' => $categoryName]);
+                $categories[$categoryName] = $category;
+            }
+            $categoryId = $categories[$categoryName]->id;
+
             $timelineItem = TimelineItem::create([
                 'user_id' => $randomUser->id,
                 'family_id' => $familyId,
-                'category_id' => $categories[$item['category']]->id,
+                'category_id' => $categoryId, // Use the ensured category ID
                 'title' => $item['title'],
                 'content' => $item['content'],
                 'date' => $item['date'],

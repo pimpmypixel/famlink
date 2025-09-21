@@ -252,7 +252,13 @@ jobs:
           chmod -R 775 storage bootstrap/cache
           chown -R $(id -u):$(id -g) . 2>/dev/null || true
           
-          echo "🐳 Starting Docker containers..."
+          echo "�️ Running database migrations and seeding..."
+          
+          # Run migrations and seed the database
+          docker compose exec -T app php artisan migrate --force
+          docker compose exec -T app php artisan db:seed --force
+          
+          echo "�🐳 Starting Docker containers..."
           
           # Login to GitHub Container Registry
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

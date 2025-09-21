@@ -141,6 +141,218 @@
 2. **Integration Testing** with Inertia.js
 3. **Browser Testing** using MCP tools
 
+### Pest v4 Browser Testing
+
+Famlink uses Pest v4 for comprehensive browser testing, providing powerful tools for testing React components, Inertia.js pages, and user interactions.
+
+#### Setting Up Browser Tests
+1. **Create Browser Test**
+   ```bash
+   php artisan make:test SpeedDialTest --browser
+   ```
+
+2. **Basic Browser Test Structure**
+   ```php
+   <?php
+
+   use Illuminate\Foundation\Testing\RefreshDatabase;
+   use Spatie\Permission\Models\Role;
+
+   uses(RefreshDatabase::class);
+
+   use function Pest\Laravel\actingAs;
+
+   it('can interact with speed dial component', function () {
+       // Seed required roles
+       Role::firstOrCreate(['name' => 'far']);
+
+       $user = \App\Models\User::factory()->create([
+           'email' => 'test@famlink.test',
+           'name' => 'Test User'
+       ]);
+       $user->assignRole('far');
+
+       actingAs($user);
+
+       $page = visit('/dashboard');
+
+       // Test SpeedDial functionality
+       $page->assertPresent('button[aria-label="Open speed dial"]')
+           ->click('button[aria-label="Open speed dial"]')
+           ->assertPresent('button[aria-label="Ask AI"]');
+   });
+   ```
+
+#### Browser Testing Best Practices
+
+**Role-Based Authentication:**
+```php
+// Always seed required roles for authenticated tests
+Role::firstOrCreate(['name' => 'far']); // Parent role
+Role::firstOrCreate(['name' => 'mor']); // Parent role
+Role::firstOrCreate(['name' => 'myndighed']); // Authority role
+
+$user = User::factory()->create();
+$user->assignRole('far'); // Assign appropriate role
+actingAs($user);
+```
+
+**Component Selectors:**
+```php
+// Use aria-labels for accessibility-compliant selectors
+$page->assertPresent('button[aria-label="Open speed dial"]');
+$page->assertPresent('button[aria-label="Ask AI"]');
+
+// Avoid brittle CSS selectors - prefer semantic attributes
+// ❌ Bad: $page->assertPresent('.speed-dial-button');
+// ✅ Good: $page->assertPresent('button[aria-label="Open speed dial"]');
+```
+
+**Modal Testing Considerations:**
+```php
+// Modal interactions may cause stream errors in browser tests
+// Focus on component visibility and interaction rather than full modal flow
+$page->click('button[aria-label="Open speed dial"]')
+    ->assertPresent('button[aria-label="Ask AI"]');
+
+// For full modal testing, consider API mocking or separate integration tests
+// Note: ->wait() calls can cause "Expected a valid stream" errors
+```
+
+**Testing SpeedDial Components:**
+```php
+it('speed dial opens and shows actions', function () {
+    // Setup user with required role
+    Role::firstOrCreate(['name' => 'far']);
+    $user = User::factory()->create();
+    $user->assignRole('far');
+    actingAs($user);
+
+    $page = visit('/dashboard');
+
+    // Test trigger button exists
+    $page->assertPresent('button[aria-label="Open speed dial"]')
+
+        // Click to open menu
+        ->click('button[aria-label="Open speed dial"]')
+
+        // Verify action buttons appear
+        ->assertPresent('button[aria-label="Ask AI"]');
+});
+```
+
+**Testing Chat Modal Components:**
+```php
+it('chat modal accessibility features work', function () {
+    Role::firstOrCreate(['name' => 'far']);
+    $user = User::factory()->create();
+    $user->assignRole('far');
+    actingAs($user);
+
+    $page = visit('/dashboard');
+
+    // Test SpeedDial opens (modal testing limited due to API calls)
+    $page->assertPresent('button[aria-label="Open speed dial"]')
+        ->click('button[aria-label="Open speed dial"]')
+        ->assertPresent('button[aria-label="Ask AI"]');
+
+    // Note: Full modal interaction testing requires API mocking
+    // to avoid "Expected a valid stream" errors from fetch requests
+});
+```
+
+#### Running Browser Tests
+```bash
+# Run all browser tests
+composer test --filter=Browser
+
+# Run specific browser test
+composer test --filter=ApprovedUserChatTest
+
+# Run with verbose output
+composer test --filter=SpeedDialTest -v
+```
+
+#### Browser Test Troubleshooting
+
+**"Expected a valid stream" Errors:**
+- Caused by `->wait()` calls triggering API requests in browser test environment
+- Solution: Remove `->wait()` calls or mock API endpoints
+- Focus tests on component visibility rather than async operations
+
+**Role Authentication Issues:**
+- Ensure roles are seeded: `Role::firstOrCreate(['name' => 'far'])`
+- Assign roles to test users: `$user->assignRole('far')`
+- Use `actingAs($user)` for authentication
+
+**Component Not Found:**
+- Verify aria-labels match actual component implementation
+- Check that components render in the correct layout (AppSidebarLayout)
+- Use browser snapshots to debug: `browser_snapshot`
+
+**Modal API Calls:**
+- Modal components making fetch requests cause stream errors
+- Skip API calls in test environment or mock responses
+- Test component visibility and interaction separately
+
+#### Browser Testing Examples
+
+**Complete SpeedDial Test:**
+```php
+<?php
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+
+uses(RefreshDatabase::class);
+
+it('speed dial component works correctly', function () {
+    // Setup
+    Role::firstOrCreate(['name' => 'far']);
+    $user = User::factory()->create();
+    $user->assignRole('far');
+    actingAs($user);
+
+    $page = visit('/dashboard');
+
+    // Test trigger button
+    $page->assertPresent('button[aria-label="Open speed dial"]')
+
+        // Open speed dial menu
+        ->click('button[aria-label="Open speed dial"]')
+
+        // Verify actions are visible
+        ->assertPresent('button[aria-label="Ask AI"]')
+
+        // Test can click action (without triggering modal)
+        ->click('button[aria-label="Ask AI"]')
+
+        // Verify speed dial is still accessible
+        ->assertPresent('button[aria-label="Open speed dial"]');
+});
+```
+
+**Onboarding Chat Test:**
+```php
+it('onboarding chat flow works', function () {
+    $page = visit('/onboarding');
+
+    // Test initial state
+    $page->assertSee('Welcome to Famlink')
+
+        // Navigate through onboarding steps
+        ->click('button[aria-label="Continue"]')
+        ->assertSee('Tell us about yourself')
+
+        // Complete onboarding
+        ->fill('input[name="name"]', 'Test User')
+        ->click('button[type="submit"]')
+
+        // Verify completion
+        ->assertSee('Onboarding complete');
+});
+```
+
 ## Code Quality Checks
 
 ### Before Committing

@@ -5,25 +5,26 @@
 # ================================
 FROM --platform=$BUILDPLATFORM node:20-alpine AS node-builder
 
-# Install PHP for Wayfinder plugin with GD extension
+# Install PHP for Wayfinder plugin with required extensions
 RUN apk add --no-cache \
     php84 \
     php84-cli \
-    composer \
     php84-gd \
     php84-mbstring \
     php84-xml \
     php84-curl \
     php84-zip \
-    php84-intl
+    php84-intl \
+    php84-simplexml \
+    php84-session \
+    php84-fileinfo \
+    php84-tokenizer \
+    php84-dom
 
 WORKDIR /app
 
 # Copy dependency files first for better caching
 COPY composer.json composer.lock package*.json bun.lock* ./
-
-# Install PHP dependencies (needed for Wayfinder)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --prefer-dist --no-cache
 
 # Copy minimal source needed for Wayfinder
 COPY app/ app/
@@ -32,7 +33,7 @@ COPY routes/ routes/
 COPY bootstrap/ bootstrap/
 COPY artisan ./
 
-# Generate Wayfinder types
+# Generate Wayfinder types (requires PHP but not full composer install)
 RUN php84 artisan wayfinder:generate --with-form
 
 # Install Node.js dependencies with fallback

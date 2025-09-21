@@ -138,19 +138,36 @@ jobs:
         php artisan route:cache  
         php artisan view:cache
         
-    - name: Create deployment archive
-      run: |
-        echo "📦 Creating deployment archive..."
-        pwd
-        ls -la
-        echo "Checking disk space..."
-        df -h .
-        echo "Creating archive with tar..."
-        tar -czf famlink-deployment.tar.gz --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='tests' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' --exclude='.env*' --exclude='*.log' * .[^.]*
-        echo "✅ Archive creation completed"
-        ls -lh famlink-deployment.tar.gz || echo "Archive not found"
-        echo "Archive size check:"
-        du -sh famlink-deployment.tar.gz || echo "Could not check archive size"
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: Build and push Docker images with Bake
+      uses: docker/bake-action@v4
+      with:
+        files: docker-bake.hcl
+        push: true
+        set: |
+          *.tags=${{ steps.meta.outputs.tags }}
+          *.labels=${{ steps.meta.outputs.labels }}
+          *.args.BUILDKIT_INLINE_CACHE=1
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0
@@ -180,74 +197,66 @@ jobs:
           # Create new deployment directory
           sudo mkdir -p current
           
-    - name: Upload deployment archive
+    - name: Upload application files
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || '22' }}
-        source: "famlink-deployment.tar.gz"
-        target: "${{ env.DEPLOYMENT_PATH }}/"
+        source: "docker-compose.yml,docker/,storage/,database/,.env.example"
+        target: "${{ env.DEPLOYMENT_PATH }}/current/"
         
-    - name: Extract and configure application
+    - name: Deploy application with pre-built images
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.CASAOS_HOST }}
         username: ${{ secrets.CASAOS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || '22' }}
-        timeout: 45m
+        timeout: 15m
         script: |
           set -e
-          cd ${{ env.DEPLOYMENT_PATH }}
+          cd ${{ env.DEPLOYMENT_PATH }}/current
           
-          echo "📁 Extracting deployment archive..."
-          sudo tar -xzf famlink-deployment.tar.gz -C current/
+          echo "� Pulling and starting pre-built Docker containers..."
           
-          # Copy environment file
-          if [ -f ".env.production" ]; then
-            sudo cp .env.production current/.env
-            echo "✅ Using existing .env.production"
-          else
-            echo "⚠️  No .env.production found, using .env.example"
-            sudo cp current/.env.example current/.env
+          # Login to GitHub Container Registry
+          echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Create .env file if it doesn't exist
+          if [ ! -f ".env" ]; then
+            echo "📝 Creating .env file..."
+            cp .env.example .env
             # Update environment for production
-            sudo sed -i 's/APP_ENV=.*/APP_ENV=production/' current/.env
-            sudo sed -i 's/APP_DEBUG=.*/APP_DEBUG=false/' current/.env
-            sudo sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' current/.env
-            sudo sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/html/database/database.sqlite|' current/.env
+            sed -i 's/APP_ENV=.*/APP_ENV=production/' .env
+            sed -i 's/APP_DEBUG=.*/APP_DEBUG=false/' .env
+            sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+            sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/html/database/database.sqlite|' .env
           fi
           
           # Create required directories
-          sudo mkdir -p current/database current/storage/app/public current/storage/logs current/bootstrap/cache
+          mkdir -p database storage/app/public storage/logs bootstrap/cache
           
           # Create SQLite database if it doesn't exist
-          if [ ! -f current/database/database.sqlite ]; then
-            sudo touch current/database/database.sqlite
-            sudo chmod 664 current/database/database.sqlite
+          if [ ! -f database/database.sqlite ]; then
+            touch database/database.sqlite
+            chmod 664 database/database.sqlite
           fi
           
           # Set proper permissions
-          sudo chown -R 1000:1000 current/
-          sudo chmod -R 775 current/storage current/bootstrap/cache
-          
-          echo "🐳 Starting Docker containers..."
-          cd current
+          chown -R 1000:1000 .
+          chmod -R 775 storage bootstrap/cache
           
           # Stop existing containers
           sudo docker compose down --remove-orphans 2>/dev/null || true
           
-          # Start new containers
-          sudo docker compose up -d --build
+          # Start new containers with pulled images
+          sudo docker compose up -d
           
           # Wait for containers to be ready
           echo "⏳ Waiting for application to be ready..."
-          sleep 30
-          
-          # Clean up
-          cd ..
-          sudo rm -f famlink-deployment.tar.gz
+          sleep 20
           
           echo "✅ Deployment completed successfully!"
           

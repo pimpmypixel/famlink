@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   famlink-app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/pimpmypixel/famlink:latest
     container_name: famlink-app
     restart: unless-stopped
     working_dir: /var/www/html

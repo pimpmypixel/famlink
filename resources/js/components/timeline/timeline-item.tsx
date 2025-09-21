@@ -138,7 +138,7 @@ export function TimelineItemComponent({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={categoryColorClass}>
-                {capitalise(typeof item.category === 'string' ? item.category : 'Uncategorized')}
+                {capitalise(typeof item.category === 'object' && item.category?.name ? item.category.name : (typeof item.category === 'string' ? item.category : 'Uncategorized'))}
               </Badge>
 
             </div>
@@ -167,7 +167,7 @@ export function TimelineItemComponent({
           <div className="flex flex-wrap gap-1">
             {item.tags?.map((tag, index) => (
               <Badge key={index} variant="outline" className="text-[10px] text-neutral-700 dark:text-neutral-200">
-                {capitalise(typeof tag === 'string' ? tag : 'Unknown')}
+                {capitalise(typeof tag === 'object' && tag?.name ? tag.name : (typeof tag === 'string' ? tag : 'Unknown'))}
               </Badge>
             )) ?? null}
           </div>

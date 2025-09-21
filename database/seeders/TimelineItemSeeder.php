@@ -41,6 +41,9 @@ class TimelineItemSeeder extends Seeder
         // Create timeline items
         $timelineItems = $this->createTimelineItems($timelineData, $categories, $tags, $families, $allUsers, $socialWorkers);
 
+        // Ensure each family has at least 3 items from social workers
+        $this->createSocialWorkerItemsForFamilies($families, $socialWorkers, $categories, $tags);
+
         // Create comments and replies
         $this->createCommentsAndReplies($timelineItems, $socialWorkers);
     }
@@ -391,6 +394,74 @@ class TimelineItemSeeder extends Seeder
         }
 
         return $timelineItems;
+    }
+
+    /**
+     * Ensure each family has at least 3 items from social workers
+     */
+    private function createSocialWorkerItemsForFamilies($families, $socialWorkers, $categories, $tags): void
+    {
+        $socialWorkerTitles = [
+            'Statusopdatering fra Familieretshuset',
+            'Mødereferat',
+            'Vurdering af børns trivsel',
+            'Anbefalinger til forældresamarbejde',
+            'Opfølgning på tidligere møde',
+            'Rapport fra børnesagkyndig',
+            'Vejledning om samvær',
+            'Evaluering af aftaler',
+            'Indstilling til Familieretten',
+            'Orientering om sagsforløb'
+        ];
+
+        $socialWorkerContents = [
+            'Familieretshuset har gennemgået sagen og kommer med følgende vurdering...',
+            'På mødet blev der diskuteret muligheder for bedre samarbejde mellem forældrene...',
+            'Børnenes trivsel er blevet vurderet, og der er behov for følgende tiltag...',
+            'Der anbefales at forældrene deltager i kursus om samarbejde efter skilsmisse...',
+            'Opfølgning på tidligere aftaler viser god fremgang i kommunikationen...',
+            'Den børnesagkyndige har afgivet rapport med anbefalinger til videre forløb...',
+            'Der gives vejledning om praktisk gennemførelse af samværsaftalen...',
+            'Evalueringen viser at aftalerne fungerer tilfredsstillende for alle parter...',
+            'Familieretshuset indstiller til Familieretten at godkende den foreslåede ordning...',
+            'Sagen er nu i følgende fase med disse næste skridt...'
+        ];
+
+        foreach ($families as $family) {
+            // Count existing social worker items for this family
+            $existingSocialWorkerItems = TimelineItem::where('family_id', $family->id)
+                ->whereHas('user', function ($query) {
+                    $query->role('myndighed');
+                })
+                ->count();
+
+            // Create additional items if needed to reach at least 3
+            $itemsToCreate = max(0, 3 - $existingSocialWorkerItems);
+
+            for ($i = 0; $i < $itemsToCreate; $i++) {
+                $socialWorker = $socialWorkers->random();
+                $categoryKeys = array_keys($categories);
+                $randomCategory = $categories[$categoryKeys[array_rand($categoryKeys)]];
+
+                $timelineItem = TimelineItem::create([
+                    'user_id' => $socialWorker->id,
+                    'family_id' => $family->id,
+                    'category_id' => $randomCategory->id,
+                    'title' => fake()->randomElement($socialWorkerTitles),
+                    'content' => fake()->randomElement($socialWorkerContents),
+                    'date' => fake()->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
+                    'item_timestamp' => fake()->dateTimeBetween('-6 months', 'now')->format('Y-m-d H:i:s'),
+                    'is_urgent' => fake()->boolean(5), // 5% chance of being urgent
+                ]);
+
+                // Add some tags
+                $tagKeys = array_keys($tags);
+                $numTags = fake()->numberBetween(1, 3);
+                $selectedTagKeys = fake()->randomElements($tagKeys, $numTags);
+                $selectedTags = collect($selectedTagKeys)->map(fn($key) => $tags[$key])->toArray();
+                $timelineItem->tags()->attach(collect($selectedTags)->pluck('id')->toArray());
+            }
+        }
     }
 
     /**

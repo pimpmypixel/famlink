@@ -4,8 +4,8 @@ export interface TimelineItem {
   content: string
   date: string
   timestamp: number
-  category: string
-  tags: string[]
+  category: string | { id: number; name: string }
+  tags: string[] | { id: number; name: string }[]
   user: TimelineUser
   author?: string
   attachments?: Attachment[]

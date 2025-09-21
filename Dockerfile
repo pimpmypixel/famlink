@@ -1,7 +1,21 @@
 # Stage 1: Build Node.js assets
 FROM node:20-alpine AS node-builder
 
+# Install PHP for Wayfinder plugin
+RUN apk add --no-cache php84 php84-cli
+
 WORKDIR /app
+
+# Copy composer files and install dependencies (needed for Wayfinder)
+COPY composer.json composer.lock ./
+RUN apk add --no-cache composer \
+    && composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --prefer-dist --no-cache
+
+# Copy application source (needed for artisan commands)
+COPY . .
+
+# Generate Wayfinder types before frontend build
+RUN php84 artisan wayfinder:generate --with-form
 
 # Copy package files
 COPY package*.json ./

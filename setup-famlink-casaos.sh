@@ -35,9 +35,35 @@ mkdir -p current/{storage/{app/public,logs,framework/{cache,sessions,views}},boo
 # Set permissions
 chmod -R 775 current/storage current/bootstrap/cache
 
-# Create SQLite database
-touch current/database/database.sqlite
-chmod 664 current/database/database.sqlite
+# Database configuration
+echo -e "${BLUE}🗄️  Database configuration:${NC}"
+echo "1) PostgreSQL (recommended for production - default)"
+echo "2) SQLite (simpler, but limited for concurrent users)"
+read -p "Choose database (1 or 2, default is 1): " db_choice
+
+if [[ $db_choice == "2" ]]; then
+    DB_CONFIG="# SQLite Database (simple setup)
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite"
+    
+    # Create SQLite database
+    touch current/database/database.sqlite
+    chmod 664 current/database/database.sqlite
+    echo -e "${GREEN}✅ SQLite database created${NC}"
+else
+    # Generate secure PostgreSQL password
+    DB_PASSWORD=$(openssl rand -base64 32)
+    DB_CONFIG="# PostgreSQL Database (production - default)
+DB_CONNECTION=pgsql
+DB_HOST=db
+DB_PORT=5432
+DB_DATABASE=famlink
+DB_USERNAME=famlink_user
+DB_PASSWORD=${DB_PASSWORD}"
+    
+    echo -e "${GREEN}Generated DB Password: ${DB_PASSWORD}${NC}"
+    echo -e "${YELLOW}💾 Save this password securely!${NC}"
+fi
 
 echo -e "${GREEN}✅ Directory structure created${NC}"
 
@@ -64,9 +90,7 @@ LOG_CHANNEL=stack
 LOG_STACK=single
 LOG_LEVEL=error
 
-# SQLite Database (simple setup)
-DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/database/database.sqlite
+${DB_CONFIG}
 
 # Cache and Session
 CACHE_DRIVER=file
@@ -97,7 +121,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v "docker compose" &> /dev/null; then
+if ! command -v docker-compose &> /dev/null; then
     echo -e "${RED}❌ Docker Compose is not installed. Please install Docker Compose first.${NC}"
     exit 1
 fi
@@ -157,17 +181,17 @@ APP_DIR="/DATA/AppData/famlink/current"
 case "$1" in
     "logs")
         echo "📋 Application logs:"
-        docker compose -f "$APP_DIR/docker-compose.yml" logs -f
+        docker-compose -f "$APP_DIR/docker-compose.yml" logs -f
         ;;
     "restart")
         echo "🔄 Restarting application..."
         cd "$APP_DIR"
-        docker compose restart
+        docker-compose restart
         ;;
     "status")
         echo "📊 Application status:"
         cd "$APP_DIR"
-        docker compose ps
+        docker-compose ps
         ;;
     "update-ssl")
         echo "🔒 SSL certificate will be handled by Nginx Proxy Manager"

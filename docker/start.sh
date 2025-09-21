@@ -5,19 +5,19 @@ set -e
 
 echo "🚀 Starting FamLink application..."
 
-# Wait for database to be ready (if using PostgreSQL)
+# Wait for database to be ready
+DB_CONNECTION=$(grep "^DB_CONNECTION=" /var/www/html/.env | cut -d'=' -f2)
+
 if [ "$DB_CONNECTION" = "pgsql" ]; then
     echo "⏳ Waiting for PostgreSQL database..."
     until php artisan tinker --execute="DB::connection()->getPdo()" 2>/dev/null; do
-        echo "Database not ready, waiting 5 seconds..."
+        echo "PostgreSQL not ready, waiting 5 seconds..."
         sleep 5
     done
-    echo "✅ Database is ready!"
-fi
-
-# Create SQLite database if it doesn't exist
-if [ "$DB_CONNECTION" = "sqlite" ]; then
-    DB_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+    echo "✅ PostgreSQL is ready!"
+elif [ "$DB_CONNECTION" = "sqlite" ]; then
+    echo "📝 Setting up SQLite database..."
+    DB_PATH=$(grep "^DB_DATABASE=" /var/www/html/.env | cut -d'=' -f2)
     if [ ! -f "$DB_PATH" ]; then
         echo "📝 Creating SQLite database..."
         mkdir -p $(dirname "$DB_PATH")
@@ -25,6 +25,7 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
         chmod 664 "$DB_PATH"
         chown www-data:www-data "$DB_PATH"
     fi
+    echo "✅ SQLite is ready!"
 fi
 
 # Generate application key if not set

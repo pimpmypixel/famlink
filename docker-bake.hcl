@@ -17,6 +17,10 @@ variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
 
+variable "RUNTIME_TAGS" {
+  default = ["${REGISTRY}/${REPOSITORY}:latest"]
+}
+
 # Base configuration shared across targets
 target "_common" {
   platforms = ["${PLATFORMS}"]
@@ -30,6 +34,21 @@ target "_common" {
   cache-to = [
     "type=gha,scope=build-${replace(PLATFORMS, ",", "-")},mode=max",
     "type=registry,ref=${REGISTRY}/${REPOSITORY}:buildcache,mode=max"
+  ]
+}
+
+# Runtime target - final application image
+target "runtime" {
+  inherits = ["_common"]
+  target = "runtime"
+  tags = RUNTIME_TAGS
+  cache-from = [
+    "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")}",
+    "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache"
+  ]
+  cache-to = [
+    "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")},mode=max",
+    "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache,mode=max"
   ]
 }
 
@@ -60,21 +79,6 @@ target "vendor" {
   cache-to = [
     "type=gha,scope=vendor-${replace(PLATFORMS, ",", "-")},mode=max",
     "type=registry,ref=${REGISTRY}/${REPOSITORY}:vendor-cache,mode=max"
-  ]
-}
-
-# Runtime target - final application image
-target "runtime" {
-  inherits = ["_common"]
-  target = "runtime"
-  tags = ["${REGISTRY}/${REPOSITORY}:${TAG}"]
-  cache-from = [
-    "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")}",
-    "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache"
-  ]
-  cache-to = [
-    "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")},mode=max",
-    "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache,mode=max"
   ]
 }
 

@@ -33,10 +33,15 @@ target "_common" {
   ]
 }
 
+variable "TAGS" {
+  default = "ghcr.io/pimpmypixel/famlink:latest"
+}
+
 # Runtime target - final application image
 target "runtime" {
   inherits = ["_common"]
   target = "runtime"
+  tags = split(",", TAGS)
   cache-from = [
     "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")}",
     "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache"

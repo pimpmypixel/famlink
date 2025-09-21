@@ -362,7 +362,7 @@ class TimelineItemSeeder extends Seeder
 
             if ($allowedUsers->isEmpty()) continue;
 
-            // Create 1-5 comments per timeline item
+            // Create at least 1 comment per timeline item (guaranteed)
             $numComments = fake()->numberBetween(1, 5);
             $comments = [];
 
@@ -377,23 +377,33 @@ class TimelineItemSeeder extends Seeder
                 $comments[] = $comment;
             }
 
-            // Create replies for some comments
+            // Create at least 1 reply for each comment (guaranteed)
             foreach ($comments as $comment) {
-                if (fake()->boolean(40)) { // 40% chance of having replies
-                    $numReplies = fake()->numberBetween(1, 3);
-                    $replyUsers = $allowedUsers->filter(fn ($user) => $user->id !== $comment->user_id);
+                $numReplies = fake()->numberBetween(1, 3); // Guaranteed at least 1 reply
+                $replyUsers = $allowedUsers->filter(fn ($user) => $user->id !== $comment->user_id);
 
-                    if ($replyUsers->isNotEmpty()) {
-                        for ($i = 0; $i < $numReplies; $i++) {
-                            $replyUser = $replyUsers->random();
-                            Comment::create([
-                                'timeline_item_id' => $timelineItem->id,
-                                'user_id' => $replyUser->id,
-                                'parent_comment_id' => $comment->id,
-                                'content' => fake()->paragraph(),
-                                'is_private' => fake()->boolean(3), // 3% chance of being private
-                            ]);
-                        }
+                if ($replyUsers->isNotEmpty()) {
+                    for ($i = 0; $i < $numReplies; $i++) {
+                        $replyUser = $replyUsers->random();
+                        Comment::create([
+                            'timeline_item_id' => $timelineItem->id,
+                            'user_id' => $replyUser->id,
+                            'parent_comment_id' => $comment->id,
+                            'content' => fake()->paragraph(),
+                            'is_private' => fake()->boolean(3), // 3% chance of being private
+                        ]);
+                    }
+                } else {
+                    // If no other users available, create a reply from a social worker
+                    $replyUser = $socialWorkers->where('id', '!=', $comment->user_id)->first() ?? $socialWorkers->first();
+                    if ($replyUser) {
+                        Comment::create([
+                            'timeline_item_id' => $timelineItem->id,
+                            'user_id' => $replyUser->id,
+                            'parent_comment_id' => $comment->id,
+                            'content' => fake()->paragraph(),
+                            'is_private' => false,
+                        ]);
                     }
                 }
             }

@@ -16,6 +16,9 @@ export interface CommentsSheetProps {
 export function CommentsSheet({ item, open, onOpenChange, comments, onAddComment }: CommentsSheetProps) {
   const [showNewCommentForm, setShowNewCommentForm] = useState(false);
 
+  // Ensure comments is always an array
+  const safeComments = Array.isArray(comments) ? comments : [];
+
   const handleNewComment = (content: string) => {
     if (onAddComment) {
       onAddComment(content);
@@ -30,12 +33,12 @@ export function CommentsSheet({ item, open, onOpenChange, comments, onAddComment
   };
 
   // Group comments by parent (top-level comments vs replies)
-  const topLevelComments = comments.filter(comment => !comment.parent_comment_id);
+  const topLevelComments = safeComments.filter(comment => !comment.parent_comment_id);
 
   // Add replies to their parent comments
   const commentsWithReplies = topLevelComments.map(comment => ({
     ...comment,
-    replies: comments.filter(reply => reply.parent_comment_id === comment.id)
+    replies: safeComments.filter(reply => reply.parent_comment_id === comment.id)
   }));
 
   return (
@@ -77,7 +80,7 @@ export function CommentsSheet({ item, open, onOpenChange, comments, onAddComment
               {commentsWithReplies.length} kommentarer
             </span>
             <span>
-              {comments.filter(c => c.parent_comment_id).length} svar
+              {safeComments.filter(c => c.parent_comment_id).length} svar
             </span>
           </div>
         </div>

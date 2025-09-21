@@ -161,13 +161,12 @@ class UserSeeder extends Seeder
             ]);
             $mother->assignRole('mor');
 
-            // Assign a social worker to this family
+            // Assign a social worker to this family (they get access but don't become part of the family)
             $designatedWorker = $socialWorkerUsers[$socialWorkerIndex % count($socialWorkerUsers)];
             $family->update(['created_by' => $designatedWorker->id]);
 
-            // Also assign the social worker to this family (they can access it)
-            $designatedWorker->family_id = $family->id;
-            $designatedWorker->save();
+            // Social workers keep their family_id as null - they access families through permissions
+            // The relationship is maintained through the created_by field and permissions
 
             $socialWorkerIndex++;
         }

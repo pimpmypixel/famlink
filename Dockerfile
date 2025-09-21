@@ -5,8 +5,17 @@
 # ================================
 FROM --platform=$BUILDPLATFORM node:20-alpine AS node-builder
 
-# Install PHP for Wayfinder plugin (only what's needed)
-RUN apk add --no-cache php84 php84-cli composer
+# Install PHP for Wayfinder plugin with GD extension
+RUN apk add --no-cache \
+    php84 \
+    php84-cli \
+    composer \
+    php84-gd \
+    php84-mbstring \
+    php84-xml \
+    php84-curl \
+    php84-zip \
+    php84-intl
 
 WORKDIR /app
 

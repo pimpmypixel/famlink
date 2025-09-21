@@ -44,6 +44,7 @@ class TimelineItemResource extends JsonResource
                     'name' => $this->user->name,
                     'email' => $this->user->email,
                     'role' => $this->user->getRoleNames()->first(),
+                    'roles' => $this->user->getRoleNames(),
                 ];
             }),
             'family' => $this->whenLoaded('family', function () {

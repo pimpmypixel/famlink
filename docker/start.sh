@@ -38,4 +38,23 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Start supervisord (which manages nginx and php-fpm)
 echo "🌐 Starting web services..."
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+/usr/bin/supervisord -c /etc/supervisord.conf &
+
+# Wait for application to be ready
+echo "⏳ Waiting for application to be ready..."
+sleep 10
+
+# Verify application is responding
+if curl -f http://localhost/health > /dev/null 2>&1 || curl -f http://localhost/ > /dev/null 2>&1; then
+    echo "✅ Application is responding"
+    
+    # Reseed database after successful deployment
+    echo "🔄 Reseeding database after successful deployment..."
+    php artisan db:seed --force
+    echo "✅ Database reseeded successfully"
+else
+    echo "⚠️  Application may not be fully ready yet, but continuing..."
+fi
+
+# Keep container running
+wait

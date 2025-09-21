@@ -11,12 +11,14 @@ class OnboardingAgent extends BaseLlmAgent
     protected string $name = 'onboarding_agent';
 
     protected ?string $provider = 'mistral';
+
     protected string $model = 'ministral-8b-2410';
-    protected null|float $temperature = 0.7;
+
+    protected ?float $temperature = 0.7;
+
     protected bool $includeConversationHistory = true;
     // protected string $model = 'gemini-2.5-flash-lite';
     // protected string $model = 'openai/gpt-4-turbo';
-
 
     protected string $description = 'Famlink Onboarding Agent that guides users through personalized onboarding questions from a playbook.';
 

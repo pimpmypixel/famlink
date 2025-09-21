@@ -27,22 +27,22 @@ class FileSearchTool implements ToolInterface
                 'properties' => [
                     'query' => [
                         'type' => 'string',
-                        'description' => 'The search query to find semantically similar content in uploaded files.'
+                        'description' => 'The search query to find semantically similar content in uploaded files.',
                     ],
                     'family_id' => [
                         'type' => 'string',
-                        'description' => 'Optional: Limit search to files from a specific family (UUID).'
+                        'description' => 'Optional: Limit search to files from a specific family (UUID).',
                     ],
                     'limit' => [
                         'type' => 'integer',
                         'description' => 'Optional: Maximum number of results to return (default: 10).',
-                        'default' => 10
+                        'default' => 10,
                     ],
                     'threshold' => [
                         'type' => 'number',
                         'description' => 'Optional: Similarity threshold (0.0-1.0) for filtering results (default: 0.7).',
-                        'default' => 0.7
-                    ]
+                        'default' => 0.7,
+                    ],
                 ],
                 'required' => ['query'],
             ],
@@ -52,8 +52,8 @@ class FileSearchTool implements ToolInterface
     /**
      * Execute the tool's logic.
      *
-     * @param array $arguments Arguments provided by the LLM, matching the parameters defined above.
-     * @param AgentContext $context The current agent context, providing access to session state etc.
+     * @param  array  $arguments  Arguments provided by the LLM, matching the parameters defined above.
+     * @param  AgentContext  $context  The current agent context, providing access to session state etc.
      * @return string JSON string representation of the tool's result.
      */
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
@@ -80,15 +80,15 @@ class FileSearchTool implements ToolInterface
                 'search_parameters' => [
                     'family_id' => $familyId,
                     'limit' => $limit,
-                    'threshold' => $threshold
-                ]
+                    'threshold' => $threshold,
+                ],
             ];
 
         } catch (\Exception $e) {
             $result = [
                 'status' => 'error',
-                'message' => 'Failed to search uploaded files: ' . $e->getMessage(),
-                'query' => $query ?? null
+                'message' => 'Failed to search uploaded files: '.$e->getMessage(),
+                'query' => $query ?? null,
             ];
         }
 

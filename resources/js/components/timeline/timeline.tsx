@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import type { TimelineItem } from "@/lib/types"
+import type { TimelineItem, User } from "@/lib/types"
 import { sortTimelineItems, filterTimelineItems, groupItemsByDate, formatGroupDate } from "@/lib/timeline-utils"
 import { TimelineItemComponent } from "./timeline-item"
 import { SearchFilters } from "./search-filters"
@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 interface TimelineProps {
   items: TimelineItem[]
+  user?: User
   onAddClick?: () => void
   onAddFile?: (itemId: string) => void
 }
 
-export function Timeline({ items = [], onAddClick, onAddFile }: TimelineProps) {
+export function Timeline({ items = [], user, onAddClick, onAddFile }: TimelineProps) {
   // console.log(items,'items')
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAuthor, setSelectedAuthor] = useState<string>("")
@@ -62,8 +63,12 @@ export function Timeline({ items = [], onAddClick, onAddFile }: TimelineProps) {
 
     return (
       <div key={item.id} className="relative flex flex-col sm:block">
-        {/* Timeline dot */}
-        <div className={`absolute ${isCenter ? 'left-1/2' : 'left-1/2 sm:left-1/2'} top-0 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10`}></div>
+        {/* Timeline dot - positioned based on item type */}
+        <div className={`absolute top-0 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10 ${
+          isCenter ? 'left-1/2' :
+          isLeft ? 'left-1/2 sm:left-8' :
+          'left-1/2 sm:right-8'
+        }`}></div>
 
         {/* Timeline item */}
         <div className={`flex flex-col sm:flex-row ${isCenter ? 'justify-center' : isLeft ? "sm:justify-start" : "sm:justify-end"}`}>
@@ -75,6 +80,7 @@ export function Timeline({ items = [], onAddClick, onAddFile }: TimelineProps) {
               forceExpanded={forceExpandAll}
               forceCollapsed={forceExpandAll === false}
               onAddFile={onAddFile}
+              user={user}
             />
           </div>
         </div>

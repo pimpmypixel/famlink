@@ -34,8 +34,8 @@ class UserTool implements ToolInterface
     /**
      * Execute the tool's logic.
      *
-     * @param array $arguments Arguments provided by the LLM, matching the parameters defined above.
-     * @param AgentContext $context The current agent context, providing access to session state etc.
+     * @param  array  $arguments  Arguments provided by the LLM, matching the parameters defined above.
+     * @param  AgentContext  $context  The current agent context, providing access to session state etc.
      * @return string JSON string representation of the tool's result.
      */
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
@@ -47,7 +47,7 @@ class UserTool implements ToolInterface
         // Implement tool logic here...
         $result = [
             'status' => 'success',
-            'message' => 'Tool user executed with arguments: ' . json_encode($arguments),
+            'message' => 'Tool user executed with arguments: '.json_encode($arguments),
             // Add relevant data to the result
         ];
 

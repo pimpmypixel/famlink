@@ -143,7 +143,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[95vw] md:w-[80vw] lg:w-[70vw] max-w-none h-[95vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl">
+            <DialogContent className="w-[98vw] md:w-[95vw] lg:w-[85vw] max-w-none h-[85vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl">
                 <DialogHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
                     <DialogTitle className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                         <Users className="h-6 w-6" />

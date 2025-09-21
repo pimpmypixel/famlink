@@ -6,16 +6,17 @@ use App\Models\TimelineItem;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Smalot\PdfParser\Parser as PdfParser;
-use PhpOffice\PhpWord\IOFactory as WordIOFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetIOFactory;
+use PhpOffice\PhpWord\IOFactory as WordIOFactory;
+use Smalot\PdfParser\Parser as PdfParser;
 use Vizra\VizraADK\Services\VectorMemoryManager;
 
 class FileVectorizationService
 {
     protected VectorMemoryManager $vectorManager;
+
     protected ?PdfParser $pdfParser = null;
+
     protected array $supportedTypes = [
         'pdf' => 'processPdf',
         'doc' => 'processWord',
@@ -45,15 +46,17 @@ class FileVectorizationService
             // Determine file type from extension
             $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-            if (!isset($this->supportedTypes[$extension])) {
+            if (! isset($this->supportedTypes[$extension])) {
                 Log::info("Unsupported file type for vectorization: {$extension}");
+
                 return false;
             }
 
             // Download file from S3
             $fileContent = Storage::disk('s3')->get($filePath);
-            if (!$fileContent) {
+            if (! $fileContent) {
                 Log::error("Could not retrieve file from S3: {$filePath}");
+
                 return false;
             }
 
@@ -62,6 +65,7 @@ class FileVectorizationService
 
             if (empty($textContent)) {
                 Log::warning("No text content extracted from file: {$originalName}");
+
                 return false;
             }
 
@@ -69,14 +73,16 @@ class FileVectorizationService
             $this->createVectorEmbeddings($textContent, $attachment, $timelineItem);
 
             Log::info("Successfully processed file for vectorization: {$originalName}");
+
             return true;
 
         } catch (\Exception $e) {
             Log::error("Error processing file for vectorization: {$e->getMessage()}", [
                 'file' => $attachment['original_name'],
                 'timeline_item_id' => $timelineItem->id,
-                'error' => $e->getTraceAsString()
+                'error' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -87,11 +93,13 @@ class FileVectorizationService
     protected function processPdf(string $content, string $filename): string
     {
         try {
-            $pdfParser = $this->pdfParser ?? new PdfParser();
+            $pdfParser = $this->pdfParser ?? new PdfParser;
             $pdf = $pdfParser->parseContent($content);
+
             return $pdf->getText();
         } catch (\Exception $e) {
             Log::warning("Error parsing PDF {$filename}: {$e->getMessage()}");
+
             return '';
         }
     }
@@ -103,7 +111,7 @@ class FileVectorizationService
     {
         try {
             // Save content to temporary file for processing
-            $tempFile = tempnam(sys_get_temp_dir(), 'word_') . '.docx';
+            $tempFile = tempnam(sys_get_temp_dir(), 'word_').'.docx';
             file_put_contents($tempFile, $content);
 
             $phpWord = WordIOFactory::load($tempFile);
@@ -112,15 +120,17 @@ class FileVectorizationService
             foreach ($phpWord->getSections() as $section) {
                 foreach ($section->getElements() as $element) {
                     if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . ' ';
+                        $text .= $element->getText().' ';
                     }
                 }
             }
 
             unlink($tempFile);
+
             return trim($text);
         } catch (\Exception $e) {
             Log::warning("Error parsing Word document {$filename}: {$e->getMessage()}");
+
             return '';
         }
     }
@@ -132,7 +142,7 @@ class FileVectorizationService
     {
         try {
             // Save content to temporary file for processing
-            $tempFile = tempnam(sys_get_temp_dir(), 'spreadsheet_') . '.xlsx';
+            $tempFile = tempnam(sys_get_temp_dir(), 'spreadsheet_').'.xlsx';
             file_put_contents($tempFile, $content);
 
             $spreadsheet = SpreadsheetIOFactory::load($tempFile);
@@ -141,16 +151,18 @@ class FileVectorizationService
             foreach ($spreadsheet->getAllSheets() as $sheet) {
                 foreach ($sheet->getRowIterator() as $row) {
                     foreach ($row->getCellIterator() as $cell) {
-                        $text .= $cell->getValue() . ' ';
+                        $text .= $cell->getValue().' ';
                     }
                     $text .= "\n";
                 }
             }
 
             unlink($tempFile);
+
             return trim($text);
         } catch (\Exception $e) {
             Log::warning("Error parsing spreadsheet {$filename}: {$e->getMessage()}");
+
             return '';
         }
     }
@@ -216,7 +228,7 @@ class FileVectorizationService
         $wordCount = 0;
 
         foreach ($words as $word) {
-            $currentChunk .= $word . ' ';
+            $currentChunk .= $word.' ';
             $wordCount++;
 
             if (strlen($currentChunk) >= $chunkSize) {
@@ -224,13 +236,13 @@ class FileVectorizationService
 
                 // Start new chunk with overlap
                 $overlapWords = array_slice($words, max(0, count($words) - $wordCount), $overlap);
-                $currentChunk = implode(' ', $overlapWords) . ' ';
+                $currentChunk = implode(' ', $overlapWords).' ';
                 $wordCount = count($overlapWords);
             }
         }
 
         // Add remaining content
-        if (!empty(trim($currentChunk))) {
+        if (! empty(trim($currentChunk))) {
             $chunks[] = trim($currentChunk);
         }
 
@@ -246,11 +258,11 @@ class FileVectorizationService
         $charCount = strlen($content);
         $filename = $attachment['original_name'];
 
-        return "File: {$filename}\n" .
-               "Size: " . number_format($attachment['size'] / 1024, 1) . " KB\n" .
-               "Words: {$wordCount}\n" .
-               "Characters: {$charCount}\n" .
-               "Content Preview: " . substr($content, 0, 500) . (strlen($content) > 500 ? '...' : '');
+        return "File: {$filename}\n".
+               'Size: '.number_format($attachment['size'] / 1024, 1)." KB\n".
+               "Words: {$wordCount}\n".
+               "Characters: {$charCount}\n".
+               'Content Preview: '.substr($content, 0, 500).(strlen($content) > 500 ? '...' : '');
     }
 
     /**
@@ -303,8 +315,9 @@ class FileVectorizationService
             Log::error("Error searching uploaded files: {$e->getMessage()}", [
                 'query' => $query,
                 'family_id' => $familyId,
-                'error' => $e->getTraceAsString()
+                'error' => $e->getTraceAsString(),
             ]);
+
             return [];
         }
     }
@@ -325,8 +338,9 @@ class FileVectorizationService
         } catch (\Exception $e) {
             Log::error("Error getting user files: {$e->getMessage()}", [
                 'user_id' => $user->id,
-                'error' => $e->getTraceAsString()
+                'error' => $e->getTraceAsString(),
             ]);
+
             return [];
         }
     }

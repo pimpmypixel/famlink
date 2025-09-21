@@ -2,13 +2,12 @@
 
 namespace App\Tools;
 
+use App\Models\TimelineItem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\Memory\AgentMemory;
 use Vizra\VizraADK\System\AgentContext;
-
-use App\Models\TimelineItem;
 
 class TimelineTool implements ToolInterface
 {
@@ -37,15 +36,15 @@ class TimelineTool implements ToolInterface
     /**
      * Execute the tool's logic.
      *
-     * @param array $arguments Arguments provided by the LLM, matching the parameters defined above.
-     * @param AgentContext $context The current agent context, providing access to session state etc.
+     * @param  array  $arguments  Arguments provided by the LLM, matching the parameters defined above.
+     * @param  AgentContext  $context  The current agent context, providing access to session state etc.
      * @return string JSON string representation of the tool's result.
      */
     public function execute(array $arguments, AgentContext $context, AgentMemory $memory): string
     {
         // Get the authenticated user ID from the context if available
         $authenticatedUserId = request()->user()?->id ?? $context->getState('authenticated_user_id') ?? auth()->id();
-        
+
         // Log::info('TimelineTool executed', [
         //     'arguments' => $arguments,
         //     'session_id' => $context->getSessionId(),

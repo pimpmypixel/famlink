@@ -20,19 +20,19 @@ class UserSeeder extends Seeder
                 'name' => 'Admin User',
                 'email' => 'pimpmypixel@me.com',
                 'password' => 'hejhejhej',
-                'role' => 'admin'
+                'role' => 'admin',
             ],
             [
                 'name' => 'System Administrator',
                 'email' => 'admin@famlink.test',
                 'password' => 'password',
-                'role' => 'admin'
+                'role' => 'admin',
             ],
             [
                 'name' => 'Super Admin',
                 'email' => 'superadmin@famlink.test',
                 'password' => 'password',
-                'role' => 'admin'
+                'role' => 'admin',
             ],
         ];
 
@@ -106,19 +106,19 @@ class UserSeeder extends Seeder
                 'name' => 'Other Guardian',
                 'email' => 'other@example.com',
                 'password' => 'password',
-                'role' => 'andet'
+                'role' => 'andet',
             ],
             [
                 'name' => 'Temporary User',
                 'email' => 'temporary@famlink.test',
                 'password' => 'password',
-                'role' => 'temporary'
+                'role' => 'temporary',
             ],
             [
                 'name' => 'Approved User',
                 'email' => 'approved@famlink.test',
                 'password' => 'password',
-                'role' => 'approved'
+                'role' => 'approved',
             ],
         ];
 
@@ -137,15 +137,15 @@ class UserSeeder extends Seeder
 
         $danishFirstNames = [
             'male' => ['Anders', 'Christian', 'Jens', 'Lars', 'Michael', 'Niels', 'Ole', 'Peter', 'Rasmus', 'Thomas', 'Henrik', 'Jan', 'Martin', 'Morten', 'Per', 'Søren', 'Torben', 'Erik', 'Flemming', 'Hans'],
-            'female' => ['Anne', 'Bente', 'Camilla', 'Dorte', 'Else', 'Freja', 'Gitte', 'Hanne', 'Ida', 'Jette', 'Karen', 'Lene', 'Mette', 'Nina', 'Pia', 'Rita', 'Susanne', 'Tina', 'Ulla', 'Vibeke']
+            'female' => ['Anne', 'Bente', 'Camilla', 'Dorte', 'Else', 'Freja', 'Gitte', 'Hanne', 'Ida', 'Jette', 'Karen', 'Lene', 'Mette', 'Nina', 'Pia', 'Rita', 'Susanne', 'Tina', 'Ulla', 'Vibeke'],
         ];
 
         foreach ($families as $family) {
             // Create father
             $fatherFirstName = $danishFirstNames['male'][array_rand($danishFirstNames['male'])];
             $father = User::factory()->create([
-                'name' => $fatherFirstName . ' ' . $family->name,
-                'email' => strtolower($fatherFirstName) . '_' . strtolower($family->name) . '@example.com',
+                'name' => $fatherFirstName.' '.$family->name,
+                'email' => strtolower($fatherFirstName).'_'.strtolower($family->name).'@example.com',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
@@ -154,8 +154,8 @@ class UserSeeder extends Seeder
             // Create mother
             $motherFirstName = $danishFirstNames['female'][array_rand($danishFirstNames['female'])];
             $mother = User::factory()->create([
-                'name' => $motherFirstName . ' ' . $family->name,
-                'email' => strtolower($motherFirstName) . '_' . strtolower($family->name) . '@example.com',
+                'name' => $motherFirstName.' '.$family->name,
+                'email' => strtolower($motherFirstName).'_'.strtolower($family->name).'@example.com',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
@@ -178,8 +178,8 @@ class UserSeeder extends Seeder
             $lastName = $families->random()->name;
 
             $user = User::factory()->create([
-                'name' => $firstName . ' ' . $lastName,
-                'email' => strtolower($firstName) . '.' . strtolower($lastName) . $i . '@test.com',
+                'name' => $firstName.' '.$lastName,
+                'email' => strtolower($firstName).'.'.strtolower($lastName).$i.'@test.com',
                 'password' => 'password',
                 'family_id' => rand(0, 1) ? $families->random()->id : null, // Some users not assigned to families
             ]);
@@ -190,12 +190,12 @@ class UserSeeder extends Seeder
         }
 
         if ($this->command) {
-            $this->command->info('Created users: ' . User::count() . ' total');
-            $this->command->info('- Admins: ' . User::role('admin')->count());
-            $this->command->info('- Social Workers: ' . User::role('myndighed')->count());
-            $this->command->info('- Fathers: ' . User::role('far')->count());
-            $this->command->info('- Mothers: ' . User::role('mor')->count());
-            $this->command->info('- Other users: ' . User::role(['andet', 'temporary', 'approved'])->count());
+            $this->command->info('Created users: '.User::count().' total');
+            $this->command->info('- Admins: '.User::role('admin')->count());
+            $this->command->info('- Social Workers: '.User::role('myndighed')->count());
+            $this->command->info('- Fathers: '.User::role('far')->count());
+            $this->command->info('- Mothers: '.User::role('mor')->count());
+            $this->command->info('- Other users: '.User::role(['andet', 'temporary', 'approved'])->count());
         }
     }
 }

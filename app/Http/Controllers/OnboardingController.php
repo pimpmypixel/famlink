@@ -417,8 +417,8 @@ class OnboardingController extends Controller
                 $this->buildCompletionEmailContent($user, $answers),
                 function ($message) use ($user) {
                     $message->to($user->email)
-                            ->subject('Tak for din onboarding - Velkommen til Famlink!')
-                            ->from(config('mail.from.address'), config('mail.from.name'));
+                        ->subject('Tak for din onboarding - Velkommen til Famlink!')
+                        ->from(config('mail.from.address'), config('mail.from.name'));
                 }
             );
 
@@ -448,7 +448,7 @@ Tak for at du har gennemført Famlinks onboarding! 🎉
 
 Vi har modtaget dine svar og er glade for at byde dig velkommen til Famlink. Vi har noteret følgende oplysninger fra din onboarding:
 
-" . $this->formatAnswersForEmail($answers) . "
+".$this->formatAnswersForEmail($answers).'
 
 Dit næste skridt:
 - Log ind på Famlink for at begynde at bruge platformen
@@ -461,7 +461,7 @@ Med venlig hilsen,
 Famlink-teamet
 
 ---
-Denne email blev sendt automatisk efter gennemført onboarding.";
+Denne email blev sendt automatisk efter gennemført onboarding.';
     }
 
     /**
@@ -476,6 +476,7 @@ Denne email blev sendt automatisk efter gennemført onboarding.";
                 $formatted .= "- {$questionText}: {$answer}\n";
             }
         }
+
         return $formatted;
     }
 

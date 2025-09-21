@@ -68,7 +68,7 @@ class FileUploadController extends Controller
             \Illuminate\Support\Facades\Log::error('File vectorization failed', [
                 'file' => $originalName,
                 'timeline_item_id' => $timelineItemId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 

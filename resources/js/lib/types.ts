@@ -7,6 +7,7 @@ export interface TimelineItem {
   category: string | { id: number; name: string }
   tags: string[] | { id: number; name: string }[]
   user: TimelineUser
+  family?: { id: string; name: string; child_name?: string }
   author?: string
   attachments?: Attachment[]
   isCollapsed?: boolean
@@ -16,7 +17,7 @@ export interface TimelineItem {
 export interface User {
   id: string
   name: string
-  role: "far" | "mor" | "myndighed" | "andet" | "father" | "mother" | "consultant"
+  role: "far" | "mor" | "myndighed" | "andet" | "father" | "mother" | "consultant" | "admin" | "super-admin" | string
 }
 
 export interface TimelineUser {

@@ -46,6 +46,9 @@ class TimelineItemSeeder extends Seeder
 
         // Create comments and replies
         $this->createCommentsAndReplies($timelineItems, $socialWorkers);
+
+        // Ensure ALL timeline items have at least 1 comment
+        $this->ensureAllTimelineItemsHaveComments($socialWorkers);
     }
 
     /**
@@ -287,14 +290,14 @@ class TimelineItemSeeder extends Seeder
     {
         $categories = [
             'familieret', 'korrespondance', 'barnet', 'rapport', 'vejledning',
-            'afgørelse', 'klage', 'opfølgning', 'familieret', 'barnet'
+            'afgørelse', 'klage', 'opfølgning', 'familieret', 'barnet',
         ];
 
         $tagPool = [
             'samvær', 'bopæl', 'trivsel', 'skole', 'møde', 'rapport', 'afgørelse',
             'barnetsStemme', 'forældreansvar', 'familieret', 'korrespondance',
             'vejledning', 'opfølgning', 'klage', 'børnesagkyndig', 'psykolog',
-            'advokat', 'retsmøde', 'fritid', 'venner', 'kursus', 'samarbejde'
+            'advokat', 'retsmøde', 'fritid', 'venner', 'kursus', 'samarbejde',
         ];
 
         $titles = [
@@ -302,7 +305,7 @@ class TimelineItemSeeder extends Seeder
             'Rapport fra møde', 'Vejledning om rettigheder', 'Afgørelse i sag',
             'Klage over beslutning', 'Opfølgning planlagt', 'Ny henvendelse',
             'Status på sag', 'Møde indkaldt', 'Dokumentation indsendt',
-            'Udtalelse fra ekspert', 'Ændring i aftale', 'Evaluering af ordning'
+            'Udtalelse fra ekspert', 'Ændring i aftale', 'Evaluering af ordning',
         ];
 
         $extendedData = [];
@@ -313,7 +316,7 @@ class TimelineItemSeeder extends Seeder
             $selectedTags = fake()->randomElements($tagPool, $numTags);
 
             $extendedData[] = [
-                'title' => fake()->randomElement($titles) . ' #' . ($i + 1),
+                'title' => fake()->randomElement($titles).' #'.($i + 1),
                 'content' => fake()->paragraphs(fake()->numberBetween(1, 3), true),
                 'date' => fake()->dateTimeBetween('-1 year', '+6 months')->format('Y-m-d'),
                 'item_timestamp' => fake()->dateTimeBetween('-1 year', '+6 months')->format('Y-m-d H:i:s'),
@@ -368,7 +371,7 @@ class TimelineItemSeeder extends Seeder
 
             // Ensure category exists and get its ID
             $categoryName = $item['category'];
-            if (!isset($categories[$categoryName])) {
+            if (! isset($categories[$categoryName])) {
                 // Create category if it doesn't exist
                 $category = Category::firstOrCreate(['name' => $categoryName]);
                 $categories[$categoryName] = $category;
@@ -411,7 +414,7 @@ class TimelineItemSeeder extends Seeder
             'Vejledning om samvær',
             'Evaluering af aftaler',
             'Indstilling til Familieretten',
-            'Orientering om sagsforløb'
+            'Orientering om sagsforløb',
         ];
 
         $socialWorkerContents = [
@@ -424,7 +427,7 @@ class TimelineItemSeeder extends Seeder
             'Der gives vejledning om praktisk gennemførelse af samværsaftalen...',
             'Evalueringen viser at aftalerne fungerer tilfredsstillende for alle parter...',
             'Familieretshuset indstiller til Familieretten at godkende den foreslåede ordning...',
-            'Sagen er nu i følgende fase med disse næste skridt...'
+            'Sagen er nu i følgende fase med disse næste skridt...',
         ];
 
         foreach ($families as $family) {
@@ -458,7 +461,7 @@ class TimelineItemSeeder extends Seeder
                 $tagKeys = array_keys($tags);
                 $numTags = fake()->numberBetween(1, 3);
                 $selectedTagKeys = fake()->randomElements($tagKeys, $numTags);
-                $selectedTags = collect($selectedTagKeys)->map(fn($key) => $tags[$key])->toArray();
+                $selectedTags = collect($selectedTagKeys)->map(fn ($key) => $tags[$key])->toArray();
                 $timelineItem->tags()->attach(collect($selectedTags)->pluck('id')->toArray());
             }
         }
@@ -474,7 +477,9 @@ class TimelineItemSeeder extends Seeder
             $familyUsers = $timelineItem->family?->users ?? collect();
             $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
 
-            if ($allowedUsers->isEmpty()) continue;
+            if ($allowedUsers->isEmpty()) {
+                continue;
+            }
 
             // Create at least 1 comment per timeline item (guaranteed)
             $numComments = fake()->numberBetween(1, 5);
@@ -521,6 +526,46 @@ class TimelineItemSeeder extends Seeder
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Ensure ALL timeline items have at least 1 comment
+     */
+    private function ensureAllTimelineItemsHaveComments($socialWorkers): void
+    {
+        $timelineItemsWithoutComments = TimelineItem::doesntHave('comments')->get();
+
+        if ($timelineItemsWithoutComments->isEmpty()) {
+            return;
+        }
+
+        if ($this->command) {
+            $this->command->info("Found {$timelineItemsWithoutComments->count()} timeline items without comments. Adding comments...");
+        }
+
+        foreach ($timelineItemsWithoutComments as $timelineItem) {
+            // Get users who can comment on this timeline item
+            $familyUsers = $timelineItem->family?->users ?? collect();
+            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+
+            if ($allowedUsers->isEmpty()) {
+                // If no users available, skip this item
+                continue;
+            }
+
+            // Create at least 1 comment
+            $commentUser = $allowedUsers->random();
+            Comment::create([
+                'timeline_item_id' => $timelineItem->id,
+                'user_id' => $commentUser->id,
+                'content' => fake()->paragraph(),
+                'is_private' => fake()->boolean(5), // 5% chance of being private
+            ]);
+        }
+
+        if ($this->command) {
+            $this->command->info("Added comments to {$timelineItemsWithoutComments->count()} timeline items.");
         }
     }
 }

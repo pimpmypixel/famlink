@@ -26,7 +26,7 @@ test('file vectorization service processes PDF files', function () {
         'id' => (string) \Illuminate\Support\Str::uuid(),
         'original_name' => 'test_document.pdf',
         'filename' => 'test_document.pdf',
-        'path' => 'timeline-items/' . $timelineItem->id . '/test_document.pdf',
+        'path' => 'timeline-items/'.$timelineItem->id.'/test_document.pdf',
         'url' => 'https://example.com/test_document.pdf',
         'mime_type' => 'application/pdf',
         'size' => strlen($pdfContent),
@@ -38,7 +38,7 @@ test('file vectorization service processes PDF files', function () {
     $storageMock->shouldReceive('get')
         ->with($attachment['path'])
         ->andReturn($pdfContent);
-    
+
     Storage::shouldReceive('disk')
         ->with('s3')
         ->andReturn($storageMock);
@@ -74,7 +74,7 @@ test('file vectorization service processes Word documents', function () {
         'id' => (string) \Illuminate\Support\Str::uuid(),
         'original_name' => 'test_document.docx',
         'filename' => 'test_document.docx',
-        'path' => 'timeline-items/' . $timelineItem->id . '/test_document.docx',
+        'path' => 'timeline-items/'.$timelineItem->id.'/test_document.docx',
         'url' => 'https://example.com/test_document.docx',
         'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'size' => strlen($wordContent),
@@ -86,7 +86,7 @@ test('file vectorization service processes Word documents', function () {
     $storageMock->shouldReceive('get')
         ->with($attachment['path'])
         ->andReturn($wordContent);
-    
+
     Storage::shouldReceive('disk')
         ->with('s3')
         ->andReturn($storageMock);
@@ -114,7 +114,7 @@ test('file vectorization service handles unsupported file types', function () {
         'id' => (string) \Illuminate\Support\Str::uuid(),
         'original_name' => 'test_image.png',
         'filename' => 'test_image.png',
-        'path' => 'timeline-items/' . $timelineItem->id . '/test_image.png',
+        'path' => 'timeline-items/'.$timelineItem->id.'/test_image.png',
         'url' => 'https://example.com/test_image.png',
         'mime_type' => 'image/png',
         'size' => 1024,
@@ -139,8 +139,8 @@ test('file vectorization service searches uploaded files', function () {
                 'timeline_item_id' => (string) \Illuminate\Support\Str::uuid(),
                 'user_id' => 1,
                 'family_id' => 1,
-            ]
-        ]
+            ],
+        ],
     ]);
 
     $vectorManagerMock->shouldReceive('search')
@@ -214,7 +214,7 @@ test('debug pdf processing', function () {
     $method->setAccessible(true);
 
     $result = $method->invoke($vectorizationService, $pdfContent, 'test.pdf');
-    
+
     dump('PDF processing result:', $result);
     expect($result)->toBeString();
 });

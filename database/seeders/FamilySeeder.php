@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Family;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 
 class FamilySeeder extends Seeder
@@ -95,7 +93,7 @@ class FamilySeeder extends Seeder
         }
 
         if ($this->command) {
-            $this->command->info('Created ' . count($familyData) . ' families with diverse Danish names');
+            $this->command->info('Created '.count($familyData).' families with diverse Danish names');
         }
     }
 }

@@ -95,7 +95,7 @@ it('impersonation banner appears when impersonating', function () {
 
     // Simulate impersonation by setting the session
     actingAs($admin);
-    
+
     // Manually set the session to simulate impersonation
     session(['impersonated_by' => $admin->id]);
 

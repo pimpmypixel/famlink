@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,7 +18,7 @@ class FamilyFactory extends Factory
     {
         return [
             'id' => (string) \Illuminate\Support\Str::uuid(),
-            'name' => fake()->lastName() . ' Family',
+            'name' => fake()->lastName().' Family',
             'child_name' => fake()->firstName(),
         ];
     }

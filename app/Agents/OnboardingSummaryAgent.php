@@ -4,13 +4,14 @@ namespace App\Agents;
 
 use Prism\Prism\Text\PendingRequest;
 use Vizra\VizraADK\Agents\BaseLlmAgent;
-use Vizra\VizraADK\Contracts\ToolInterface;
 use Vizra\VizraADK\System\AgentContext;
+
 // use App\Tools\YourTool; // Example: Import your tool
 
 class OnboardingSummaryAgent extends BaseLlmAgent
 {
     protected string $name = 'onboarding_summary_agent';
+
     protected string $description = 'Describe what this agent does.';
 
     /**
@@ -19,12 +20,12 @@ class OnboardingSummaryAgent extends BaseLlmAgent
      * 2. Database: agent_prompt_versions table (if enabled)
      * 3. File: resources/prompts/onboarding_summary_agent/default.blade.php
      * 4. Fallback: This property
-     * 
+     *
      * The prompt file has been created for you at:
      * resources/prompts/onboarding_summary_agent/default.blade.php
      */
     protected string $instructions = 'You are Onboarding Summary Agent. See resources/prompts/onboarding_summary_agent/default.blade.php for full instructions.';
-    
+
     protected string $model = '';
 
     protected array $tools = [

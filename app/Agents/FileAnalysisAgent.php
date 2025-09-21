@@ -14,8 +14,11 @@ class FileAnalysisAgent extends BaseLlmAgent
     protected string $name = 'file_analysis_agent';
 
     protected ?string $provider = 'mistral';
+
     protected string $model = 'ministral-8b-2410';
-    protected null|float $temperature = 0.3; // Lower temperature for more consistent analysis
+
+    protected ?float $temperature = 0.3; // Lower temperature for more consistent analysis
+
     protected bool $includeConversationHistory = true;
 
     protected string $description = 'Specialized agent for analyzing uploaded files and documents in co-parenting cases.';
@@ -60,9 +63,9 @@ Remember: You have access to semantic search across all uploaded files. Use this
 
         // Ensure user context is available for file access
         $userId = $context->getState('user_id');
-        if (!$userId) {
+        if (! $userId) {
             Log::warning('No user_id found in FileAnalysisAgent context', [
-                'session_id' => $context->getSessionId()
+                'session_id' => $context->getSessionId(),
             ]);
         }
 
@@ -86,6 +89,7 @@ Remember: You have access to semantic search across all uploaded files. Use this
 
         if (empty($searchResults)) {
             $analysis['findings'][] = 'No relevant files found for the query.';
+
             return $analysis;
         }
 
@@ -152,7 +156,7 @@ Remember: You have access to semantic search across all uploaded files. Use this
             }
 
             // Get timeline context if available
-            if (!empty($fileResults[0]['timeline_item_id'])) {
+            if (! empty($fileResults[0]['timeline_item_id'])) {
                 $finding['timeline_context'] = $this->getTimelineContext($fileResults[0]['timeline_item_id']);
             }
 
@@ -170,11 +174,12 @@ Remember: You have access to semantic search across all uploaded files. Use this
         $grouped = [];
         foreach ($results as $result) {
             $filename = $result['file_name'];
-            if (!isset($grouped[$filename])) {
+            if (! isset($grouped[$filename])) {
                 $grouped[$filename] = [];
             }
             $grouped[$filename][] = $result;
         }
+
         return $grouped;
     }
 
@@ -184,7 +189,7 @@ Remember: You have access to semantic search across all uploaded files. Use this
     protected function getTimelineContext(string $timelineItemId): ?array
     {
         // Use TimelineTool to get context
-        $timelineTool = new TimelineTool();
+        $timelineTool = new TimelineTool;
 
         $arguments = [
             'action' => 'get_item',
@@ -209,7 +214,7 @@ Remember: You have access to semantic search across all uploaded files. Use this
         $recommendations = [];
 
         // Analyze patterns in the results
-        $highRelevanceCount = count(array_filter($results, fn($r) => $r['similarity_score'] > 0.8));
+        $highRelevanceCount = count(array_filter($results, fn ($r) => $r['similarity_score'] > 0.8));
 
         if ($highRelevanceCount > 0) {
             $recommendations[] = "Found {$highRelevanceCount} highly relevant document(s). Consider reviewing these for immediate action items.";
@@ -230,13 +235,13 @@ Remember: You have access to semantic search across all uploaded files. Use this
         }
 
         if ($hasLegalContent) {
-            $recommendations[] = "Legal documents detected. Consider consulting with a family law professional for interpretation.";
+            $recommendations[] = 'Legal documents detected. Consider consulting with a family law professional for interpretation.';
         }
 
         // Timeline correlation recommendations
         $timelineItems = array_filter(array_column($results, 'timeline_item_id'));
-        if (!empty($timelineItems)) {
-            $recommendations[] = "Documents are connected to " . count($timelineItems) . " timeline event(s). Review the full timeline for context.";
+        if (! empty($timelineItems)) {
+            $recommendations[] = 'Documents are connected to '.count($timelineItems).' timeline event(s). Review the full timeline for context.';
         }
 
         return $recommendations;

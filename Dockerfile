@@ -26,15 +26,8 @@ WORKDIR /app
 # Copy dependency files first for better caching
 COPY composer.json composer.lock package*.json bun.lock* ./
 
-# Copy minimal source needed for Wayfinder
-COPY app/ app/
-COPY config/ config/
-COPY routes/ routes/
-COPY bootstrap/ bootstrap/
-COPY artisan ./
-
-# Generate Wayfinder types (requires PHP but not full composer install)
-RUN php84 artisan wayfinder:generate --with-form
+# Copy Wayfinder-generated types from vendor stage
+COPY --from=vendor /app/resources/js/types/wayfinder.d.ts resources/js/types/wayfinder.d.ts
 
 # Install Node.js dependencies with fallback
 RUN if [ -f "bun.lock" ] || [ -f "bun.lockb" ]; then \
@@ -93,6 +86,16 @@ RUN composer install \
     --prefer-dist \
     --no-cache \
     --classmap-authoritative
+
+# Copy minimal source needed for Wayfinder
+COPY app/ app/
+COPY config/ config/
+COPY routes/ routes/
+COPY bootstrap/ bootstrap/
+COPY artisan ./
+
+# Generate Wayfinder types (requires PHP and vendor dependencies)
+RUN php84 artisan wayfinder:generate --with-form
 
 # ================================
 # Stage 3: Runtime Application

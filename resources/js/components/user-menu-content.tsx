@@ -5,7 +5,7 @@ import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
-import { LogOut, Settings, MoonIcon, Lightbulb, UserX } from 'lucide-react';
+import { LogOut, Settings, MoonIcon, UserX } from 'lucide-react';
 import { useAppearance } from '@/hooks/use-appearance';
 import { type SharedData } from '@/types';
 

@@ -1,9 +1,8 @@
 import { AIChatModal } from '@/components/ai-chat-modal';
-import AppLayout from '@/layouts/app-layout';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Download, FileText, ShieldCheck, Lock, Sparkles, LockOpen, Shield, Scale } from "lucide-react";
+import { FileText, ShieldCheck, Lock, Sparkles, LockOpen, Shield, Scale } from "lucide-react";
 import { Suspense, useState } from 'react';
 import AppLogo from '@/components/app-logo';
 

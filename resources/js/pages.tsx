@@ -9,7 +9,7 @@ import { SharedData } from "./types"
 
 export default function Home() {
   const { auth } = usePage<SharedData>().props;
-  const [currentUser, setCurrentUser] = useState<User>({
+  const [currentUser] = useState<User>({
     id: auth.user.id.toString(),
     name: auth.user.name,
     role: (auth.user.role as User['role']) ?? "andet", // fallback if role is missing
@@ -60,7 +60,7 @@ export default function Home() {
         </div>
 
         {/* Timeline */}
-        <Timeline items={timelineItems} currentUser={currentUser} />
+        <Timeline items={timelineItems} />
 
         <AddItemModal
           isOpen={isAddModalOpen}

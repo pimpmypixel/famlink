@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTable } from './nested-table/data-table';
@@ -12,6 +12,14 @@ import { Search, Users, X } from 'lucide-react';
 interface ImpersonationModalProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+}
+
+interface ImpersonatableUser {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+    family_name?: string;
 }
 
 type TabType = 'role' | 'family';
@@ -43,7 +51,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
         if (!searchQuery.trim()) return impersonatableUsers;
 
         const query = searchQuery.toLowerCase();
-        return impersonatableUsers.filter((user: any) =>
+        return impersonatableUsers.filter((user: ImpersonatableUser) =>
             user.name?.toLowerCase().includes(query) ||
             user.email?.toLowerCase().includes(query) ||
             user.role?.toLowerCase().includes(query) ||
@@ -56,7 +64,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
         if (!filteredUsers) return {};
 
         const grouped: Record<string, UserColumn[]> = {};
-        filteredUsers.forEach((user: any) => {
+        filteredUsers.forEach((user: ImpersonatableUser) => {
             const role = user.role || 'No Role';
             if (!grouped[role]) {
                 grouped[role] = [];
@@ -77,7 +85,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
         if (!filteredUsers) return {};
 
         const grouped: Record<string, UserColumn[]> = {};
-        filteredUsers.forEach((user: any) => {
+        filteredUsers.forEach((user: ImpersonatableUser) => {
             const family = user.family_name || 'No Family';
             if (!grouped[family]) {
                 grouped[family] = [];
@@ -93,11 +101,11 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
         return grouped;
     }, [filteredUsers]);
 
-    const getRowCanExpand = (row: any) => {
+    const getRowCanExpand = () => {
         return true; // Allow expansion for all rows
     };
 
-    const renderSubComponent = (row: any) => {
+    const renderSubComponent = (row: { original: UserColumn }) => {
         const user = row.original;
         return (
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">

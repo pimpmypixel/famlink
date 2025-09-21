@@ -1,6 +1,6 @@
 import React from "react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { Download, FileText, ShieldCheck, Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles } from "lucide-react";
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';

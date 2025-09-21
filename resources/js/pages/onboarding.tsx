@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { RefreshCw, Mail, CheckCircle } from 'lucide-react';
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
@@ -34,38 +34,18 @@ export default function Onboarding() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const showToastNotification = (message: React.ReactNode) => {
+  const showToastNotification = useCallback((message: React.ReactNode) => {
     setToastMessage(message);
     setShowToast(true);
     // Auto-hide toast after 5 seconds
     setTimeout(() => setShowToast(false), 5000);
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Start onboarding when component mounts
-  useEffect(() => {
-    const existingSession = getOnboardingSession();
-
-    if (existingSession) {
-      // Resume existing session
-      setIsResumed(true);
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        sender: 'system',
-        text: `Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
-        timestamp: new Date()
-      }]);
-      resumeOnboarding(existingSession.sessionId);
-    } else {
-      // Start new session
-      startOnboarding();
-    }
-  }, []);
-
-  const startOnboarding = async () => {
+  const startOnboarding = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/onboarding/question', {
@@ -145,7 +125,7 @@ export default function Onboarding() {
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parsing errors for incomplete chunks
               }
             }
@@ -165,9 +145,9 @@ export default function Onboarding() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToastNotification]);
 
-  const resumeOnboarding = async (existingSessionId: string) => {
+  const resumeOnboarding = useCallback(async (existingSessionId: string) => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true`, {
@@ -247,7 +227,7 @@ export default function Onboarding() {
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parsing errors for incomplete chunks
               }
             }
@@ -270,7 +250,27 @@ export default function Onboarding() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToastNotification, startOnboarding]);
+
+  // Start onboarding when component mounts
+  useEffect(() => {
+    const existingSession = getOnboardingSession();
+
+    if (existingSession) {
+      // Resume existing session
+      setIsResumed(true);
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        sender: 'system',
+        text: `Welcome back! I've found your previous onboarding session. You were at question ${existingSession.progress.answered + 1} of ${existingSession.progress.total}. Let's continue where we left off.`,
+        timestamp: new Date()
+      }]);
+      resumeOnboarding(existingSession.sessionId);
+    } else {
+      // Start new session
+      startOnboarding();
+    }
+  }, [startOnboarding, resumeOnboarding]);
 
   const submitAnswer = async (answer: string) => {
     if (!currentQuestion || !sessionId) return;
@@ -307,7 +307,7 @@ export default function Onboarding() {
         throw new Error(errorData.error || 'Failed to submit answer');
       }
 
-      const result = await response.json();
+      await response.json();
 
       // Update session activity in cookie
       updateSessionActivity(sessionId);
@@ -406,7 +406,7 @@ export default function Onboarding() {
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parsing errors for incomplete chunks
               }
             }

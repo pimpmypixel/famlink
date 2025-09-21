@@ -49,7 +49,7 @@ export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSucce
     formData.append('file', selectedFile)
 
     router.post(`/timeline/${timelineItemId}/upload`, formData, {
-      onSuccess: (response) => {
+      onSuccess: () => {
         // Reset form
         setSelectedFile(null)
         if (fileInputRef.current) {
@@ -62,7 +62,7 @@ export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSucce
         // Close modal
         onClose()
       },
-      onError: (errors: any) => {
+      onError: (errors: Record<string, string>) => {
         // Handle validation errors or other errors
         if (errors.file) {
           setError(errors.file)

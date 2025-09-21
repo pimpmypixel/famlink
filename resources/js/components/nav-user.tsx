@@ -11,7 +11,7 @@ import { ImpersonationModal } from '@/components/impersonation/impersonation-mod
 import { useState } from 'react';
 
 export function NavUser() {
-    const { auth, isImpersonating, impersonatableUsers } = usePage<SharedData>().props;
+    const { auth, isImpersonating } = usePage<SharedData>().props;
     const isMobile = useIsMobile();
     const { state } = useSidebar();
     const [showImpersonateModal, setShowImpersonateModal] = useState(false);

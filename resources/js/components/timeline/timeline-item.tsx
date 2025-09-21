@@ -20,7 +20,6 @@ interface TimelineItemProps {
   forceCollapsed?: boolean
   onToggle?: (id: string, isExpanded: boolean) => void
   onAddComment?: (itemId: string) => void
-  onAddFile?: (itemId: string) => void
 }
 
 export function TimelineItemComponent({
@@ -30,8 +29,7 @@ export function TimelineItemComponent({
   forceExpanded,
   forceCollapsed,
   onToggle,
-  onAddComment,
-  onAddFile: _onAddFile
+  onAddComment
 }: TimelineItemProps) {
   // console.log(item,'item')
   const [isExpanded, setIsExpanded] = useState(!item.isCollapsed)

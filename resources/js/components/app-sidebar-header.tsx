@@ -14,11 +14,6 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
     const isAdmin = auth?.user?.roles?.includes('admin') || auth?.user?.roles?.includes('super-admin');
 
-    const handleImpersonate = (userId: string) => {
-        router.get(`/impersonate/take/${userId}`);
-        setShowImpersonateModal(false);
-    };
-
     const handleLeaveImpersonation = () => {
         router.get('/impersonate/leave');
     };

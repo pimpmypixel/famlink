@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,12 +14,6 @@ import { RefreshCw, Mail, CheckCircle, Sparkles, MessageSquare, Shield, Users, F
 interface AIChatModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface Question {
-  key: string;
-  text: string;
-  options?: string[];
 }
 
 export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
@@ -41,12 +35,12 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   const [toastMessage, setToastMessage] = useState<React.ReactNode>('');
 
   // Function to show toast
-  const showToastNotification = (message: React.ReactNode) => {
+  const showToastNotification = useCallback((message: React.ReactNode) => {
     setToastMessage(message);
     setShowToast(true);
     // Auto-hide toast after 5 seconds
     setTimeout(() => setShowToast(false), 5000);
-  };
+  }, []);
 
   // Function to restart onboarding
   const handleRestart = () => {
@@ -62,7 +56,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
   };
 
   // Function to create streaming words effect
-  const streamText = (fullText: React.ReactNode, messageIndex: number, speed: number = 50) => {
+  const streamText = useCallback((fullText: React.ReactNode, messageIndex: number, speed: number = 50) => {
     setIsTyping(true);
     let currentText = '';
     const words = typeof fullText === 'string' ? fullText.split(' ') : [''];
@@ -104,7 +98,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     };
 
     typeNextWord();
-  };
+  }, []);
 
   // Cleanup typing timeout on unmount
   React.useEffect(() => {
@@ -114,38 +108,6 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       }
     };
   }, []);
-
-  React.useEffect(() => {
-    if (open) {
-      const existingSession = getOnboardingSession();
-      if (existingSession) {
-        setIsResumed(true);
-        setMessages([{
-          id: `msg-${Date.now()}`,
-          role: "agent",
-          content: <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.</span>,
-
-          timestamp: new Date().toISOString()
-        }]);
-        resumeOnboarding(existingSession.sessionId);
-      } else {
-        startOnboarding();
-      }
-    } else {
-      // Clean up any ongoing typing effects
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = null;
-      }
-      setMessages([]);
-      setQuestion(null);
-      setInput("");
-      setCompleted(false);
-      setSessionId(null);
-      setIsTyping(false);
-      setIsResumed(false);
-    }
-  }, [open]);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,7 +123,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
     }
   }, [question, messages, loading, open, completed, isTyping]);
 
-  async function startOnboarding() {
+  const startOnboarding = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -202,15 +164,11 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       const eventSource = new EventSource(`/api/onboarding/question?_token=${csrfToken}`);
 
       let currentMessage = '';
-      let currentQuestion = null;
-      let currentSessionId = null;
 
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
         if (data.type === 'start') {
-          currentQuestion = data.question;
-          currentSessionId = data.session_id;
           setQuestion(data.question);
           setSessionId(data.session_id);
           setCompleted(false);
@@ -287,13 +245,13 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         eventSource.close();
       };
 
-    } catch (err) {
+    } catch {
       setError("Kunne ikke starte onboarding chatten.");
       setLoading(false);
     }
-  }
+  }, [streamText, showToastNotification]);
 
-  async function resumeOnboarding(existingSessionId: string) {
+  const resumeOnboarding = useCallback(async (existingSessionId: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -334,15 +292,11 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       const eventSource = new EventSource(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true&_token=${csrfToken}`);
 
       let currentMessage = '';
-      let currentQuestion = null;
-      let currentSessionId = null;
 
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
         if (data.type === 'start') {
-          currentQuestion = data.question;
-          currentSessionId = data.session_id;
           setQuestion(data.question);
           setSessionId(data.session_id);
           setCompleted(false);
@@ -419,11 +373,44 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         eventSource.close();
       };
 
-    } catch (err) {
+    } catch {
       setError("Kunne ikke genoptage onboarding chatten.");
       setLoading(false);
     }
-  }
+  }, [streamText, showToastNotification]);
+
+  // Handle modal open/close and session management
+  React.useEffect(() => {
+    if (open) {
+      const existingSession = getOnboardingSession();
+      if (existingSession) {
+        setIsResumed(true);
+        setMessages([{
+          id: `msg-${Date.now()}`,
+          role: "agent",
+          content: <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.</span>,
+
+          timestamp: new Date().toISOString()
+        }]);
+        resumeOnboarding(existingSession.sessionId);
+      } else {
+        startOnboarding();
+      }
+    } else {
+      // Clean up any ongoing typing effects
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      setMessages([]);
+      setQuestion(null);
+      setInput("");
+      setCompleted(false);
+      setSessionId(null);
+      setIsTyping(false);
+      setIsResumed(false);
+    }
+  }, [open, startOnboarding, resumeOnboarding]);
 
   // Function to handle option button clicks
   const handleOptionClick = async (option: string) => {
@@ -442,9 +429,6 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
     setLoading(true);
     setError(null);
-
-    // Store the current message count before adding user message
-    const currentMessageCount = messages.length;
 
     // Show user answer
     setMessages((prev) => [
@@ -591,7 +575,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         eventSource.close();
       };
 
-    } catch (err) {
+    } catch {
       setError("Kunne ikke sende svar.");
       setLoading(false);
     }

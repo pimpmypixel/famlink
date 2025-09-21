@@ -13,7 +13,6 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
 
 // Define DataTableProps interface

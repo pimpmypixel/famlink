@@ -13,7 +13,6 @@ interface TimelineCase {
     category: {
         id: string;
         name: string;
-        [key: string]: any;
     };
     updated_at: string;
     family_name: string;

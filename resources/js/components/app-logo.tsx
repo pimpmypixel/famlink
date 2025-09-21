@@ -1,4 +1,3 @@
-import AppLogoIcon from './app-logo-icon';
 import { Shield, Scale } from 'lucide-react';
 
 export default function AppLogo({ className }: { className?: string }) {

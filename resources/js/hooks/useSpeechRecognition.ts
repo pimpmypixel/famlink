@@ -13,10 +13,10 @@ interface SpeechRecognition extends EventTarget {
   start(): void
   stop(): void
   abort(): void
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null
 }
 
 interface SpeechRecognitionEvent extends Event {
@@ -47,7 +47,7 @@ interface SpeechRecognitionAlternative {
   confidence: number
 }
 
-declare var SpeechRecognition: {
+declare const SpeechRecognition: {
   prototype: SpeechRecognition
   new(): SpeechRecognition
 }
@@ -195,7 +195,7 @@ export function useSpeechRecognition() {
       alert('Error starting speech recognition: ' + error)
       setIsRecording(false)
     }
-  }, [])
+  }, [retryCount])
 
   const stopSpeechRecognition = useCallback(() => {
     if (recognitionRef.current) {

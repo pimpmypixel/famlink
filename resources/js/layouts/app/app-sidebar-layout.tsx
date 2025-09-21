@@ -2,7 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SpeedDial } from '@/components/speed-dial';
-import { MessageCircle, Settings, MessageSquareText } from 'lucide-react';
+import { MessageCircle, MessageSquareText } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';

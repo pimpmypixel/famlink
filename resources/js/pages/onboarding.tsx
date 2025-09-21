@@ -18,7 +18,7 @@ interface Message {
 
 export default function Onboarding() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: 'system', text: 'Welcome to Famlink! Let\'s get you started with a personalized onboarding experience.', timestamp: new Date() }
+    { id: 1, sender: 'system', text: 'Velkommen til Famlink! Lad os komme i gang med en personlig onboarding oplevelse.', timestamp: new Date() }
   ]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string>('');

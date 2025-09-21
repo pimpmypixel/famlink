@@ -56,12 +56,12 @@ export function DataTable<TData, TValue>({
     return (
         <div className="w-full">
             <div className="rounded-md border">
-                <Table>
+                <Table className="text-sm">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow key={headerGroup.id} className="h-10">
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead key={header.id} className="px-3 py-2">
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
@@ -77,9 +77,9 @@ export function DataTable<TData, TValue>({
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <React.Fragment key={row.id}>
-                                    <TableRow>
+                                    <TableRow className="h-10">
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell key={cell.id} className="px-3 py-2">
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
@@ -89,7 +89,7 @@ export function DataTable<TData, TValue>({
                                     </TableRow>
                                     {row.getIsExpanded() && renderSubComponent && (
                                         <TableRow>
-                                            <TableCell colSpan={columns.length} className="bg-gray-50 dark:bg-gray-800">
+                                            <TableCell colSpan={columns.length} className="bg-gray-50 dark:bg-gray-800 px-3 py-2">
                                                 {renderSubComponent(row)}
                                             </TableCell>
                                         </TableRow>
@@ -98,7 +98,7 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell colSpan={columns.length} className="h-16 text-center px-3 py-2">
                                     No results.
                                 </TableCell>
                             </TableRow>
@@ -106,12 +106,13 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
+            <div className="flex items-center justify-end space-x-2 py-3">
                 <Button
                     variant="outline"
                     size="sm"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
+                    className="h-8 px-3"
                 >
                     Previous
                 </Button>
@@ -120,6 +121,7 @@ export function DataTable<TData, TValue>({
                     size="sm"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
+                    className="h-8 px-3"
                 >
                     Next
                 </Button>

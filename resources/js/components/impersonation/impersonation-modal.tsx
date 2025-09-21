@@ -108,9 +108,9 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
     const renderSubComponent = (row: { original: UserColumn }) => {
         const user = row.original;
         return (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                <h4 className="font-semibold text-sm mb-3 text-gray-900 dark:text-gray-100">User Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-sm mb-2 text-gray-900 dark:text-gray-100">User Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-600 dark:text-gray-400">Name:</span>
                         <span className="text-gray-900 dark:text-gray-100">{user.name}</span>
@@ -143,7 +143,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[98vw] md:w-[95vw] lg:w-[85vw] max-w-none h-[85vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl">
+            <DialogContent className="w-[98vw] md:w-[98vw] lg:w-[95vw] max-w-none h-[85vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl">
                 <DialogHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
                     <DialogTitle className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                         <Users className="h-6 w-6" />
@@ -225,7 +225,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
                         ) : (
                             <>
                                 {activeTab === 'role' && (
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                                             <Users className="h-5 w-5" />
                                             Users by Role
@@ -240,7 +240,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
                                                         </span>
                                                     </h3>
                                                 </div>
-                                                <div className="p-4">
+                                                <div className="p-3">
                                                     <DataTable
                                                         columns={columns}
                                                         data={users}
@@ -254,7 +254,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
                                 )}
 
                                 {activeTab === 'family' && (
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                                             <Users className="h-5 w-5" />
                                             Users by Family
@@ -269,7 +269,7 @@ export function ImpersonationModal({ isOpen, onOpenChange }: ImpersonationModalP
                                                         </span>
                                                     </h3>
                                                 </div>
-                                                <div className="p-4">
+                                                <div className="p-3">
                                                     <DataTable
                                                         columns={columns}
                                                         data={users}

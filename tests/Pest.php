@@ -2,18 +2,43 @@
 
 /*
 |--------------------------------------------------------------------------
-| Test Case
+| Browser Tests
 |--------------------------------------------------------------------------
 |
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind a different classes or traits.
+| Browser tests are configured to use Pest v4's built-in browser testing
+| capabilities with ChromeDriver for Brave browser support.
+|
+*/
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Browser');
+
+/*
+|--------------------------------------------------------------------------
+| Feature Tests
+|--------------------------------------------------------------------------
+|
+| Feature tests are configured to use the TestCase class with database
+| refreshing to ensure a clean state for each test.
 |
 */
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
+
+/*
+|--------------------------------------------------------------------------
+| Unit Tests
+|--------------------------------------------------------------------------
+|
+| Unit tests are configured to use the TestCase class without any
+| additional traits or setup.
+|
+*/
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit');
 
 /*
 |--------------------------------------------------------------------------

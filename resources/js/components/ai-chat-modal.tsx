@@ -604,7 +604,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         </div>
       )}
 
-      <DialogContent className="w-[95vw] md:w-[80vw] lg:w-[70vw] max-w-none h-[95vh] flex flex-col bg-white dark:bg-gray-900 border-2 border-blue-500 dark:border-blue-400 shadow-2xl p-0">
+      <DialogContent className="w-[95vw] md:w-[80vw] lg:w-[70vw] max-w-none h-[95vh] flex flex-col bg-white dark:bg-gray-900 dark:border-blue-400 shadow-2xl p-0">
         <DialogHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4 from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
           <div className="flex items-center justify-between px-6 py-4">
             <div>

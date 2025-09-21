@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import { ArrowUpDown, ChevronDown, UserCheck } from "lucide-react";
 
 export type UserColumn = {
     id: string;
@@ -12,6 +12,28 @@ export type UserColumn = {
 
 export const columns: ColumnDef<UserColumn>[] = [
     {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => {
+            const user = row.original;
+            return (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                        // This will be handled by the parent component
+                        const event = new CustomEvent('impersonate-user', { detail: user.id });
+                        window.dispatchEvent(event);
+                    }}
+                    className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900"
+                    title="Impersonate this user"
+                >
+                    <UserCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                </Button>
+            );
+        },
+    },
+    {
         id: "expand",
         header: () => null,
         cell: ({ row }) => {
@@ -20,7 +42,7 @@ export const columns: ColumnDef<UserColumn>[] = [
                     variant="ghost"
                     size="sm"
                     onClick={row.getToggleExpandedHandler()}
-                    className="p-1 h-6 w-6"
+                    className="h-8 w-8 p-0"
                 >
                     {row.getIsExpanded() ? (
                         <ChevronDown className="h-4 w-4" />
@@ -38,11 +60,15 @@ export const columns: ColumnDef<UserColumn>[] = [
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    className="h-8 px-2 font-medium"
                 >
                     Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             );
+        },
+        cell: ({ row }) => {
+            return <div className="font-medium">{row.getValue("name")}</div>;
         },
     },
     {
@@ -52,11 +78,15 @@ export const columns: ColumnDef<UserColumn>[] = [
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    className="h-8 px-2 font-medium"
                 >
                     Email
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             );
+        },
+        cell: ({ row }) => {
+            return <div className="text-sm text-muted-foreground">{row.getValue("email")}</div>;
         },
     },
     {
@@ -66,11 +96,15 @@ export const columns: ColumnDef<UserColumn>[] = [
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    className="h-8 px-2 font-medium"
                 >
                     Role
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             );
+        },
+        cell: ({ row }) => {
+            return <div className="text-sm">{row.getValue("role")}</div>;
         },
     },
     {
@@ -80,30 +114,15 @@ export const columns: ColumnDef<UserColumn>[] = [
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    className="h-8 px-2 font-medium"
                 >
                     Family
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                 </Button>
             );
         },
-    },
-    {
-        id: "actions",
         cell: ({ row }) => {
-            const user = row.original;
-            return (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                        // This will be handled by the parent component
-                        const event = new CustomEvent('impersonate-user', { detail: user.id });
-                        window.dispatchEvent(event);
-                    }}
-                >
-                    Impersonate
-                </Button>
-            );
+            return <div className="text-sm">{row.getValue("family_name")}</div>;
         },
     },
 ];

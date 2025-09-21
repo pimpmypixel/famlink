@@ -147,24 +147,13 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ghcr.io/${{ github.repository }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
     - name: Build and push Docker images with Bake
       uses: docker/bake-action@v5
       with:
-        files: |
-          docker-bake.hcl
-          ${{ steps.meta.outputs.bake-file }}
+        files: docker-bake.hcl
         push: true
+        set: |
+          runtime.tags=ghcr.io/${{ github.repository }}:main,ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:main-${{ github.sha }}
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0

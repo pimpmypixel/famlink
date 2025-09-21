@@ -153,7 +153,7 @@ jobs:
         files: docker-bake.hcl
         push: true
         set: |
-          TAGS=ghcr.io/${{ github.repository }}:main,ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:main-${{ github.sha }}
+          *.args.TAGS=ghcr.io/${{ github.repository }}:main,ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:main-${{ github.sha }}
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0

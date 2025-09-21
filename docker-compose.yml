@@ -1,5 +1,8 @@
-# docker-compose.yml - Simplified for reliable deployment
-version: '3.8'
+# docker-compose.yml - FamLink deployment with GHCR authentication
+# To use this compose file, ensure you're logged into GHCR:
+# export GITHUB_TOKEN=your_github_token_here
+# echo $GITHUB_TOKEN | docker login ghcr.io -u pimpmypixel --password-stdin
+# Then run: docker-compose up -d
 
 services:
   famlink-app:
@@ -14,6 +17,8 @@ services:
       - ./.env:/var/www/html/.env:ro
     environment:
       - CONTAINER_ROLE=app
+    labels:
+      - "com.github.package=ghcr.io/pimpmypixel/famlink"
     networks:
       - famlink-network
       - nginx-proxy-manager
@@ -43,9 +48,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # Uncomment below if you want to expose PostgreSQL port
-    # ports:
-    #   - "5432:5432"
 
 volumes:
   db_data:

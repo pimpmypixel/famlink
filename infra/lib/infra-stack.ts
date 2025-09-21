@@ -2,14 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
-// import * as ecs from 'aws-cdk-lib/aws-ecs';
-// import * as ec2 from 'aws-cdk-lib/aws-ec2';
-// import * as rds from 'aws-cdk-lib/aws-rds';
-// import { TaskDefinition } from 'aws-cdk-lib/aws-ecs';
-// import * as ecs_patterns from 'aws-cdk-lib/aws-ecs-patterns';
-// import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-// import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-// import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
 
 export class FamlinkStack extends cdk.Stack {
 
@@ -17,68 +11,56 @@ export class FamlinkStack extends cdk.Stack {
 
     super(scope, id, props);
 
-    // VPC
-    // const vpc = new ec2.Vpc(this, 'FamLinkVpc', { maxAzs: 2 });
+    // VPC for RDS
+    const vpc = new ec2.Vpc(this, 'FamLinkVpc', {
+      maxAzs: 2,
+      natGateways: 0, // Cost optimization for public RDS
+      subnetConfiguration: [
+        {
+          name: 'public',
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24,
+        }
+      ]
+    });
 
-    // ECS Cluster
-    // const cluster = new ecs.Cluster(this, 'FamLinkCluster', { vpc });
+    // Security Group for RDS
+    const dbSecurityGroup = new ec2.SecurityGroup(this, 'FamLinkDBSecurityGroup', {
+      vpc,
+      description: 'Security group for FamLink PostgreSQL database',
+      allowAllOutbound: true,
+    });
 
-    // const repository = ecr.Repository.fromRepositoryName(this, 'FamLinkRepository', 'famlink');
+    // Allow PostgreSQL access from anywhere (for development - restrict in production)
+    dbSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(5432),
+      'PostgreSQL access from anywhere'
+    );
 
-    // ECR Repository
-    // const repository = new ecr.Repository(this, 'FamLinkRepository', {
-    //   repositoryName: 'famlink',
-    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
-    // });
-
-    // // DB Credentials
-    // const dbSecret = new rds.DatabaseSecret(this, 'DBSecret', {
-    //   username: 'famlinkuser',
-    // });
-
-    // Create a secret for DB credentials
-    /* const dbSecret = new Secret(this, 'DBCredentials', {
-      secretName: 'famlink-db-credentials',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-          username: 'famlinkuser',
-          host: 'famlink-db-host',
-          port: '3306',
-        }),
-        generateStringKey: 'password',
-        excludePunctuation: true,
-        includeSpace: false,
-      },
-    }); */
-
-    // App Key Secret
-    /* const appKeySecret = new secretsmanager.Secret(this, 'AppKeySecret', {
-      secretName: 'famlink/app-key',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({}),
-        generateStringKey: 'APP_KEY',
-        excludePunctuation: true,
-        includeSpace: false,
-      },
-    }); */
-
-    // RDS (PostgreSQL)
-    /* const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
+    // RDS PostgreSQL Database
+    const db = new rds.DatabaseInstance(this, 'FamLinkDB', {
       engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_15
+        version: rds.PostgresEngineVersion.VER_16
       }),
       vpc,
-      credentials: rds.Credentials.fromSecret(dbSecret),
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
+      securityGroups: [dbSecurityGroup],
+      credentials: rds.Credentials.fromPassword('famlink', cdk.SecretValue.unsafePlainText('DVSHefi2017')),
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
       allocatedStorage: 20,
       multiAz: false,
-      publiclyAccessible: false,
+      publiclyAccessible: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-    }); */
+      deletionProtection: false,
+      backupRetention: cdk.Duration.days(7),
+    });
 
+    // S3 Bucket for file uploads
     const bucketName = `famlink-uploads-${this.stackName.toLowerCase()}`;
 
-    // Create the S3 bucket
     const bucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
       bucketName,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // dev only
@@ -91,76 +73,50 @@ export class FamlinkStack extends cdk.Stack {
           allowedHeaders: ['*'],
         },
       ],
+      lifecycleRules: [
+        {
+          id: 'delete-old-uploads',
+          enabled: true,
+          expiration: cdk.Duration.days(90), // Auto-delete files after 90 days
+        }
+      ]
     });
 
-
+    // IAM Role for application access to S3
     const famlinkS3Role = new iam.Role(this, 'FamLinkAppRole', {
       roleName: 'FamLinkAppRole',
-      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'), // or ecs-tasks.amazonaws.com, or lambda.amazonaws.com
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
     });
 
     famlinkS3Role.addToPolicy(new iam.PolicyStatement({
-      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-      resources: [`${bucket.bucketArn}/*`],
+      actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject', 's3:ListBucket'],
+      resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
     }));
-
-    /* 
-*/
-
-    // Fargate Service with Load Balancer
-    /* const fargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, 'FamlinkService', {
-      cluster,
-      cpu: 512,
-      desiredCount: 1,
-      memoryLimitMiB: 1024,
-      publicLoadBalancer: true,
-      taskImageOptions: {
-        containerName: 'web',
-        image: ecs.ContainerImage.fromEcrRepository(repository, 'latest'),
-        containerPort: 80,
-        environment: {
-          APP_ENV: 'production',
-          DB_CONNECTION: 'pgsql',
-          FILESYSTEM_DRIVER: 's3',
-          AWS_BUCKET: bucket.bucketName,
-        },
-        secrets: {
-          DB_HOST: ecs.Secret.fromSecretsManager(dbSecret, 'host'),
-          DB_PORT: ecs.Secret.fromSecretsManager(dbSecret, 'port'),
-          DB_USERNAME: ecs.Secret.fromSecretsManager(dbSecret, 'username'),
-          DB_PASSWORD: ecs.Secret.fromSecretsManager(dbSecret, 'password'),
-          APP_KEY: ecs.Secret.fromSecretsManager(appKeySecret, 'APP_KEY'),
-        }
-      }
-    });
-
-    // Permissions
-    bucket.grantReadWrite(fargateService.taskDefinition.taskRole);
-    db.connections.allowDefaultPortFrom(fargateService.service);
-
-    // Grant ECS task permission to read all relevant secrets
-    fargateService.taskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: [dbSecret.secretArn, appKeySecret.secretArn],
-    })); */
-
 
     // Outputs
     new cdk.CfnOutput(this, 'UploadBucketName', {
       value: bucket.bucketName,
+      description: 'S3 bucket for file uploads',
     });
 
-    /* new cdk.CfnOutput(this, 'LoadBalancerURL', {
-      value: fargateService.loadBalancer.loadBalancerDnsName,
+    new cdk.CfnOutput(this, 'DatabaseHost', {
+      value: db.dbInstanceEndpointAddress,
+      description: 'PostgreSQL database host',
     });
-    new cdk.CfnOutput(this, 'ECRRepositoryURI', {
-      value: repository.repositoryUri,
+
+    new cdk.CfnOutput(this, 'DatabasePort', {
+      value: db.dbInstanceEndpointPort,
+      description: 'PostgreSQL database port',
     });
-    new cdk.CfnOutput(this, 'DBSecretArn', {
-      value: dbSecret.secretArn,
+
+    new cdk.CfnOutput(this, 'DatabaseName', {
+      value: 'famlink',
+      description: 'PostgreSQL database name',
     });
-    new cdk.CfnOutput(this, 'AppKeySecretArn', {
-      value: appKeySecret.secretArn,
-    }); */
+
+    new cdk.CfnOutput(this, 'DatabaseUsername', {
+      value: 'famlink',
+      description: 'PostgreSQL database username',
+    });
   }
 }

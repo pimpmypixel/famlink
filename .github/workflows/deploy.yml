@@ -90,6 +90,7 @@ jobs:
       run: bun run build
       env:
         NODE_ENV: production
+        WAYFINDER_SKIP: true
       
     - name: Optimize Laravel
       run: |

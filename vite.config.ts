@@ -13,9 +13,9 @@ export default defineConfig({
         }),
         react(),
         tailwindcss(),
-        wayfinder({
+        ...(process.env.NODE_ENV !== 'production' ? [wayfinder({
             formVariants: true,
-        }),
+        })] : []),
     ],
     esbuild: {
         jsx: 'automatic',

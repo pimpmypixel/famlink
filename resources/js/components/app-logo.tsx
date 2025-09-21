@@ -1,10 +1,6 @@
 import { Shield, Scale } from 'lucide-react';
-import { useSidebar } from '@/components/ui/sidebar';
 
-export default function AppLogo({ className }: { className?: string }) {
-    const { state } = useSidebar();
-    const isCollapsed = state === 'collapsed';
-
+export default function AppLogo({ className, isCollapsed = false }: { className?: string; isCollapsed?: boolean }) {
     // Extract size classes from className to apply them properly
     const sizeClasses = className?.match(/(h-\d+|w-\d+|size-\d+)/g)?.join(' ') || 'size-8';
     const otherClasses = className?.replace(/(h-\d+|w-\d+|size-\d+)/g, '').trim();

@@ -8,6 +8,7 @@ import { type PropsWithChildren } from 'react';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import React from 'react';
 import { AIChatModal } from '@/components/ai-chat-modal';
+import { ApprovedUserChatModal } from '@/components/approved-user-chat-modal';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
 
@@ -32,13 +33,13 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                         triggerSize="default"
                         style="circle"
                         triggerIcon={MessageSquareText}
-                        
+
                     />
                 </div>
                 {/* Large centered modal for AI chat */}
                 <React.Suspense fallback={null}>
                   {aiModalOpen && (
-                    <AIChatModal open={aiModalOpen} onOpenChange={setAIModalOpen} />
+                    <ApprovedUserChatModal open={aiModalOpen} onOpenChange={setAIModalOpen} />
                   )}
                 </React.Suspense>
             </AppContent>

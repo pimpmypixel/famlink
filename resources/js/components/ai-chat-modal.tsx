@@ -621,17 +621,6 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 }
               </DialogDescription>
             </div>
-            {!completed && (
-              <Button
-                onClick={handleRestart}
-                variant="outline"
-                size="sm"
-                className="ml-4 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-950"
-              >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Genstart
-              </Button>
-            )}
           </div>
         </DialogHeader>
         <div className="flex flex-col h-[70vh] w-full">
@@ -700,28 +689,39 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             </div>
           )}
 
-          {!completed && (
-            <div className="mx-6 mb-6">
-              <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
-                <input
-                  ref={inputRef}
-                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Skriv dit svar..."
-                  disabled={loading || isTyping}
-                  autoFocus
-                />
-                <Button
-                  type="submit"
-                  disabled={loading || !input.trim() || isTyping}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
-                >
-                  {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
-                </Button>
-              </form>
-            </div>
-          )}
+            {!completed && (
+              <div className="mx-6 mb-6">
+                <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
+                  <input
+                    ref={inputRef}
+                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Skriv dit svar..."
+                    disabled={loading || isTyping}
+                    autoFocus
+                  />
+                  <Button
+                    type="submit"
+                    disabled={loading || !input.trim() || isTyping}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
+                  >
+                    {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
+                  </Button>
+                </form>
+                <div className="flex justify-center mt-3">
+                  <Button
+                    onClick={handleRestart}
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-6 px-2"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Genstart
+                  </Button>
+                </div>
+              </div>
+            )}
           {completed && (
             <div className="mx-6 mb-6 text-center">
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-6 mb-6">

@@ -41,6 +41,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Vizra Agent API routes
     Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');
+
+    // Vizra Agent API routes
+    Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');
+
+    // Chat routes moved to api.php
+    // Route::prefix('api/chat')->group(function () {
+    //     Route::post('message', [App\Http\Controllers\ChatController::class, 'sendMessage'])->name('api.chat.message');
+    //     Route::get('messages', [App\Http\Controllers\ChatController::class, 'getMessages'])->name('api.chat.messages');
+    // });
 });
 
 require __DIR__.'/settings.php';

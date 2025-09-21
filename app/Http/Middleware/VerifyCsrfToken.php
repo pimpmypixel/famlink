@@ -15,5 +15,6 @@ class VerifyCsrfToken extends BaseVerifier
         'api/onboarding/question',
         'api/onboarding/answer',
         'api/onboarding/stream/*',
+        'api/chat/*',
     ];
 }

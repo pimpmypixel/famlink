@@ -9,7 +9,7 @@ import { capitalise } from "@/lib/utils"
 import { FileUploadModal } from "@/components/file-upload-modal"
 import { router } from '@inertiajs/react'
 import { CommentsSheet } from "@/components/comments-sheet"
-import { store as storeComment } from "@/routes/timeline/comments"
+import { store as storeComment } from "@/routes/timeline/comments/index"
 import { Toast } from "@/components/ui/toast"
 
 interface TimelineItemProps {

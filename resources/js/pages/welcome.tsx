@@ -52,10 +52,10 @@ export default function Welcome() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <nav className="flex items-center justify-between bg-white rounded-lg shadow-md p-4 border border-slate-200">
                         <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                            <AppLogo className="h-12 w-12" />
+                            <AppLogo className="h-12 w-12" isCollapsed={false} />
                         </Link>
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex items-center space-x-6 text-sm">
@@ -122,7 +122,7 @@ export default function Welcome() {
                                 <Scale className="h-24 w-24 text-blue-400" />
                             </div>
                         </div>
-                        
+
                         <div className="max-w-5xl mx-auto text-center relative z-10">
                             <div className="mb-6">
                                 <div className="flex flex-col items-center gap-2 mb-4">
@@ -133,19 +133,19 @@ export default function Welcome() {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                                 Retfærdighed og <span className="text-blue-300">Tryghed</span> i Familieretlige Sager
                             </h1>
-                            
+
                             <p className="text-xl text-slate-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-                                Vores officielle platform hjælper separerede forældre med at dokumentere deres forløb på en sikker, transparent og juridisk bindende måde. 
+                                Vores officielle platform hjælper separerede forældre med at dokumentere deres forløb på en sikker, transparent og juridisk bindende måde.
                                 Understøttet af kunstig intelligens og styret af Social- og Ældreministeriet.
                             </p>
-                            
+
                             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                                 <button
-                                    onClick={() => setAIModalOpen(true)} 
+                                    onClick={() => setAIModalOpen(true)}
                                     className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-slate-100 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                                 >
                                     <Sparkles className="h-5 w-5" />
@@ -156,7 +156,7 @@ export default function Welcome() {
                                     Læs Vejledning
                                 </button>
                             </div>
-                            
+
                             {/* Authority Badges */}
                             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-300">
                                 <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export default function Welcome() {
                                 Vores platform lever op til de højeste standarder for sikkerhed, juridisk gyldighed og brugervenlighed
                             </p>
                         </div>
-                        
+
                         <div className="grid md:grid-cols-3 gap-8">
                             <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6 mx-auto">
@@ -195,7 +195,7 @@ export default function Welcome() {
                                 </div>
                                 <h3 className="text-xl font-bold mb-4 text-center text-slate-800">Juridisk Sikkerhed</h3>
                                 <p className="text-slate-600 text-center leading-relaxed">
-                                    Alle dokumenter opbevares krypteret og juridisk bindende. Vores system lever op til danske lovkrav 
+                                    Alle dokumenter opbevares krypteret og juridisk bindende. Vores system lever op til danske lovkrav
                                     og kan bruges som bevis i retssager. Fuld kontrol over dine data og rettigheder.
                                 </p>
                                 <div className="mt-4 flex items-center justify-center gap-2 text-sm text-green-600 font-medium">
@@ -203,14 +203,14 @@ export default function Welcome() {
                                     <span>Ministerie-godkendt</span>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-6 mx-auto">
                                     <Sparkles className="h-8 w-8 text-purple-600" />
                                 </div>
                                 <h3 className="text-xl font-bold mb-4 text-center text-slate-800">AI-Rådgivning</h3>
                                 <p className="text-slate-600 text-center leading-relaxed">
-                                    Intelligent assistance hjælper dig med at forstå komplekse lovtekster, udarbejde dokumentation 
+                                    Intelligent assistance hjælper dig med at forstå komplekse lovtekster, udarbejde dokumentation
                                     og navigere i sagsprocessen. AI'en er trænet på dansk familieret og giver professionel vejledning.
                                 </p>
                                 <div className="mt-4 flex items-center justify-center gap-2 text-sm text-purple-600 font-medium">
@@ -218,14 +218,14 @@ export default function Welcome() {
                                     <span>Specialiseret i Familieret</span>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6 mx-auto">
                                     <Lock className="h-8 w-8 text-green-600" />
                                 </div>
                                 <h3 className="text-xl font-bold mb-4 text-center text-slate-800">Fortrolighed & Support</h3>
                                 <p className="text-slate-600 text-center leading-relaxed">
-                                    Privatliv er altafgørende i følsomme sager. Vi tilbyder 24/7 support fra kvalificerede 
+                                    Privatliv er altafgørende i følsomme sager. Vi tilbyder 24/7 support fra kvalificerede
                                     familieterapeuter og jurister. Alle samtaler er fortrolige og beskyttet af tavshedspligt.
                                 </p>
                                 <div className="mt-4 flex items-center justify-center gap-2 text-sm text-green-600 font-medium">
@@ -280,7 +280,7 @@ export default function Welcome() {
                                     Familie Link er udviklet i samarbejde med Social- og Ældreministeriet og lever op til alle danske standarder for digitale offentlige tjenester
                                 </p>
                             </div>
-                            
+
                             <div className="grid md:grid-cols-4 gap-8">
                                 <div className="text-center">
                                     <div className="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4 mx-auto">
@@ -289,7 +289,7 @@ export default function Welcome() {
                                     <h3 className="font-bold mb-2">Ministerie-godkendt</h3>
                                     <p className="text-sm text-slate-300">Officielt godkendt af Social- og Ældreministeriet</p>
                                 </div>
-                                
+
                                 <div className="text-center">
                                     <div className="flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4 mx-auto">
                                         <Lock className="h-8 w-8 text-white" />
@@ -297,7 +297,7 @@ export default function Welcome() {
                                     <h3 className="font-bold mb-2">GDPR Compliant</h3>
                                     <p className="text-sm text-slate-300">Fuld overholdelse af persondataforordningen</p>
                                 </div>
-                                
+
                                 <div className="text-center">
                                     <div className="flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full mb-4 mx-auto">
                                         <Scale className="h-8 w-8 text-white" />
@@ -305,7 +305,7 @@ export default function Welcome() {
                                     <h3 className="font-bold mb-2">Juridisk Gyldig</h3>
                                     <p className="text-sm text-slate-300">Alle dokumenter har juridisk vægt i retten</p>
                                 </div>
-                                
+
                                 <div className="text-center">
                                     <div className="flex items-center justify-center w-16 h-16 bg-orange-600 rounded-full mb-4 mx-auto">
                                         <ShieldCheck className="h-8 w-8 text-white" />
@@ -314,7 +314,7 @@ export default function Welcome() {
                                     <p className="text-sm text-slate-300">Professionel support døgnet rundt</p>
                                 </div>
                             </div>
-                            
+
                             <div className="text-center mt-12 pt-8 border-t border-slate-700">
                                 <p className="text-slate-400 text-sm">
                                     Familie Link er en del af den danske offentlige digitale infrastruktur og drives efter de højeste standarder for sikkerhed og pålidelighed.

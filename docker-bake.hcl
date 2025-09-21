@@ -17,10 +17,6 @@ variable "PLATFORMS" {
   default = "linux/amd64,linux/arm64"
 }
 
-variable "RUNTIME_TAGS" {
-  default = ["${REGISTRY}/${REPOSITORY}:latest"]
-}
-
 # Base configuration shared across targets
 target "_common" {
   platforms = ["${PLATFORMS}"]
@@ -41,7 +37,6 @@ target "_common" {
 target "runtime" {
   inherits = ["_common"]
   target = "runtime"
-  tags = RUNTIME_TAGS
   cache-from = [
     "type=gha,scope=runtime-${replace(PLATFORMS, ",", "-")}",
     "type=registry,ref=${REGISTRY}/${REPOSITORY}:runtime-cache"

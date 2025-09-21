@@ -166,7 +166,7 @@ jobs:
         files: docker-bake.hcl
         push: true
         set: |
-          RUNTIME_TAGS=${{ steps.meta.outputs.tags }}
+          runtime.tags=${{ steps.meta.outputs.tags }}
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0

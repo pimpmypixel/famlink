@@ -157,14 +157,21 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-          
+
+    - name: Set runtime tags
+      id: tags
+      run: |
+        # Convert newline-separated tags to comma-separated for Bake
+        TAGS=$(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ',' | sed 's/,$//')
+        echo "runtime_tags=$TAGS" >> $GITHUB_OUTPUT
+
     - name: Build and push Docker images with Bake
       uses: docker/bake-action@v5
       with:
         files: docker-bake.hcl
         push: true
         set: |
-          runtime.tags=${{ steps.meta.outputs.tags }}
+          runtime.tags=${{ steps.tags.outputs.runtime_tags }}
           
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.0

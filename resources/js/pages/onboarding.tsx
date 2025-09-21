@@ -100,8 +100,8 @@ export default function Onboarding() {
                   setCurrentQuestion(data.question);
                   // Set cookie with session data
                   setOnboardingSession(data.session_id, {
-                    answered: 0,
-                    total: 16, // This should come from the backend
+                    answered: data.answers ? Object.keys(data.answers).length : 0,
+                    total: 17, // Total questions in playbook
                     currentQuestionKey: data.question?.key,
                   });
                 } else if (data.type === 'chunk') {

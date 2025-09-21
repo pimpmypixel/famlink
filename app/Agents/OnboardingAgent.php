@@ -10,9 +10,9 @@ class OnboardingAgent extends BaseLlmAgent
 {
     protected string $name = 'onboarding_agent';
 
-    protected ?string $provider = 'mistral';
+    protected ?string $provider = 'gemini';
 
-    protected string $model = 'ministral-8b-2410';
+    protected string $model = 'gemini-1.5-flash';
 
     protected ?float $temperature = 0.7;
 

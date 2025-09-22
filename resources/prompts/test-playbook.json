@@ -1,0 +1,116 @@
+{
+  "questions": [
+    {
+      "key": "user_firstname",
+      "text": "Hej \ud83d\udc4b F\u00f8rst vil jeg gerne h\u00f8re dit fornavn, s\u00e5 vi kan tilpasse oplevelsen til dig.",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "user_email",
+      "text": "Hvad er din email-adresse, s\u00e5 vi kan kontakte dig?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "parent_role",
+      "text": "Hvilken rolle har du i forhold til barnet/b\u00f8rnene?",
+      "type": "select",
+      "options": ["Mor", "Far", "Andet (beskriv venligst)"],
+      "required": true
+    },
+    {
+      "key": "living_situation",
+      "text": "Hvad er din nuv\u00e6rende bop\u00e6ls-situation?",
+      "type": "select",
+      "options": ["Bor med b\u00f8rnene", "Bor alene", "Deleordning", "Bor sammen med anden for\u00e6lder"],
+      "required": true
+    },
+    {
+      "key": "number_of_children",
+      "text": "Hvor mange b\u00f8rn har du?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "children_ages",
+      "text": "Hvad er alderen p\u00e5 dine b\u00f8rn? (fx: 8 og 12 \u00e5r)",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "custody",
+      "text": "Hvad er jeres nuv\u00e6rende for\u00e6ldreansvarsordning?",
+      "type": "select",
+      "options": ["7/7", "Weekend-ordning", "Ingen aftale endnu", "Andet (beskriv venligst)"],
+      "required": true
+    },
+    {
+      "key": "communication_evaluation",
+      "text": "Hvordan vil du evaluere kommunikationen med den anden for\u00e6lder?",
+      "type": "select",
+      "options": ["God", "Udfordret", "Ingen kontakt"],
+      "required": true
+    },
+    {
+      "key": "active_case",
+      "text": "Har I en aktiv sag i Familieretshuset eller Statsforvaltningen?",
+      "type": "select",
+      "options": ["Ja", "Nej"],
+      "required": true
+    },
+    {
+      "key": "cooperation_evaluation",
+      "text": "Hvordan vil du beskrive samarbejdet med myndighederne?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "communication_channels",
+      "text": "Hvilke kommunikationskanaler bruger I prim\u00e6rt?",
+      "type": "select",
+      "options": ["SMS", "Email", "Telefon", "App'en"],
+      "required": true
+    },
+    {
+      "key": "situation_overview",
+      "text": "Hvordan vil du samlet set beskrive jeres familiesituation?",
+      "type": "select",
+      "options": ["Godt", "Nogenlunde", "D\u00e5rligt"],
+      "required": true
+    },
+    {
+      "key": "assistance_need",
+      "text": "Hvor stort er dit behov for hj\u00e6lp og st\u00f8tte lige nu?",
+      "type": "select",
+      "options": ["H\u00f8jt", "Moderat", "Lavt"],
+      "required": true
+    },
+    {
+      "key": "goals",
+      "text": "Hvad er dine m\u00e5l med at bruge Famlink?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "capacity",
+      "text": "Hvordan vil du vurdere din nuv\u00e6rende kapacitet til at h\u00e5ndtere situationen?",
+      "type": "select",
+      "options": ["Godt", "Nogenlunde", "D\u00e5rligt"],
+      "required": true
+    },
+    {
+      "key": "notifications",
+      "text": "Vil du gerne modtage notifikationer om opdateringer og nye funktioner?",
+      "type": "select",
+      "options": ["Ja, tak", "Nej tak"],
+      "required": true
+    },
+    {
+      "key": "additional",
+      "text": "Er der noget andet, du gerne vil fort\u00e6lle os om din situation?",
+      "type": "text",
+      "required": false
+    }
+  ]
+}

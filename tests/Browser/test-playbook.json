@@ -1,0 +1,117 @@
+{
+  "questions": [
+    {
+      "key": "user_firstname",
+      "text": "Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "user_email",
+      "text": "Hvad er din email-adresse?",
+      "type": "email",
+      "required": true
+    },
+    {
+      "key": "parent_role",
+      "text": "Hvad er din rolle i forhold til børnene?",
+      "type": "select",
+      "options": ["Mor", "Far", "Andet (beskriv venligst)"],
+      "required": true
+    },
+    {
+      "key": "living_situation",
+      "text": "Hvad er din nuværende bopælssituation?",
+      "type": "select",
+      "options": ["Bor med børnene", "Bor alene", "Deleordning", "Bor sammen med anden forælder"],
+      "required": true
+    },
+    {
+      "key": "number_of_children",
+      "text": "Hvor mange børn har I sammen?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "children_ages",
+      "text": "Hvad er børnenes alder(e)?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "custody",
+      "text": "Hvordan ser jeres nuværende forældremyndighed ud?",
+      "type": "select",
+      "options": ["7/7", "Weekend-ordning", "Ingen aftale endnu", "Andet"],
+      "required": true
+    },
+    {
+      "key": "communication_evaluation",
+      "text": "Hvordan vil du evaluere kommunikationen med den anden forælder?",
+      "type": "select",
+      "options": ["God", "Udfordret", "Ingen kontakt"],
+      "required": true
+    },
+    {
+      "key": "active_case",
+      "text": "Har I en aktiv sag i Familieretshuset eller Statsforvaltningen?",
+      "type": "select",
+      "options": ["Ja", "Nej"],
+      "required": true
+    },
+    {
+      "key": "cooperation_evaluation",
+      "text": "Hvordan vil du beskrive samarbejdet med myndighederne?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "communication_channels",
+      "text": "Hvilke kommunikationskanaler bruger I primært?",
+      "type": "select",
+      "options": ["SMS", "Email", "Telefon", "App'en"],
+      "required": true
+    },
+    {
+      "key": "situation_overview",
+      "text": "Hvordan vil du samlet set evaluere jeres nuværende situation?",
+      "type": "select",
+      "options": ["Godt", "Nogenlunde", "Dårligt"],
+      "required": true
+    },
+    {
+      "key": "assistance_need",
+      "text": "Hvor stort er dit behov for assistance lige nu?",
+      "type": "select",
+      "options": ["Højt", "Moderat", "Lavt"],
+      "required": true
+    },
+    {
+      "key": "goals",
+      "text": "Hvad er dine mål med at bruge Famlink?",
+      "type": "select",
+      "options": ["Ro og overblik", "Styr på dokumentation", "Bedre kommunikation", "Andet"],
+      "required": true
+    },
+    {
+      "key": "capacity",
+      "text": "Hvordan vil du evaluere din nuværende kapacitet til at håndtere situationen?",
+      "type": "select",
+      "options": ["Godt", "Nogenlunde", "Dårligt"],
+      "required": true
+    },
+    {
+      "key": "notifications",
+      "text": "Ønsker du at modtage notifikationer om opdateringer?",
+      "type": "select",
+      "options": ["Ja, tak", "Nej, tak"],
+      "required": true
+    },
+    {
+      "key": "additional",
+      "text": "Er der noget andet, du gerne vil fortælle os?",
+      "type": "text",
+      "required": false
+    }
+  ]
+}

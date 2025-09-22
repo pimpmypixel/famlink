@@ -10,15 +10,20 @@ class OnboardingAgent extends BaseLlmAgent
 {
     protected string $name = 'onboarding_agent';
 
-    protected ?string $provider = 'gemini';
+    // protected ?string $provider = 'gemini';
+    protected ?string $provider = 'mistral';
 
-    protected string $model = 'gemini-1.5-flash';
+    protected string $model = 'mistral-medium-2505';
+    // protected string $model = 'gemini-2.5-flash-lite';
+    // protected string $model = 'openai/gpt-4-turbo';
 
     protected ?float $temperature = 0.7;
 
+    protected string $contextStrategy = 'recent'; // 'none', 'recent', 'full'
+
+    protected int $historyLimit = 5; // last 10 messages (for 'recent' strategy)
+
     protected bool $includeConversationHistory = true;
-    // protected string $model = 'gemini-2.5-flash-lite';
-    // protected string $model = 'openai/gpt-4-turbo';
 
     protected string $description = 'Famlink Onboarding Agent that guides users through personalized onboarding questions from a playbook.';
 
@@ -29,38 +34,57 @@ class OnboardingAgent extends BaseLlmAgent
      * 3. File: resources/prompts/onboarding_agent/default.blade.php
      * 4. Fallback: This property
      *
-     * Using fallback instructions to avoid Blade template issues
+     * Using dynamic prompt building instead of Blade template for better compatibility
      */
-    protected string $instructions = 'Du er Famlinks onboarding-assistent, der hjælper nye brugere med at komme godt om bord.
+    protected string $instructions = 'Du er Famlinks onboarding-assistent.';
 
-VIGTIGT: Du skal ALTID guide brugeren gennem alle spørgsmålene i playbooken i rækkefølge.
+    /**
+     * Get the dynamic prompt based on context
+     */
+    protected function getPrompt(): string
+    {
+        $context = $this->context;
+        if (! $context) {
+            return 'Du er Famlinks onboarding-assistent. Stil spørgsmålet på en empatisk måde.';
+        }
 
-RETNINGSLINJER:
-- Sig hej, byd velkommen og introducer dig selv KUN ved det allerførste spørgsmål
-- Hvis brugerens svar er længere end et par ord, så forstå svaret, vær empatisk og støttende
-- Kommuniker på dansk
-- Hvis brugeren afviger, før du har stillet alle spørgsmål, forsøg at bringe samtalen tilbage til det næste spørgsmål
-- Hvis brugeren siger "spring over" eller lignende, skal du respektere det og gå videre til næste spørgsmål
-- Hvis brugeren siger "afslut" eller lignende, skal du afslutte onboarding-processen høfligt og informere dem om, at de altid kan starte forfra senere';
+        $currentQuestion = $context->getState('current_question');
+        $isFirstQuestion = $context->getState('is_first_question', true);
+        $userName = $context->getState('user_name', 'der');
 
+        $prompt = "Du er Famlinks onboarding-assistent.\n\n";
+
+        if ($isFirstQuestion) {
+            $prompt .= "Hej {$userName}, jeg er Famlinks onboarding-assistent, og jeg er her for at hjælpe dig med at komme godt i gang.\n\n";
+        }
+
+        if ($currentQuestion) {
+            $prompt .= "Stil følgende spørgsmål på en empatisk og støttende måde: {$currentQuestion['text']}\n\n";
+            $prompt .= 'Svar KUN med spørgsmålet - ingen yderligere instruktioner eller forklaringer.';
+        }
+
+        return $prompt;
+    }
+
+    /*
     protected string $temp = '
-        Playbook spørgsmål:
-        1. Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.
-        2. Hvad er din e-mailadresse?
-        3. Vil du fortælle mig, om du er mor eller far?
-        4. Hvad er din nuværende boligsituation? (fx bor alene, med børnene, deleordning, sammen med ny partner)
-        5. Hvor mange børn har du, og hvor gamle er de?
-        6. Hvordan ser samværsordningen ud lige nu? (fx 7/7, weekend-ordning, ingen aftale endnu)
-        7. Hvordan vil du beskrive kommunikationen med den anden forælder på nuværende tidspunkt? (fx god, udfordret, ingen kontakt)
-        8. Er der en igangværende sag i Familieretshuset eller ved en myndighed?
-        9. Hvordan oplever du samarbejdet med sagsbehandlere eller myndigheder indtil nu?
-        10. Hvilke kanaler bruger du oftest til at kommunikere med den anden forælder? (fx sms, e-mail, telefon, messenger)
-        11. Føler du, at du har overblik over vigtige aftaler og hændelser i jeres forløb lige nu?
-        12. Hvor stort et behov oplever du for at dokumentere hændelser og kommunikation? (fx lavt, moderat, højt)
-        13. Hvad er det vigtigste for dig at få ud af at bruge Famlink? (fx ro og overblik, bedre kommunikation, styr på dokumentation)
-        14. Hvordan vil du beskrive dit nuværende overskud i hverdagen? (fx godt overskud, nogenlunde, presset)
-        15. Vil du gerne have, at Famlink sender dig påmindelser om aftaler, deadlines eller dokumentation?
-        16. Er der noget særligt, du synes vi skal vide om din situation, som kan hjælpe os med at støtte dig bedst muligt?';
+         Playbook spørgsmål:
+         1. Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.
+         2. Hvad er din e-mailadresse?
+         3. Vil du fortælle mig, om du er mor eller far?
+         4. Hvad er din nuværende boligsituation? (fx bor alene, med børnene, deleordning, sammen med ny partner)
+         5. Hvor mange børn har du, og hvor gamle er de?
+         6. Hvordan ser samværsordningen ud lige nu? (fx 7/7, weekend-ordning, ingen aftale endnu)
+         7. Hvordan vil du beskrive kommunikationen med den anden forælder på nuværende tidspunkt? (fx god, udfordret, ingen kontakt)
+         8. Er der en igangværende sag i Familieretshuset eller ved en myndighed?
+         9. Hvordan oplever du samarbejdet med sagsbehandlere eller myndigheder indtil nu?
+         10. Hvilke kanaler bruger du oftest til at kommunikere med den anden forælder? (fx sms, e-mail, telefon, messenger)
+         11. Føler du, at du har overblik over vigtige aftaler og hændelser i jeres forløb lige nu?
+         12. Hvor stort et behov oplever du for at dokumentere hændelser og kommunikation? (fx lavt, moderat, højt)
+         13. Hvad er det vigtigste for dig at få ud af at bruge Famlink? (fx ro og overblik, bedre kommunikation, styr på dokumentation)
+         14. Hvordan vil du beskrive dit nuværende overskud i hverdagen? (fx godt overskud, nogenlunde, presset)
+         15. Vil du gerne have, at Famlink sender dig påmindelser om aftaler, deadlines eller dokumentation?
+         16. Er der noget særligt, du synes vi skal vide om din situation, som kan hjælpe os med at støtte dig bedst muligt?'; */
 
     protected bool $stream = true;
 
@@ -93,6 +117,19 @@ RETNINGSLINJER:
             }
         }
 
+        // Set context variables for the Blade template
+        $progress = $context->getState('progress', ['answered' => 0, 'total' => 16]);
+        $currentQuestion = $context->getState('current_question');
+        $answers = $context->getState('answers', []);
+
+        // Set template variables directly in context state
+        // Note: is_first_question is already set by the controller
+        $context->setState('user_name', $answers['user_firstname'] ?? null);
+        $context->setState('current_question', $currentQuestion);
+        $context->setState('question_number', ($progress['answered'] ?? 0) + 1);
+        $context->setState('total_questions', $progress['total'] ?? 16);
+        $context->setState('previous_answers', $answers);
+
         // Handle resumed sessions
         $isResumed = $context->getState('is_resumed', false);
         if ($isResumed) {
@@ -100,14 +137,6 @@ RETNINGSLINJER:
         }
 
         return parent::beforeLlmCall($inputMessages, $context);
-    }
-
-    /**
-     * Override getPrompt to avoid Blade template issues
-     */
-    public function getPrompt(?AgentContext $context = null): string
-    {
-        return $this->instructions;
     }
 
     /**
@@ -136,5 +165,14 @@ RETNINGSLINJER:
         }
 
         return $data;
+    }
+
+    /**
+     * Override getInstructions to use dynamic prompt building instead of Blade template
+     */
+    public function getInstructions(): string
+    {
+        // Use the dynamic prompt method instead of file-based prompts
+        return $this->getPrompt();
     }
 }

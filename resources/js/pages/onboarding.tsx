@@ -124,6 +124,20 @@ export default function Onboarding() {
                     // Show toast notification
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
+                } else if (data.type === 'error') {
+                  // Handle error events
+                  if (data.is_rate_limit) {
+                    // Show browser alert for rate limit errors
+                    alert('Der er for mange brugere lige nu. Prøv igen om et øjeblik.');
+                  }
+                  // Show fallback question
+                  setCurrentQuestion(data.question);
+                  setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    sender: 'assistant',
+                    text: data.fallback,
+                    timestamp: new Date()
+                  }]);
                 }
               } catch {
                 // Ignore parsing errors for incomplete chunks
@@ -226,6 +240,20 @@ export default function Onboarding() {
                     // Show toast notification
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
+                } else if (data.type === 'error') {
+                  // Handle error events
+                  if (data.is_rate_limit) {
+                    // Show browser alert for rate limit errors
+                    alert('Der er for mange brugere lige nu. Prøv igen om et øjeblik.');
+                  }
+                  // Show fallback question
+                  setCurrentQuestion(data.question);
+                  setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    sender: 'assistant',
+                    text: data.fallback,
+                    timestamp: new Date()
+                  }]);
                 }
               } catch {
                 // Ignore parsing errors for incomplete chunks
@@ -405,6 +433,20 @@ export default function Onboarding() {
                     // Show toast notification
                     showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
                   }
+                } else if (data.type === 'error') {
+                  // Handle error events
+                  if (data.is_rate_limit) {
+                    // Show browser alert for rate limit errors
+                    alert('Der er for mange brugere lige nu. Prøv igen om et øjeblik.');
+                  }
+                  // Show fallback question
+                  setCurrentQuestion(data.question);
+                  setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    sender: 'assistant',
+                    text: data.fallback,
+                    timestamp: new Date()
+                  }]);
                 }
               } catch {
                 // Ignore parsing errors for incomplete chunks

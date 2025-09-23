@@ -2,7 +2,7 @@
 
 use App\Models\Comment;
 use App\Models\Family;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role as SpatieRole;
@@ -23,7 +23,7 @@ describe('Comment Authorization', function () {
         it('allows family members to comment on their family timeline items', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -46,7 +46,7 @@ describe('Comment Authorization', function () {
             $socialWorker = User::factory()->create();
             $socialWorker->assignRole('myndighed');
 
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'family_id' => $family->id,
             ]);
 
@@ -68,7 +68,7 @@ describe('Comment Authorization', function () {
             $family2 = Family::factory()->create();
 
             $userFromFamily1 = User::factory()->create(['family_id' => $family1->id]);
-            $timelineItemFromFamily2 = TimelineItem::factory()->create([
+            $timelineItemFromFamily2 = Event::factory()->create([
                 'family_id' => $family2->id,
             ]);
 
@@ -85,7 +85,7 @@ describe('Comment Authorization', function () {
         it('denies users without family from commenting', function () {
             $userWithoutFamily = User::factory()->create(['family_id' => null]);
             $family = Family::factory()->create();
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'family_id' => $family->id,
             ]);
 
@@ -101,7 +101,7 @@ describe('Comment Authorization', function () {
 
         it('denies unauthenticated users from commenting', function () {
             $family = Family::factory()->create();
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'family_id' => $family->id,
             ]);
 
@@ -119,7 +119,7 @@ describe('Comment Authorization', function () {
         it('validates comment content is required', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -138,7 +138,7 @@ describe('Comment Authorization', function () {
         it('validates comment content is not too long', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -159,7 +159,7 @@ describe('Comment Authorization', function () {
         it('accepts valid comment content', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);

@@ -1,4 +1,4 @@
-export interface TimelineItem {
+export interface Event {
   id: string
   title: string
   content: string

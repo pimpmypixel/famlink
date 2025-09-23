@@ -33,11 +33,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Comment routes
-    Route::post('timeline/{timelineItemId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
+    Route::post('timeline/{eventId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
 
     // File upload routes
-    Route::post('timeline/{timelineItemId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
-    Route::delete('timeline/{timelineItemId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
+    Route::post('timeline/{eventId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
+    Route::delete('timeline/{eventId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
 
     // Vizra Agent API routes
     Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');

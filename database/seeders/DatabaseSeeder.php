@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CategorySeeder::class);
         $this->call(TagSeeder::class);
-        // $this->call(TimelineItemSeeder::class);
+        // $this->call(EventSeeder::class);
         // $this->call(CommentSeeder::class);
     }
 }

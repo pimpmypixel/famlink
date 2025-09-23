@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +36,7 @@ class FileVectorizationService
     /**
      * Process an uploaded file and create vector embeddings for semantic search
      */
-    public function processUploadedFile(array $attachment, TimelineItem $timelineItem): bool
+    public function processUploadedFile(array $attachment, Event $timelineItem): bool
     {
         try {
             $filePath = $attachment['path'];
@@ -179,7 +179,7 @@ class FileVectorizationService
     /**
      * Create vector embeddings for the extracted text content
      */
-    protected function createVectorEmbeddings(string $textContent, array $attachment, TimelineItem $timelineItem): void
+    protected function createVectorEmbeddings(string $textContent, array $attachment, Event $timelineItem): void
     {
         $user = $timelineItem->user;
         $agentName = "user_{$user->id}_file_processor";

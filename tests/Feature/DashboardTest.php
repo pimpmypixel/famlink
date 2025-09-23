@@ -60,14 +60,14 @@ test('social worker users receive their specific dashboard statistics and timeli
     $father2->assignRole('far');
 
     // Create timeline items for these families
-    \App\Models\TimelineItem::factory()->create([
+    \App\Models\Event::factory()->create([
         'user_id' => $father1->id,
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 1',
         'content' => 'Test content 1',
     ]);
 
-    \App\Models\TimelineItem::factory()->create([
+    \App\Models\Event::factory()->create([
         'user_id' => $mother1->id,
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 2',

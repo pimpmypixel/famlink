@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Family;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -106,7 +106,7 @@ describe('Timeline API', function () {
 
         foreach ($families as $family) {
             // Count social worker items for this family (items created by users with 'myndighed' role)
-            $socialWorkerItemsCount = TimelineItem::where('family_id', $family->id)
+            $socialWorkerItemsCount = Event::where('family_id', $family->id)
                 ->whereHas('user', function ($query) {
                     $query->role('myndighed');
                 })
@@ -119,7 +119,7 @@ describe('Timeline API', function () {
     });
 
     test('all timeline items have at least 1 comment', function () {
-        $timelineItems = TimelineItem::all();
+        $timelineItems = Event::all();
 
         foreach ($timelineItems as $item) {
             $commentCount = $item->comments()->count();

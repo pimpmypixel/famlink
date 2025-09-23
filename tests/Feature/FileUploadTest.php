@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Family;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -18,7 +18,7 @@ describe('File Upload', function () {
         it('allows upload when user is in same family as timeline item', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -42,7 +42,7 @@ describe('File Upload', function () {
             $family1 = Family::factory()->create();
             $family2 = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family1->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => User::factory()->create(['family_id' => $family2->id])->id,
                 'family_id' => $family2->id,
             ]);
@@ -75,7 +75,7 @@ describe('File Upload', function () {
         it('validates file is required', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -106,7 +106,7 @@ describe('File Upload', function () {
         it('validates file size limit', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -139,7 +139,7 @@ describe('File Upload', function () {
         it('validates file type', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -172,7 +172,7 @@ describe('File Upload', function () {
         it('accepts valid file types', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -202,7 +202,7 @@ describe('File Upload', function () {
         it('stores file in S3 with correct path', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -222,7 +222,7 @@ describe('File Upload', function () {
         it('updates timeline item attachments array', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -249,7 +249,7 @@ describe('File Upload', function () {
         it('generates unique filename for uploaded file', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -272,7 +272,7 @@ describe('File Upload', function () {
         it('returns correct response and stores attachment data', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);
@@ -304,7 +304,7 @@ describe('File Upload', function () {
         it('handles multiple attachments on same timeline item', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create([
+            $timelineItem = Event::factory()->create([
                 'user_id' => $user->id,
                 'family_id' => $family->id,
             ]);

@@ -1,4 +1,4 @@
-import type { TimelineItem } from "./types"
+import type { Event } from "./types"
 
 export const getAuthorColor = (role: string) => {
   switch (role) {
@@ -16,7 +16,7 @@ export const getAuthorColor = (role: string) => {
   }
 }
 
-export const getCategoryColor = (category: TimelineItem["category"]) => {
+export const getCategoryColor = (category: Event["category"]) => {
   switch (category) {
     case "afgørelse":
     case "vejledning":
@@ -42,12 +42,12 @@ export const formatDate = (timestamp: number) => {
   })
 }
 
-export const sortTimelineItems = (items: TimelineItem[]) => {
+export const sortTimelineItems = (items: Event[]) => {
   return [...items].sort((a, b) => b.timestamp - a.timestamp)
 }
 
 export const filterTimelineItems = (
-  items: TimelineItem[],
+  items: Event[],
   searchTerm: string,
   selectedAuthor?: string,
   selectedCategory?: string,
@@ -58,13 +58,15 @@ export const filterTimelineItems = (
     console.warn('filterTimelineItems: items is not an array:', items);
     return [];
   }
-  
+
   return items.filter((item) => {
     const matchesSearch =
       searchTerm === "" ||
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (Array.isArray(item.tags) ? item.tags : []).some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      (Array.isArray(item.tags) ? item.tags : []).some((tag) =>
+        typeof tag === 'string' ? tag.toLowerCase().includes(searchTerm.toLowerCase()) : tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
 
     const matchesAuthor = !selectedAuthor || item.author === selectedAuthor
     const matchesCategory = !selectedCategory || item.category === selectedCategory
@@ -83,8 +85,8 @@ export const filterTimelineItems = (
   })
 }
 
-export const groupItemsByDate = (items: TimelineItem[]) => {
-  const groups: { [key: string]: TimelineItem[] } = {}
+export const groupItemsByDate = (items: Event[]) => {
+  const groups: { [key: string]: Event[] } = {}
 
   items.forEach((item) => {
     const date = new Date(item.timestamp).toDateString()

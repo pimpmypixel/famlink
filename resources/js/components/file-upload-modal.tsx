@@ -16,11 +16,11 @@ import { router } from '@inertiajs/react'
 interface FileUploadModalProps {
   isOpen: boolean
   onClose: () => void
-  timelineItemId: string
+  eventId: string
   onUploadSuccess?: () => void
 }
 
-export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSuccess }: FileUploadModalProps) {
+export function FileUploadModal({ isOpen, onClose, eventId, onUploadSuccess }: FileUploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +48,7 @@ export function FileUploadModal({ isOpen, onClose, timelineItemId, onUploadSucce
     const formData = new FormData()
     formData.append('file', selectedFile)
 
-    router.post(`/timeline/${timelineItemId}/upload`, formData, {
+    router.post(`/timeline/${eventId}/upload`, formData, {
       onSuccess: () => {
         // Reset form
         setSelectedFile(null)

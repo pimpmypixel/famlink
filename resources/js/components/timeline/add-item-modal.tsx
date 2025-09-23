@@ -1,7 +1,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import type { TimelineItem, User } from "@/lib/types"
+import type { Event, User } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,14 +21,14 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 interface AddItemModalProps {
   isOpen: boolean
   onClose: () => void
-  onAdd: (item: Omit<TimelineItem, "id" | "timestamp">) => void
+  onAdd: (item: Omit<Event, "id" | "timestamp">) => void
   currentUser: User
 }
 
 export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemModalProps) {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState<TimelineItem["category"]>("parenting")
+  const [category, setCategory] = useState<Event["category"]>("parenting")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
@@ -52,7 +52,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
 
     if (!title.trim() || !content.trim()) return
 
-    const newItem: Omit<TimelineItem, "id" | "timestamp"> = {
+    const newItem: Omit<Event, "id" | "timestamp"> = {
       user: {
         id: parseInt(currentUser.id),
         name: currentUser.name,
@@ -120,7 +120,7 @@ export function AddItemModal({ isOpen, onClose, onAdd, currentUser }: AddItemMod
               <select
                 id="category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value as TimelineItem["category"])}
+                onChange={(e) => setCategory(e.target.value as Event["category"])}
                 className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="parenting">Forældre</option>

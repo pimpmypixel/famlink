@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Family;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -30,7 +30,7 @@ describe('Timeline Seeder Requirements', function () {
             }
 
             // Count timeline items created by the designated social worker for this family
-            $socialWorkerItemsCount = TimelineItem::where('user_id', $designatedSocialWorker->id)
+            $socialWorkerItemsCount = Event::where('user_id', $designatedSocialWorker->id)
                 ->where('family_id', $family->id)
                 ->count();
 
@@ -86,7 +86,7 @@ describe('Timeline Seeder Requirements', function () {
             $mother = $familyUsers->first(fn ($user) => $user->hasRole('mor'));
 
             if ($father) {
-                $fatherItemsCount = TimelineItem::where('user_id', $father->id)
+                $fatherItemsCount = Event::where('user_id', $father->id)
                     ->where('family_id', $family->id)
                     ->count();
 
@@ -96,7 +96,7 @@ describe('Timeline Seeder Requirements', function () {
             }
 
             if ($mother) {
-                $motherItemsCount = TimelineItem::where('user_id', $mother->id)
+                $motherItemsCount = Event::where('user_id', $mother->id)
                     ->where('family_id', $family->id)
                     ->count();
 

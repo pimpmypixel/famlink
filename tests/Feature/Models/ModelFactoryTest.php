@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Family;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -79,9 +79,9 @@ describe('Model Factory Tests', function () {
         });
     });
 
-    describe('TimelineItem Factory', function () {
+    describe('Event Factory', function () {
         it('creates timeline items with valid attributes', function () {
-            $timelineItem = TimelineItem::factory()->make();
+            $timelineItem = Event::factory()->make();
 
             expect($timelineItem->title)->toBeString();
             expect($timelineItem->content)->toBeString();
@@ -90,7 +90,7 @@ describe('Model Factory Tests', function () {
         });
 
         it('can create and save timeline items to database', function () {
-            $timelineItem = TimelineItem::factory()->create();
+            $timelineItem = Event::factory()->create();
 
             expect($timelineItem->exists)->toBeTrue();
             expect($timelineItem->id)->toBeString(); // Now using UUIDs
@@ -100,7 +100,7 @@ describe('Model Factory Tests', function () {
         });
 
         it('creates timeline items with user relationships', function () {
-            $timelineItem = TimelineItem::factory()->create();
+            $timelineItem = Event::factory()->create();
 
             expect($timelineItem->user_id)->not->toBeNull();
             expect($timelineItem->user)->not->toBeNull();
@@ -108,8 +108,8 @@ describe('Model Factory Tests', function () {
         });
 
         it('can create timeline items with specific categories', function () {
-            $consultationItem = TimelineItem::factory()->category('consultation')->create();
-            $parentingItem = TimelineItem::factory()->category('parenting')->create();
+            $consultationItem = Event::factory()->category('consultation')->create();
+            $parentingItem = Event::factory()->category('parenting')->create();
 
             expect($consultationItem->category->name)->toBe('consultation');
             expect($parentingItem->category->name)->toBe('parenting');
@@ -117,7 +117,7 @@ describe('Model Factory Tests', function () {
 
         it('creates multiple timeline items for same user', function () {
             $user = User::factory()->create();
-            $timelineItems = TimelineItem::factory()->count(3)->create(['user_id' => $user->id]);
+            $timelineItems = Event::factory()->count(3)->create(['user_id' => $user->id]);
 
             expect($timelineItems)->toHaveCount(3);
 
@@ -133,7 +133,7 @@ describe('Model Factory Tests', function () {
             $users = User::factory()->count(2)->create(['family_id' => $family->id]);
 
             foreach ($users as $user) {
-                TimelineItem::factory()->count(2)->create(['user_id' => $user->id]);
+                Event::factory()->count(2)->create(['user_id' => $user->id]);
             }
 
             $family->refresh();
@@ -147,7 +147,7 @@ describe('Model Factory Tests', function () {
         it('maintains referential integrity', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create(['user_id' => $user->id]);
+            $timelineItem = Event::factory()->create(['user_id' => $user->id]);
 
             // Test forward relationships
             expect($user->family->id)->toBe($family->id);
@@ -185,7 +185,7 @@ describe('Model Factory Tests', function () {
         });
 
         it('creates valid dates', function () {
-            $timelineItems = TimelineItem::factory()->count(5)->create();
+            $timelineItems = Event::factory()->count(5)->create();
 
             foreach ($timelineItems as $item) {
                 expect($item->date)->toBeInstanceOf(\Carbon\Carbon::class);
@@ -196,7 +196,7 @@ describe('Model Factory Tests', function () {
         });
 
         it('creates valid JSON arrays', function () {
-            $timelineItem = TimelineItem::factory()->create();
+            $timelineItem = Event::factory()->create();
 
             expect($timelineItem->tags)->toBeInstanceOf(\Illuminate\Database\Eloquent\Collection::class);
             expect($timelineItem->tags->count())->toBeGreaterThan(0);

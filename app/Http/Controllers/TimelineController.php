@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\TimelineItemResource;
-use App\Models\TimelineItem;
+use App\Http\Resources\EventResource;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -28,7 +28,7 @@ class TimelineController extends Controller
             ]);
         }
 
-        $query = TimelineItem::with([
+        $query = Event::with([
             'user:id,name,email',
             'comments' => function ($query) {
                 $query->with('user:id,name')->latest()->limit(5);
@@ -49,7 +49,7 @@ class TimelineController extends Controller
         }
 
         return Inertia::render('authenticated/timeline_page', [
-            'timelineItems' => TimelineItemResource::collection($timelineItems)->resolve(),
+            'timelineItems' => EventResource::collection($timelineItems)->resolve(),
             'pagination' => [
                 'current_page' => $timelineItems->currentPage(),
                 'last_page' => $timelineItems->lastPage(),

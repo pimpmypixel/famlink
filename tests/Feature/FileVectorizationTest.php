@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use App\Services\FileVectorizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 
 test('file vectorization service processes PDF files', function () {
     $user = User::factory()->create();
-    $timelineItem = TimelineItem::factory()->create(['user_id' => $user->id]);
+    $timelineItem = Event::factory()->create(['user_id' => $user->id]);
 
     // Mock the vector manager
     $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);
@@ -58,7 +58,7 @@ test('file vectorization service processes PDF files', function () {
 
 test('file vectorization service processes Word documents', function () {
     $user = User::factory()->create();
-    $timelineItem = TimelineItem::factory()->create(['user_id' => $user->id]);
+    $timelineItem = Event::factory()->create(['user_id' => $user->id]);
 
     // Mock the vector manager
     $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);
@@ -103,7 +103,7 @@ test('file vectorization service processes Word documents', function () {
 
 test('file vectorization service handles unsupported file types', function () {
     $user = User::factory()->create();
-    $timelineItem = TimelineItem::factory()->create(['user_id' => $user->id]);
+    $timelineItem = Event::factory()->create(['user_id' => $user->id]);
 
     // Mock the vector manager
     $vectorManagerMock = \Mockery::mock(\Vizra\VizraADK\Services\VectorMemoryManager::class);

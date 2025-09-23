@@ -161,7 +161,9 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       }
 
       // Use EventSource for streaming
-      const eventSource = new EventSource(`/api/onboarding/question?_token=${csrfToken}`);
+      const eventSource = new EventSource(`/api/onboarding/question?_token=${csrfToken}`, {
+        withCredentials: true
+      });
 
       let currentMessage = '';
 
@@ -289,7 +291,9 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       }
 
       // Use EventSource for streaming with resumed session
-      const eventSource = new EventSource(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true&_token=${csrfToken}`);
+      const eventSource = new EventSource(`/api/onboarding/question?session_id=${existingSessionId}&resumed=true&_token=${csrfToken}`, {
+        withCredentials: true
+      });
 
       let currentMessage = '';
 
@@ -488,7 +492,9 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       updateSessionActivity(updatedSessionId);
 
       // Then use EventSource to stream the next question
-      const eventSource = new EventSource(`/api/onboarding/stream/${updatedSessionId}?_token=${csrfToken}`);
+      const eventSource = new EventSource(`/api/onboarding/stream/${updatedSessionId}?_token=${csrfToken}`, {
+        withCredentials: true
+      });
 
       let currentMessage = '';
       let nextQuestion: { key: string; text: string } | null = null;

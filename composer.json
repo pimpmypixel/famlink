@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "pimpmypixel/famlink",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "The family link app for sharing, organizing and documenting family disputes.",
     "keywords": [
         "laravel",
         "framework"
@@ -66,19 +66,19 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"bun dev\" --names=queue,logs,vite --kill-others"
+            "bunx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"bun dev\" --names=queue,logs,vite --kill-others"
         ],
         "dev:ssr": [
-            "npm run build:ssr",
+            "bun run build:ssr",
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"php artisan inertia:start-ssr\" --names=queue,logs,ssr --kill-others"
+            "bunx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"php artisan inertia:start-ssr\" --names=queue,logs,ssr --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",
             "pest"
         ],
         "phpstan": [
-            "vendor/bin/phpstan analyse"
+            "php -d xdebug.mode=off vendor/bin/phpstan analyse --memory-limit=512M"
         ],
         "dusk:chrome": [
             "chromedriver --port=9515"

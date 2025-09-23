@@ -43,25 +43,6 @@ RETNINGSLINJER:
 - Hvis brugeren siger "spring over" eller lignende, skal du respektere det og gå videre til næste spørgsmål
 - Hvis brugeren siger "afslut" eller lignende, skal du afslutte onboarding-processen høfligt og informere dem om, at de altid kan starte forfra senere';
 
-    protected string $temp = '
-        Playbook spørgsmål:
-        1. Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.
-        2. Hvad er din e-mailadresse?
-        3. Vil du fortælle mig, om du er mor eller far?
-        4. Hvad er din nuværende boligsituation? (fx bor alene, med børnene, deleordning, sammen med ny partner)
-        5. Hvor mange børn har du, og hvor gamle er de?
-        6. Hvordan ser samværsordningen ud lige nu? (fx 7/7, weekend-ordning, ingen aftale endnu)
-        7. Hvordan vil du beskrive kommunikationen med den anden forælder på nuværende tidspunkt? (fx god, udfordret, ingen kontakt)
-        8. Er der en igangværende sag i Familieretshuset eller ved en myndighed?
-        9. Hvordan oplever du samarbejdet med sagsbehandlere eller myndigheder indtil nu?
-        10. Hvilke kanaler bruger du oftest til at kommunikere med den anden forælder? (fx sms, e-mail, telefon, messenger)
-        11. Føler du, at du har overblik over vigtige aftaler og hændelser i jeres forløb lige nu?
-        12. Hvor stort et behov oplever du for at dokumentere hændelser og kommunikation? (fx lavt, moderat, højt)
-        13. Hvad er det vigtigste for dig at få ud af at bruge Famlink? (fx ro og overblik, bedre kommunikation, styr på dokumentation)
-        14. Hvordan vil du beskrive dit nuværende overskud i hverdagen? (fx godt overskud, nogenlunde, presset)
-        15. Vil du gerne have, at Famlink sender dig påmindelser om aftaler, deadlines eller dokumentation?
-        16. Er der noget særligt, du synes vi skal vide om din situation, som kan hjælpe os med at støtte dig bedst muligt?';
-
     protected bool $stream = true;
 
     protected array $tools = [

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-use App\Models\Comment;
 use App\Models\Family;
 use App\Models\Tag;
 use App\Models\TimelineItem;
@@ -29,26 +28,16 @@ class TimelineItemSeeder extends Seeder
         // Combine base and extended data
         $timelineData = array_merge($baseTimelineData, $extendedTimelineData);
 
-        // Create categories and tags
-        $categories = $this->createCategories($timelineData);
-        $tags = $this->createTags($timelineData);
-
         // Get users and families
         $families = Family::all();
         $allUsers = User::all();
-        $socialWorkers = User::role('myndighed')->get();
+        $socialWorkers = User::role('sagsbehandler')->get(); // Use caseworkers as the primary authority
 
         // Create timeline items
-        $timelineItems = $this->createTimelineItems($timelineData, $categories, $tags, $families, $allUsers, $socialWorkers);
+        $this->createTimelineItems($timelineData, $families, $allUsers, $socialWorkers);
 
         // Ensure each family has at least 3 items from social workers
-        $this->createSocialWorkerItemsForFamilies($families, $socialWorkers, $categories, $tags);
-
-        // Create comments and replies
-        $this->createCommentsAndReplies($timelineItems, $socialWorkers);
-
-        // Ensure ALL timeline items have at least 1 comment
-        $this->ensureAllTimelineItemsHaveComments($socialWorkers);
+        $this->createSocialWorkerItemsForFamilies($families, $socialWorkers);
     }
 
     /**
@@ -329,39 +318,9 @@ class TimelineItemSeeder extends Seeder
     }
 
     /**
-     * Create categories from timeline data
-     */
-    private function createCategories(array $timelineData): array
-    {
-        $categories = [];
-        $allCategories = collect($timelineData)->pluck('category')->unique();
-
-        foreach ($allCategories as $categoryName) {
-            $categories[$categoryName] = Category::firstOrCreate(['name' => $categoryName]);
-        }
-
-        return $categories;
-    }
-
-    /**
-     * Create tags from timeline data
-     */
-    private function createTags(array $timelineData): array
-    {
-        $allTags = collect($timelineData)->pluck('tags')->flatten()->unique();
-        $tags = [];
-
-        foreach ($allTags as $tagName) {
-            $tags[$tagName] = Tag::firstOrCreate(['name' => $tagName]);
-        }
-
-        return $tags;
-    }
-
-    /**
      * Create timeline items
      */
-    private function createTimelineItems(array $timelineData, array $categories, array $tags, $families, $allUsers, $socialWorkers): array
+    private function createTimelineItems(array $timelineData, $families, $allUsers, $socialWorkers): array
     {
         $timelineItems = [];
 
@@ -369,19 +328,18 @@ class TimelineItemSeeder extends Seeder
             $randomUser = $allUsers->random();
             $familyId = $randomUser->family_id ?? $families->random()->id;
 
-            // Ensure category exists and get its ID
-            $categoryName = $item['category'];
-            if (! isset($categories[$categoryName])) {
+            // Get category by name
+            $category = Category::where('name', $item['category'])->first();
+            if (! $category) {
                 // Create category if it doesn't exist
-                $category = Category::firstOrCreate(['name' => $categoryName]);
-                $categories[$categoryName] = $category;
+                $category = Category::firstOrCreate(['name' => $item['category']]);
             }
-            $categoryId = $categories[$categoryName]->id;
+            $categoryId = $category->id;
 
             $timelineItem = TimelineItem::create([
                 'user_id' => $randomUser->id,
                 'family_id' => $familyId,
-                'category_id' => $categoryId, // Use the ensured category ID
+                'category_id' => $categoryId,
                 'title' => $item['title'],
                 'content' => $item['content'],
                 'date' => $item['date'],
@@ -390,7 +348,13 @@ class TimelineItemSeeder extends Seeder
             ]);
 
             // Attach tags
-            $tagIds = collect($item['tags'])->map(fn ($tagName) => $tags[$tagName]->id)->toArray();
+            $tagIds = collect($item['tags'])->map(function ($tagName) {
+                $tag = Tag::where('name', $tagName)->first();
+                if (! $tag) {
+                    $tag = Tag::firstOrCreate(['name' => $tagName]);
+                }
+                return $tag->id;
+            })->toArray();
             $timelineItem->tags()->attach($tagIds);
 
             $timelineItems[] = $timelineItem;
@@ -402,7 +366,7 @@ class TimelineItemSeeder extends Seeder
     /**
      * Ensure each family has at least 3 items from social workers
      */
-    private function createSocialWorkerItemsForFamilies($families, $socialWorkers, $categories, $tags): void
+    private function createSocialWorkerItemsForFamilies($families, $socialWorkers): void
     {
         $socialWorkerTitles = [
             'Statusopdatering fra Familieretshuset',
@@ -434,7 +398,7 @@ class TimelineItemSeeder extends Seeder
             // Count existing social worker items for this family
             $existingSocialWorkerItems = TimelineItem::where('family_id', $family->id)
                 ->whereHas('user', function ($query) {
-                    $query->role('myndighed');
+                    $query->role('sagsbehandler');
                 })
                 ->count();
 
@@ -443,13 +407,12 @@ class TimelineItemSeeder extends Seeder
 
             for ($i = 0; $i < $itemsToCreate; $i++) {
                 $socialWorker = $socialWorkers->random();
-                $categoryKeys = array_keys($categories);
-                $randomCategory = $categories[$categoryKeys[array_rand($categoryKeys)]];
+                $category = Category::inRandomOrder()->first();
 
                 $timelineItem = TimelineItem::create([
                     'user_id' => $socialWorker->id,
                     'family_id' => $family->id,
-                    'category_id' => $randomCategory->id,
+                    'category_id' => $category->id,
                     'title' => fake()->randomElement($socialWorkerTitles),
                     'content' => fake()->randomElement($socialWorkerContents),
                     'date' => fake()->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
@@ -458,114 +421,39 @@ class TimelineItemSeeder extends Seeder
                 ]);
 
                 // Add some tags
-                $tagKeys = array_keys($tags);
-                $numTags = fake()->numberBetween(1, 3);
-                $selectedTagKeys = fake()->randomElements($tagKeys, $numTags);
-                $selectedTags = collect($selectedTagKeys)->map(fn ($key) => $tags[$key])->toArray();
-                $timelineItem->tags()->attach(collect($selectedTags)->pluck('id')->toArray());
+                $tags = Tag::inRandomOrder()->limit(fake()->numberBetween(1, 3))->get();
+                $timelineItem->tags()->attach($tags->pluck('id')->toArray());
             }
         }
     }
 
     /**
-     * Create comments and replies for timeline items
+     * Create categories from timeline data
      */
-    private function createCommentsAndReplies(array $timelineItems, $socialWorkers): void
+    private function createCategories(array $timelineData): array
     {
-        foreach ($timelineItems as $timelineItem) {
-            // Get users who can comment on this timeline item
-            $familyUsers = $timelineItem->family?->users ?? collect();
-            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
+        $categories = [];
+        $allCategories = collect($timelineData)->pluck('category')->unique();
 
-            if ($allowedUsers->isEmpty()) {
-                continue;
-            }
-
-            // Create at least 1 comment per timeline item (guaranteed)
-            $numComments = fake()->numberBetween(1, 5);
-            $comments = [];
-
-            for ($i = 0; $i < $numComments; $i++) {
-                $commentUser = $allowedUsers->random();
-                $comment = Comment::create([
-                    'timeline_item_id' => $timelineItem->id,
-                    'user_id' => $commentUser->id,
-                    'content' => fake()->paragraph(),
-                    'is_private' => fake()->boolean(5), // 5% chance of being private
-                ]);
-                $comments[] = $comment;
-            }
-
-            // Create at least 1 reply for each comment (guaranteed)
-            foreach ($comments as $comment) {
-                $numReplies = fake()->numberBetween(1, 3); // Guaranteed at least 1 reply
-                $replyUsers = $allowedUsers->filter(fn ($user) => $user->id !== $comment->user_id);
-
-                if ($replyUsers->isNotEmpty()) {
-                    for ($i = 0; $i < $numReplies; $i++) {
-                        $replyUser = $replyUsers->random();
-                        Comment::create([
-                            'timeline_item_id' => $timelineItem->id,
-                            'user_id' => $replyUser->id,
-                            'parent_comment_id' => $comment->id,
-                            'content' => fake()->paragraph(),
-                            'is_private' => fake()->boolean(3), // 3% chance of being private
-                        ]);
-                    }
-                } else {
-                    // If no other users available, create a reply from a social worker
-                    $replyUser = $socialWorkers->where('id', '!=', $comment->user_id)->first() ?? $socialWorkers->first();
-                    if ($replyUser) {
-                        Comment::create([
-                            'timeline_item_id' => $timelineItem->id,
-                            'user_id' => $replyUser->id,
-                            'parent_comment_id' => $comment->id,
-                            'content' => fake()->paragraph(),
-                            'is_private' => false,
-                        ]);
-                    }
-                }
-            }
+        foreach ($allCategories as $categoryName) {
+            $categories[$categoryName] = Category::firstOrCreate(['name' => $categoryName]);
         }
+
+        return $categories;
     }
 
     /**
-     * Ensure ALL timeline items have at least 1 comment
+     * Create tags from timeline data
      */
-    private function ensureAllTimelineItemsHaveComments($socialWorkers): void
+    private function createTags(array $timelineData): array
     {
-        $timelineItemsWithoutComments = TimelineItem::doesntHave('comments')->get();
+        $allTags = collect($timelineData)->pluck('tags')->flatten()->unique();
+        $tags = [];
 
-        if ($timelineItemsWithoutComments->isEmpty()) {
-            return;
+        foreach ($allTags as $tagName) {
+            $tags[$tagName] = Tag::firstOrCreate(['name' => $tagName]);
         }
 
-        if ($this->command) {
-            $this->command->info("Found {$timelineItemsWithoutComments->count()} timeline items without comments. Adding comments...");
-        }
-
-        foreach ($timelineItemsWithoutComments as $timelineItem) {
-            // Get users who can comment on this timeline item
-            $familyUsers = $timelineItem->family?->users ?? collect();
-            $allowedUsers = $familyUsers->merge($socialWorkers)->unique('id');
-
-            if ($allowedUsers->isEmpty()) {
-                // If no users available, skip this item
-                continue;
-            }
-
-            // Create at least 1 comment
-            $commentUser = $allowedUsers->random();
-            Comment::create([
-                'timeline_item_id' => $timelineItem->id,
-                'user_id' => $commentUser->id,
-                'content' => fake()->paragraph(),
-                'is_private' => fake()->boolean(5), // 5% chance of being private
-            ]);
-        }
-
-        if ($this->command) {
-            $this->command->info("Added comments to {$timelineItemsWithoutComments->count()} timeline items.");
-        }
+        return $tags;
     }
 }

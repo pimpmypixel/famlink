@@ -45,157 +45,180 @@ class UserSeeder extends Seeder
             $admin->assignRole($adminData['role']);
         }
 
-        // Create social workers/consultants
-        $socialWorkers = [
-            [
-                'name' => 'DAFL Consultant #1',
-                'email' => 'consultant1@dafl.dk',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'DAFL Consultant #2',
-                'email' => 'consultant2@dafl.dk',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Social Worker #1',
-                'email' => 'socialworker1@famlink.test',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Social Worker #2',
-                'email' => 'socialworker2@famlink.test',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Family Consultant #1',
-                'email' => 'familyconsultant1@famlink.test',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Family Consultant #2',
-                'email' => 'familyconsultant2@famlink.test',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Legal Advisor #1',
-                'email' => 'legaladvisor1@famlink.test',
-                'password' => 'password',
-            ],
-            [
-                'name' => 'Legal Advisor #2',
-                'email' => 'legaladvisor2@famlink.test',
-                'password' => 'password',
-            ],
-        ];
+        // Step 1: Create 5 caseworkers, 5 psychiatrists, 5 witnesses
+        $authorityUsers = [];
 
-        $socialWorkerUsers = [];
-        foreach ($socialWorkers as $workerData) {
-            $worker = User::factory()->create([
-                'name' => $workerData['name'],
-                'email' => $workerData['email'],
-                'password' => $workerData['password'],
+        // Create 5 caseworkers
+        for ($i = 1; $i <= 5; $i++) {
+            $caseworker = User::factory()->create([
+                'name' => 'Caseworker #' . $i,
+                'email' => 'caseworker' . $i . '@famlink.test',
+                'password' => 'password',
+                'family_id' => null, // Authorities don't belong to families
             ]);
-            $worker->assignRole('myndighed');
-            $socialWorkerUsers[] = $worker;
+            $caseworker->assignRole('sagsbehandler');
+            $authorityUsers['caseworkers'][] = $caseworker;
         }
 
-        // Create additional users with different roles
-        $otherUsers = [
-            [
-                'name' => 'Other Guardian',
-                'email' => 'other@example.com',
+        // Create 5 psychiatrists
+        for ($i = 1; $i <= 5; $i++) {
+            $psychiatrist = User::factory()->create([
+                'name' => 'Psychiatrist #' . $i,
+                'email' => 'psychiatrist' . $i . '@famlink.test',
                 'password' => 'password',
-                'role' => 'andet',
-            ],
-            [
-                'name' => 'Temporary User',
-                'email' => 'temporary@famlink.test',
-                'password' => 'password',
-                'role' => 'temporary',
-            ],
-            [
-                'name' => 'Approved User',
-                'email' => 'approved@famlink.test',
-                'password' => 'password',
-                'role' => 'approved',
-            ],
-        ];
-
-        foreach ($otherUsers as $userData) {
-            $user = User::factory()->create([
-                'name' => $userData['name'],
-                'email' => $userData['email'],
-                'password' => $userData['password'],
+                'family_id' => null, // Authorities don't belong to families
             ]);
-            $user->assignRole($userData['role']);
+            $psychiatrist->assignRole('psykiater');
+            $authorityUsers['psychiatrists'][] = $psychiatrist;
         }
 
-        // Create parents for each family
+        // Create 5 lawyers
+        for ($i = 1; $i <= 5; $i++) {
+            $lawyer = User::factory()->create([
+                'name' => 'Lawyer #' . $i,
+                'email' => 'lawyer' . $i . '@famlink.test',
+                'password' => 'password',
+                'family_id' => null, // Authorities don't belong to families
+            ]);
+            $lawyer->assignRole('advokat');
+            $authorityUsers['lawyers'][] = $lawyer;
+        }
+
+        // Create 5 witnesses
+        for ($i = 1; $i <= 5; $i++) {
+            $witness = User::factory()->create([
+                'name' => 'Witness #' . $i,
+                'email' => 'witness' . $i . '@famlink.test',
+                'password' => 'password',
+                'family_id' => null, // Witnesses don't belong to families
+            ]);
+            $witness->assignRole('vidne');
+            $authorityUsers['witnesses'][] = $witness;
+        }
+
+        // Create guest user (temporary role, no family)
+        $guestUser = User::factory()->create([
+            'name' => 'Guest User',
+            'email' => 'guest@famlink.test',
+            'password' => 'password',
+            'family_id' => null,
+        ]);
+        $guestUser->assignRole('temporary');
+
+        // Step 2: Create children with 1 or 2 parents for each family
         $families = Family::all();
-        $socialWorkerIndex = 0;
-
         $danishFirstNames = [
             'male' => ['Anders', 'Christian', 'Jens', 'Lars', 'Michael', 'Niels', 'Ole', 'Peter', 'Rasmus', 'Thomas', 'Henrik', 'Jan', 'Martin', 'Morten', 'Per', 'Søren', 'Torben', 'Erik', 'Flemming', 'Hans'],
             'female' => ['Anne', 'Bente', 'Camilla', 'Dorte', 'Else', 'Freja', 'Gitte', 'Hanne', 'Ida', 'Jette', 'Karen', 'Lene', 'Mette', 'Nina', 'Pia', 'Rita', 'Susanne', 'Tina', 'Ulla', 'Vibeke'],
         ];
 
+        $familyAuthorities = []; // Track which authorities are assigned to which families
+
         foreach ($families as $family) {
-            // Create father
-            $fatherFirstName = $danishFirstNames['male'][array_rand($danishFirstNames['male'])];
-            $father = User::factory()->create([
-                'name' => $fatherFirstName.' '.$family->name,
-                'email' => strtolower($fatherFirstName).'_'.strtolower($family->name).'@example.com',
+            // Create child for this family
+            $child = User::factory()->create([
+                'name' => $family->child_name,
+                'email' => strtolower($family->child_name) . '_' . strtolower($family->name) . '@famlink.test',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
-            $father->assignRole('far');
+            $child->assignRole('barn');
 
-            // Create mother
-            $motherFirstName = $danishFirstNames['female'][array_rand($danishFirstNames['female'])];
-            $mother = User::factory()->create([
-                'name' => $motherFirstName.' '.$family->name,
-                'email' => strtolower($motherFirstName).'_'.strtolower($family->name).'@example.com',
-                'password' => 'password',
-                'family_id' => $family->id,
-            ]);
-            $mother->assignRole('mor');
+            // Create 1 or 2 parents for this family
+            $numParents = rand(1, 2);
+            $parents = [];
 
-            // Assign a social worker to this family (they get access but don't become part of the family)
-            $designatedWorker = $socialWorkerUsers[$socialWorkerIndex % count($socialWorkerUsers)];
-            $family->update(['created_by' => $designatedWorker->id]);
+            for ($i = 0; $i < $numParents; $i++) {
+                $gender = $i === 0 ? 'male' : 'female'; // First parent male, second female if exists
+                $role = $gender === 'male' ? 'far' : 'mor';
+                $firstName = $danishFirstNames[$gender][array_rand($danishFirstNames[$gender])];
 
-            // Social workers keep their family_id as null - they access families through permissions
-            // The relationship is maintained through the created_by field and permissions
+                $parent = User::factory()->create([
+                    'name' => $firstName . ' ' . $family->name,
+                    'email' => strtolower($firstName) . '_' . strtolower($family->name) . '@famlink.test',
+                    'password' => 'password',
+                    'family_id' => $family->id,
+                ]);
+                $parent->assignRole('approved'); // Parents are approved
+                $parents[] = $parent;
+            }
 
-            $socialWorkerIndex++;
+            // Step 3: Attach authorities to each parent
+            // Each approved parent must have at least 1 authority
+            foreach ($parents as $parent) {
+                $assignedAuthorities = [];
+
+                // Randomly assign 1-3 authorities per parent (caseworkers, psychiatrists, lawyers)
+                $authorityTypes = ['caseworkers', 'psychiatrists', 'lawyers'];
+                $numAuthorities = rand(1, 3);
+
+                for ($i = 0; $i < $numAuthorities; $i++) {
+                    $authorityType = $authorityTypes[array_rand($authorityTypes)];
+                    $availableAuthorities = $authorityUsers[$authorityType];
+
+                    // Find an authority not already assigned to this family
+                    $unassignedAuthorities = collect($availableAuthorities)->filter(function ($authority) use ($family, $familyAuthorities) {
+                        return !isset($familyAuthorities[$family->id]) ||
+                               !in_array($authority->id, $familyAuthorities[$family->id]);
+                    });
+
+                    if ($unassignedAuthorities->isNotEmpty()) {
+                        $assignedAuthority = $unassignedAuthorities->random();
+                        $assignedAuthorities[] = $assignedAuthority;
+
+                        // Track assignment
+                        if (!isset($familyAuthorities[$family->id])) {
+                            $familyAuthorities[$family->id] = [];
+                        }
+                        $familyAuthorities[$family->id][] = $assignedAuthority->id;
+                    }
+                }
+
+                // If no authorities were assigned (shouldn't happen), assign at least one caseworker
+                if (empty($assignedAuthorities)) {
+                    $caseworker = $authorityUsers['caseworkers'][array_rand($authorityUsers['caseworkers'])];
+                    $assignedAuthorities[] = $caseworker;
+
+                    if (!isset($familyAuthorities[$family->id])) {
+                        $familyAuthorities[$family->id] = [];
+                    }
+                    $familyAuthorities[$family->id][] = $caseworker->id;
+                }
+
+                // Store authority assignments in user's metadata or create relationships
+                // For now, we'll track this in memory - in a real app you'd want a proper relationship table
+                $parent->authorities_assigned = collect($assignedAuthorities)->pluck('id')->toArray();
+            }
+
+            // Assign a caseworker as the family creator (created_by)
+            $familyCreator = $authorityUsers['caseworkers'][array_rand($authorityUsers['caseworkers'])];
+            $family->update(['created_by' => $familyCreator->id]);
         }
 
-        // Create additional standalone users for testing
-        for ($i = 1; $i <= 20; $i++) {
-            $gender = rand(0, 1) ? 'male' : 'female';
-            $firstName = $danishFirstNames[$gender][array_rand($danishFirstNames[$gender])];
-            $lastName = $families->random()->name;
-
+        // Create some additional standalone approved users (not part of families)
+        for ($i = 1; $i <= 10; $i++) {
             $user = User::factory()->create([
-                'name' => $firstName.' '.$lastName,
-                'email' => strtolower($firstName).'.'.strtolower($lastName).$i.'@test.com',
+                'name' => 'Approved User #' . $i,
+                'email' => 'approved' . $i . '@famlink.test',
                 'password' => 'password',
-                'family_id' => rand(0, 1) ? $families->random()->id : null, // Some users not assigned to families
+                'family_id' => null,
             ]);
-
-            // Randomly assign roles
-            $roles = ['far', 'mor', 'myndighed', 'andet', 'temporary', 'approved'];
-            $user->assignRole($roles[array_rand($roles)]);
+            $user->assignRole('approved');
         }
 
         if ($this->command) {
-            $this->command->info('Created users: '.User::count().' total');
-            $this->command->info('- Admins: '.User::role('admin')->count());
-            $this->command->info('- Social Workers: '.User::role('myndighed')->count());
-            $this->command->info('- Fathers: '.User::role('far')->count());
-            $this->command->info('- Mothers: '.User::role('mor')->count());
-            $this->command->info('- Other users: '.User::role(['andet', 'temporary', 'approved'])->count());
+            $this->command->info('Created users: ' . User::count() . ' total');
+            $this->command->info('- Admins: ' . User::role('admin')->count());
+            $this->command->info('- Caseworkers: ' . User::role('sagsbehandler')->count());
+            $this->command->info('- Psychiatrists: ' . User::role('psykiater')->count());
+            $this->command->info('- Lawyers: ' . User::role('advokat')->count());
+            $this->command->info('- Witnesses: ' . User::role('vidne')->count());
+            $this->command->info('- Children: ' . User::role('barn')->count());
+            $this->command->info('- Fathers: ' . User::role('far')->count());
+            $this->command->info('- Mothers: ' . User::role('mor')->count());
+            $this->command->info('- Approved users: ' . User::role('approved')->count());
+            $this->command->info('- Temporary users: ' . User::role('temporary')->count());
+            $this->command->info('- Families with complete structure: ' . $families->count());
         }
     }
 }

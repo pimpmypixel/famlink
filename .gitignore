@@ -31,3 +31,4 @@ yarn-error.log
 /.kiro/specs/
 /.kiro/logs/
 .env.testing
+database/.DS_Store

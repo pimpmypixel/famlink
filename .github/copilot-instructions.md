@@ -44,6 +44,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - ✅ **AWS S3 Integration**: File storage ready (league/flysystem-aws-s3-v3)
 - ❌ **Frontend Interface**: Timeline UI needs implementation
 - ❌ **File Upload UI**: Attachment functionality needs frontend
+- ❌ **Multimodal Support**: Realtime video and audio stream uploads
 - ❌ **Advanced Filtering**: Search and filter UI components
 - ❌ **Notification System**: Real-time notifications
 - ❌ **Calendar Integration**: Event coordination features

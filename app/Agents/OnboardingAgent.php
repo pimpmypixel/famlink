@@ -53,15 +53,6 @@ RETNINGSLINJER:
     {
         Log::info('OnboardingAgent beforeLlmCall', ['session_id' => $context->getSessionId()]);
 
-        // Check for custom instructions from context
-        $customInstructions = $context->getState('custom_instructions');
-        if ($customInstructions) {
-            // Replace the system message with custom instructions
-            if (! empty($inputMessages) && isset($inputMessages[0]['role']) && $inputMessages[0]['role'] === 'system') {
-                $inputMessages[0]['content'] = $customInstructions;
-            }
-        }
-
         // Load playbook data and add it to context
         $playbookData = $this->loadPlaybookData();
         if ($playbookData) {
@@ -98,6 +89,39 @@ RETNINGSLINJER:
     public function getPrompt(?AgentContext $context = null): string
     {
         return $this->instructions;
+    }
+
+    /**
+     * Override getInstructionsWithMemory to include custom instructions
+     */
+    public function getInstructionsWithMemory(AgentContext $context): string
+    {
+        $instructions = $this->getInstructions();
+
+        // Check for custom instructions from context
+        $customInstructions = $context->getState('custom_instructions');
+        if ($customInstructions) {
+            $instructions = $customInstructions;
+        }
+
+        // Add memory context if available
+        $memoryContext = $context->getState('memory_context');
+        if (! empty($memoryContext)) {
+            // Handle memory_context that might be an array
+            $memoryContextString = is_array($memoryContext) || is_object($memoryContext)
+                ? json_encode($memoryContext, JSON_PRETTY_PRINT)
+                : (string) $memoryContext;
+
+            $memoryInfo = "\n\nMEMORY CONTEXT:\n".
+                "Based on your previous interactions, here's what you should remember:\n\n".
+                $memoryContextString."\n\n".
+                'Use this information to provide more personalized and contextual responses. '.
+                'Build upon previous conversations and maintain continuity in your interactions.';
+
+            $instructions .= $memoryInfo;
+        }
+
+        return $instructions;
     }
 
     /**

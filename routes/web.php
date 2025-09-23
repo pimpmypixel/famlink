@@ -18,6 +18,15 @@ Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');
 })->name('onboarding');
 
+// Web Tinker route (unauthenticated for development)
+Route::middleware([
+    Illuminate\Cookie\Middleware\EncryptCookies::class,
+    Illuminate\Session\Middleware\StartSession::class,
+])->group(function () {
+    Route::get('/tinker', [Spatie\WebTinker\Http\Controllers\WebTinkerController::class, 'index'])->name('web-tinker');
+    Route::post('/tinker', [Spatie\WebTinker\Http\Controllers\WebTinkerController::class, 'execute']);
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('userguide', [App\Http\Controllers\UserguideController::class, 'index'])->name('userguide');
 

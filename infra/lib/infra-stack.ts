@@ -59,7 +59,7 @@ export class FamlinkStack extends cdk.Stack {
     });
 
     // S3 Bucket for file uploads
-    const bucketName = `famlink-uploads-${this.stackName.toLowerCase()}`;
+    const bucketName = `${cdk.Aws.ACCOUNT_ID}-famlink-uploads}`;
 
     const bucket = new s3.Bucket(this, 'FamLinkUploadBucket', {
       bucketName,

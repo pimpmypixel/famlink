@@ -612,7 +612,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                 <MessageSquare className="w-6 h-6" />
                 Onboarding Chat
               </DialogTitle>
-              <DialogDescription className="text-sm text-blue-700 dark:text-blue-300">
+              <DialogDescription className="text-xs text-blue-700 dark:text-blue-300">
                 {completed
                   ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
                   : isResumed

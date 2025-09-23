@@ -249,42 +249,32 @@ class OnboardingController extends Controller
                     'current' => $question['key'],
                 ]);
 
-                // Build conversation history
-                $messages = [];
-
                 // Determine if this is the first question ever for this session
-                $isFirstQuestionEver = empty($answers) && $question['key'] === 'name';
+                $isFirstQuestionEver = empty($answers);
 
-                // Add system context with greeting logic
-                $systemContent = "Du er Famlinks onboarding-assistent. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.';
-
+                // Set agent instructions based on whether this is the first question
                 if ($isFirstQuestionEver) {
-                    $systemContent .= ' Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv.';
+                    $agent->setInstructions(
+                        "Du er Famlinks onboarding-assistent. Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
+                    );
                 } else {
-                    $systemContent .= ' Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener.';
+                    $agent->setInstructions(
+                        "Du er Famlinks onboarding-assistent. Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
+                    );
                 }
 
-                $systemContent .= ' Stil spørgsmålet på en empatisk måde.';
-
-                $messages[] = [
-                    'role' => 'system',
-                    'content' => $systemContent,
-                ];
-
-                // Add previous answers as context
+                // Add previous answers as context if available
                 if (! empty($answers)) {
-                    $messages[] = [
-                        'role' => 'system',
-                        'content' => 'Tidligere svar: '.json_encode($answers, JSON_UNESCAPED_UNICODE),
-                    ];
+                    $agent->setInstructions(
+                        $agent->getInstructions()."\n\nTidligere svar: ".json_encode($answers, JSON_UNESCAPED_UNICODE)
+                    );
                 }
 
                 // Add resumption context if this is a resumed session
                 if ($isResumed) {
-                    $messages[] = [
-                        'role' => 'system',
-                        'content' => 'Dette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap.',
-                    ];
+                    $agent->setInstructions(
+                        $agent->getInstructions()."\n\nDette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap."
+                    );
                 }
 
                 // Add the current question
@@ -294,7 +284,7 @@ class OnboardingController extends Controller
                 ];
 
                 // Get agent response - handle both streaming and non-streaming
-                $prompt = "Du er Famlinks onboarding-assistent. Stil spørgsmål {$question['key']} på en empatisk og støttende måde: {$question['text']}";
+                $prompt = "Stil spørgsmål {$question['key']}: {$question['text']}";
                 $response = $agent->execute($prompt, $context);
 
                 // Send initial data

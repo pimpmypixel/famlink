@@ -18,8 +18,12 @@ test('users can authenticate using the login screen', function () {
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+
+    // Follow the redirect to ensure session is maintained
+    $response = $this->get(route('dashboard'));
+
+    $this->assertAuthenticated();
 });
 
 test('users can not authenticate with invalid password', function () {

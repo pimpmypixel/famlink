@@ -18,6 +18,14 @@ Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');
 })->name('onboarding');
 
+// Onboarding API routes
+Route::middleware(['web'])->prefix('api/onboarding')->group(function () {
+    Route::get('question', [App\Http\Controllers\OnboardingController::class, 'getQuestion']);
+    Route::post('answer', [App\Http\Controllers\OnboardingController::class, 'submitAnswer']);
+    Route::get('stream/{sessionId}', [App\Http\Controllers\OnboardingController::class, 'streamAnswer']);
+    Route::post('approve/{userId}', [App\Http\Controllers\OnboardingController::class, 'approveUser']);
+});
+
 // Web Tinker route (unauthenticated for development)
 Route::middleware([
     Illuminate\Cookie\Middleware\EncryptCookies::class,

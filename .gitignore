@@ -30,3 +30,4 @@ yarn-error.log
 # Kiro - include settings and steering, exclude specs and logs
 /.kiro/specs/
 /.kiro/logs/
+.env.testing

@@ -55,9 +55,12 @@ export class FamlinkStack extends cdk.Stack {
       isProduction,
     });
 
+    const s3BucketName = `${this.account}-famlink-uploads`;
+    const bucket = cdk.aws_s3.Bucket.fromBucketName(this, 'ImportedBucket', s3BucketName);
+
     // S3 - File storage
     const s3Construct = new S3Construct(this, 'S3', {
-      bucketName: `famlink-uploads-${this.stackName.toLowerCase()}`,
+      bucketName: bucket.bucketName,
       isProduction,
       retentionDays: isProduction ? 365 : 90,
     });

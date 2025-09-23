@@ -2,11 +2,11 @@
 
 use App\Models\Profile;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
-use function Pest\Laravel\get;
-use function Pest\Laravel\post;
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed the required roles for testing
@@ -24,7 +24,7 @@ it('completes full onboarding flow via API', function () {
     Mail::fake();
 
     // Test the API endpoints directly
-    $response = get('/api/onboarding/question');
+    $response = $this->getJson('/api/onboarding/question');
 
     $response->assertSuccessful();
     $data = $response->json();
@@ -58,7 +58,7 @@ it('completes full onboarding flow via API', function () {
     ];
 
     foreach ($answers as $questionKey => $answer) {
-        $response = post('/api/onboarding/answer', [
+        $response = $this->postJson('/api/onboarding/answer', [
             'session_id' => $sessionId,
             'question_key' => $questionKey,
             'answer' => $answer,
@@ -99,20 +99,20 @@ it('handles email conflicts correctly via API', function () {
     ]);
 
     // Start onboarding
-    $response = get('/api/onboarding/question');
+    $response = $this->getJson('/api/onboarding/question');
     $response->assertSuccessful();
     $data = $response->json();
     $sessionId = $data['session_id'];
 
     // Answer first two questions
-    post('/api/onboarding/answer', [
+    $this->postJson('/api/onboarding/answer', [
         'session_id' => $sessionId,
         'question_key' => 'user_firstname',
         'answer' => 'New User',
     ])->assertSuccessful();
 
     // Try to use existing email - should fail
-    $response = post('/api/onboarding/answer', [
+    $response = $this->postJson('/api/onboarding/answer', [
         'session_id' => $sessionId,
         'question_key' => 'user_email',
         'answer' => 'existing@example.dk',
@@ -124,7 +124,7 @@ it('handles email conflicts correctly via API', function () {
     expect($data['error'])->toContain('allerede registreret');
 
     // Try with different email - should succeed
-    post('/api/onboarding/answer', [
+    $this->postJson('/api/onboarding/answer', [
         'session_id' => $sessionId,
         'question_key' => 'user_email',
         'answer' => 'newuser@example.dk',
@@ -150,7 +150,7 @@ it('handles email conflicts correctly via API', function () {
     ];
 
     foreach ($remainingAnswers as $questionKey => $answer) {
-        post('/api/onboarding/answer', [
+        $this->postJson('/api/onboarding/answer', [
             'session_id' => $sessionId,
             'question_key' => $questionKey,
             'answer' => $answer,
@@ -166,26 +166,26 @@ it('handles email conflicts correctly via API', function () {
 
 it('validates session resumption via API', function () {
     // Start first session
-    $response1 = get('/api/onboarding/question');
+    $response1 = $this->getJson('/api/onboarding/question');
     $response1->assertSuccessful();
     $data1 = $response1->json();
     $sessionId = $data1['session_id'];
 
     // Answer first two questions
-    post('/api/onboarding/answer', [
+    $this->postJson('/api/onboarding/answer', [
         'session_id' => $sessionId,
         'question_key' => 'user_firstname',
         'answer' => 'Session Test',
     ])->assertSuccessful();
 
-    post('/api/onboarding/answer', [
+    $this->postJson('/api/onboarding/answer', [
         'session_id' => $sessionId,
         'question_key' => 'user_email',
         'answer' => 'session@example.dk',
     ])->assertSuccessful();
 
     // Resume session
-    $response2 = get('/api/onboarding/question?session_id='.$sessionId.'&resumed=true');
+    $response2 = $this->getJson('/api/onboarding/question?session_id='.$sessionId.'&resumed=true');
     $response2->assertSuccessful();
     $data2 = $response2->json();
 
@@ -199,12 +199,12 @@ it('loads test playbook in testing environment', function () {
     // This test verifies that the controller correctly loads the test playbook
     // when in testing environment, which is crucial for deterministic testing
 
-    $response = get('/api/onboarding/question');
+    $response = $this->getJson('/api/onboarding/question');
     $response->assertSuccessful();
     $data = $response->json();
 
     // Verify the question comes from our test playbook
-    expect($data['question']['text'])->toBe('Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.');
+    expect($data['question']['text'])->toBe("Hej 👋 Først vil jeg gerne høre dit fornavn, så vi kan tilpasse oplevelsen til dig.");
     expect($data['question']['key'])->toBe('user_firstname');
     expect($data['question']['type'])->toBe('text');
     expect($data['question']['required'])->toBeTrue();

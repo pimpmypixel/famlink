@@ -7,6 +7,12 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// Route testing routes (for debugging)
+Route::get('/debug/routes', [App\Http\Controllers\RouteTestController::class, 'testAllRoutes'])->name('debug.routes');
+Route::get('/debug/routes/{method}/{path}', [App\Http\Controllers\RouteTestController::class, 'testSpecificRoute'])
+    ->name('debug.routes.specific')
+    ->where('path', '.*');
+
 // Guest onboarding route
 Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');

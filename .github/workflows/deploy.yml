@@ -15,27 +15,27 @@ jobs:
   build-and-deploy:
     if: false
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup PHP 8.4
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.4'
         extensions: mbstring, dom, fileinfo, pgsql, sqlite3, gd, bcmath, opcache
         coverage: none
-        
+
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
       with:
         bun-version: latest
-        
+
     - name: Get Composer Cache Directory
       id: composer-cache
       run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-      
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -46,12 +46,12 @@ jobs:
         key: ${{ runner.os }}-deps-${{ hashFiles('**/composer.lock', '**/bun.lockb', '**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-deps-
-        
+
     - name: Prepare build environment
       run: |
         # Create directories
         mkdir -p database bootstrap/cache storage/{app,framework,logs}
-        
+
         # Create minimal .env that avoids database dependencies during build
         cat > .env << 'EOF'
         APP_NAME="FamLink"
@@ -59,57 +59,57 @@ jobs:
         APP_DEBUG=false
         APP_KEY=
         APP_URL=http://localhost
-        
+
         # Use drivers that don't require database during package discovery
         CACHE_DRIVER=array
         SESSION_DRIVER=array
         QUEUE_CONNECTION=sync
         BROADCAST_DRIVER=log
-        
+
         LOG_CHANNEL=single
         LOG_LEVEL=error
-        
+
         # Database - PostgreSQL for production, SQLite for build only
         DB_CONNECTION=sqlite
         DB_DATABASE=database/database.sqlite
         EOF
-        
+
         # Create empty SQLite file
         touch database/database.sqlite
         chmod 664 database/database.sqlite
-        
+
     - name: Install PHP dependencies
       run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-      
+
     - name: Generate application key
       run: php artisan key:generate --force
-      
+
     - name: Install JS dependencies
       run: bun install --frozen-lockfile
-        
+
     - name: Build production assets
       run: bun run build
       env:
         NODE_ENV: production
         WAYFINDER_SKIP: true
-      
+
     - name: Optimize Laravel
       run: |
         php artisan config:cache
         php artisan route:cache
         php artisan view:cache
         php artisan event:cache
-        
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-      
+
     - name: Log in to Container Registry
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        
+
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -119,7 +119,7 @@ jobs:
           type=ref,event=branch
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-          
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -132,7 +132,7 @@ jobs:
         cache-to: type=gha,mode=max
         build-args: |
           BUILDKIT_INLINE_CACHE=1
-          
+
     - name: Create deployment archive
       run: |
         # Create a minimal deployment package
@@ -151,7 +151,7 @@ jobs:
           storage/ \
           database/ \
           bootstrap/
-          
+
     - name: Deploy to CasaOS
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -163,21 +163,21 @@ jobs:
         script: |
           set -e
           echo "🚀 Starting deployment to CasaOS..."
-          
+
           # Create and navigate to deployment directory
           mkdir -p ${{ env.DEPLOYMENT_PATH }}/{deployments,current}
           cd ${{ env.DEPLOYMENT_PATH }}
-          
+
           # Backup current deployment (if exists)
           if [ -d "current" ] && [ "$(ls -A current)" ]; then
             echo "📦 Backing up current deployment..."
             mv current deployments/backup-$(date +%Y%m%d-%H%M%S) || true
             mkdir -p current
           fi
-          
+
           # Clean up old backups (keep last 3)
           find deployments/ -maxdepth 1 -name "backup-*" -type d | sort -r | tail -n +4 | xargs rm -rf 2>/dev/null || true
-          
+
     - name: Upload deployment files
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -187,7 +187,7 @@ jobs:
         port: ${{ secrets.SSH_PORT || '22' }}
         source: deployment.tar.gz
         target: ${{ env.DEPLOYMENT_PATH }}/
-        
+
     - name: Extract and start application
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -199,15 +199,15 @@ jobs:
         script: |
           set -e
           cd ${{ env.DEPLOYMENT_PATH }}
-          
+
           echo "📁 Extracting deployment files..."
           tar -xzf deployment.tar.gz -C current/
-          
+
           # Navigate to current deployment
           cd current
-          
+
           echo "🔧 Setting up environment..."
-          
+
           # Create production .env if it doesn't exist
           if [ ! -f .env ]; then
             echo "📝 Creating production .env file..."
@@ -219,8 +219,8 @@ jobs:
               APP_NAME="FamLink"
               APP_ENV=production
               APP_DEBUG=false
-              APP_URL=https://test-famlink.spoons.dk
-              
+              APP_URL=https://famlink-plu17.sevalla.app
+
               # PostgreSQL Database (production)
               DB_CONNECTION=pgsql
               DB_HOST=db
@@ -228,55 +228,55 @@ jobs:
               DB_DATABASE=famlink
               DB_USERNAME=famlink_user
               DB_PASSWORD=secure_password_change_me
-              
+
               # Cache and Session (using database)
               CACHE_DRIVER=database
               SESSION_DRIVER=database
               QUEUE_CONNECTION=database
-              
+
               LOG_CHANNEL=single
               LOG_LEVEL=error
               EOF
-              
+
               # Generate a new APP_KEY
               APP_KEY=$(openssl rand -base64 32)
               sed -i "s/APP_KEY=.*/APP_KEY=base64:$APP_KEY/" .env
               echo "🔑 Generated new APP_KEY"
             fi
           fi
-          
+
           # Create required directories (no SQLite needed for PostgreSQL setup)
           mkdir -p storage/{app/public,logs,framework/{cache,sessions,views}} bootstrap/cache
-          
+
           # Set proper permissions
           chmod -R 775 storage bootstrap/cache
           chown -R $(id -u):$(id -g) . 2>/dev/null || true
-          
+
           echo "�️ Running database migrations and seeding..."
-          
+
           # Run migrations and seed the database
           docker compose exec -T app php artisan migrate --force
           docker compose exec -T app php artisan db:seed --force
-          
+
           echo "�🐳 Starting Docker containers..."
-          
+
           # Login to GitHub Container Registry
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          
+
           # Stop existing containers gracefully
           docker compose down --timeout 30 2>/dev/null || true
-          
+
           # Pull latest images
           docker compose pull
-          
+
           # Start containers
           docker compose up -d --wait --timeout 120
-          
+
           # Clean up deployment archive
           rm -f ../deployment.tar.gz
-          
+
           echo "✅ Deployment completed successfully!"
-          
+
     - name: Health check and verification
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -287,9 +287,9 @@ jobs:
         timeout: 5m
         script: |
           cd ${{ env.DEPLOYMENT_PATH }}/current
-          
+
           echo "🔍 Verifying deployment..."
-          
+
           # Check container status
           if ! docker compose ps --format "table {{.Names}}\t{{.Status}}" | grep -q "Up"; then
             echo "❌ Containers failed to start properly"
@@ -297,25 +297,25 @@ jobs:
             docker compose logs --tail=50
             exit 1
           fi
-          
+
           echo "📊 Container status:"
           docker compose ps
-          
+
           # Wait for application to be fully ready
           echo "⏳ Waiting for application to be ready..."
           sleep 30
-          
+
           # Find the main application container
           APP_CONTAINER=$(docker compose ps --format "{{.Names}}" | grep -E "(famlink|app)" | head -1)
-          
+
           if [ -z "$APP_CONTAINER" ]; then
             echo "❌ Could not find application container"
             docker compose ps
             exit 1
           fi
-          
+
           echo "🧪 Testing application health..."
-          
+
           # Test if the web server is responding
           if docker exec "$APP_CONTAINER" curl -sf http://localhost/health >/dev/null 2>&1 || \
              docker exec "$APP_CONTAINER" curl -sf http://localhost/ >/dev/null 2>&1; then
@@ -326,7 +326,7 @@ jobs:
             docker exec "$APP_CONTAINER" tail -20 /var/www/html/storage/logs/laravel.log 2>/dev/null || \
             docker logs "$APP_CONTAINER" --tail=20
           fi
-          
+
           echo "🌐 Application should be accessible via:"
           echo "   - Internal: http://$(docker inspect "$APP_CONTAINER" -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')/"
           echo "   - External: https://test-famlink.spoons.dk (via Nginx Proxy Manager)"

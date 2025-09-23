@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Vizra\VizraADK\Execution\AgentExecutor;
 use Vizra\VizraADK\System\AgentContext;
 
 class OnboardingController extends Controller
@@ -236,56 +237,50 @@ class OnboardingController extends Controller
     {
         return response()->stream(function () use ($sessionId, $question, $answers, $allQuestions, $isResumed) {
             try {
-                $agent = new OnboardingAgent;
+                // Find or create profile for this session
+                $profile = Profile::firstOrCreate(
+                    ['session_id' => $sessionId],
+                    ['answers' => []]
+                );
 
-                // Create context with session data
-                $context = new AgentContext($sessionId);
-                $context->setState('current_question', $question);
-                $context->setState('answers', $answers);
-                $context->setState('is_resumed', $isResumed);
-                $context->setState('progress', [
-                    'answered' => count($answers),
-                    'total' => count($allQuestions),
-                    'current' => $question['key'],
-                ]);
+                $user = $profile->user;
 
                 // Determine if this is the first question ever for this session
                 $isFirstQuestionEver = empty($answers);
 
-                // Set agent instructions based on whether this is the first question
-                if ($isFirstQuestionEver) {
-                    $agent->setInstructions(
-                        "Du er Famlinks onboarding-assistent. Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
-                    );
-                } else {
-                    $agent->setInstructions(
-                        "Du er Famlinks onboarding-assistent. Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
-                    );
-                }
+                // Build instructions
+                $instructions = $isFirstQuestionEver
+                    ? "Du er Famlinks onboarding-assistent. Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
+                    : "Du er Famlinks onboarding-assistent. Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.';
 
                 // Add previous answers as context if available
                 if (! empty($answers)) {
-                    $agent->setInstructions(
-                        $agent->getInstructions()."\n\nTidligere svar: ".json_encode($answers, JSON_UNESCAPED_UNICODE)
-                    );
+                    $instructions .= "\n\nTidligere svar: ".json_encode($answers, JSON_UNESCAPED_UNICODE);
                 }
 
                 // Add resumption context if this is a resumed session
                 if ($isResumed) {
-                    $agent->setInstructions(
-                        $agent->getInstructions()."\n\nDette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap."
-                    );
+                    $instructions .= "\n\nDette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap.";
                 }
 
-                // Add the current question
-                $messages[] = [
-                    'role' => 'user',
-                    'content' => "Stil spørgsmål {$question['key']}: {$question['text']}",
-                ];
+                // Use AgentExecutor for proper persistence
+                $executor = (new AgentExecutor(OnboardingAgent::class, "Stil spørgsmål {$question['key']}: {$question['text']}"))
+                    ->forUser($user)
+                    ->withSession($sessionId)
+                    ->withContext([
+                        'current_question' => $question,
+                        'answers' => $answers,
+                        'is_resumed' => $isResumed,
+                        'progress' => [
+                            'answered' => count($answers),
+                            'total' => count($allQuestions),
+                            'current' => $question['key'],
+                        ],
+                        'custom_instructions' => $instructions,
+                    ]);
 
-                // Get agent response - handle both streaming and non-streaming
-                $prompt = "Stil spørgsmål {$question['key']}: {$question['text']}";
-                $response = $agent->execute($prompt, $context);
+                // Execute the agent
+                $response = $executor->go();
 
                 // Send initial data
                 echo 'data: '.json_encode([

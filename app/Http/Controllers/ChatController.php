@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Execution\AgentExecutor;
 
 class ChatController extends Controller
 {
@@ -31,19 +31,23 @@ class ChatController extends Controller
 
         try {
             // Determine agent based on user role
-            $agent = $this->getAgentForUser($user);
+            $agentClass = $this->getAgentClassForUser($user);
 
-            // Create context with role-based permissions
-            $context = new AgentContext($sessionId);
-            $context->setState('authenticated_user_id', $user->id);
-            $context->setState('user_role', $user->getRoleNames()->first());
-            $context->setState('family_id', $user->family_id);
+            // Use AgentExecutor for proper persistence
+            $executor = (new AgentExecutor($agentClass, $message))
+                ->forUser($user)
+                ->withSession($sessionId)
+                ->withContext([
+                    'authenticated_user_id' => $user->id,
+                    'user_role' => $user->getRoleNames()->first(),
+                    'family_id' => $user->family_id,
+                ]);
 
             // Add role-specific context
-            $this->addRoleContext($context, $user);
+            $this->addRoleContextToExecutor($executor, $user);
 
-            // Execute agent with user message
-            $response = $agent->execute($message, $context);
+            // Execute agent
+            $response = $executor->go();
 
             // Handle streaming response
             if ($response instanceof \Generator) {
@@ -177,59 +181,71 @@ class ChatController extends Controller
     }
 
     /**
-     * Get the appropriate agent based on user role.
+     * Get the appropriate agent class based on user role.
      */
-    private function getAgentForUser(User $user): CustomerSupportAgent
+    private function getAgentClassForUser(User $user): string
     {
         // All approved users use CustomerSupportAgent for now
         // Could be extended to use different agents based on role
-        return new CustomerSupportAgent();
+        return CustomerSupportAgent::class;
     }
 
     /**
-     * Add role-specific context to the agent context.
+     * Add role-specific context to the agent executor.
      */
-    private function addRoleContext(AgentContext $context, User $user): void
+    private function addRoleContextToExecutor(AgentExecutor $executor, User $user): void
     {
         $role = $user->getRoleNames()->first();
+
+        $contextData = [];
 
         switch ($role) {
             case 'admin':
                 // Admin can access everything
-                $context->setState('access_level', 'global');
-                $context->setState('can_access_all_timelines', true);
-                $context->setState('can_access_all_users', true);
-                $context->setState('admin_instructions', 'Du er en administrator. Du har adgang til alle brugere, familier og timeline-elementer. Vær særlig hjælpsom og detaljeret i dine svar.');
+                $contextData = [
+                    'access_level' => 'global',
+                    'can_access_all_timelines' => true,
+                    'can_access_all_users' => true,
+                    'admin_instructions' => 'Du er en administrator. Du har adgang til alle brugere, familier og timeline-elementer. Vær særlig hjælpsom og detaljeret i dine svar.',
+                ];
                 break;
 
             case 'myndighed':
                 // Authority can access their related families
-                $context->setState('access_level', 'family');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
-                $context->setState('authority_instructions', 'Du er en myndighedsperson. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.');
+                $contextData = [
+                    'access_level' => 'family',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                    'authority_instructions' => 'Du er en myndighedsperson. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.',
+                ];
                 // Get families this authority has access to
                 $familyIds = $this->getAuthorityFamilyIds($user);
-                $context->setState('accessible_family_ids', $familyIds);
+                $contextData['accessible_family_ids'] = $familyIds;
                 break;
 
             case 'far':
             case 'mor':
                 // Parents have private access between themselves and authorities
-                $context->setState('access_level', 'private');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
-                $context->setState('parent_instructions', 'Du er en forælder. Du har privat adgang til kommunikation mellem dig og myndighederne. Du kan kun se timeline-elementer, der vedrører din familie.');
-                $context->setState('family_id', $user->family_id);
+                $contextData = [
+                    'access_level' => 'private',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                    'parent_instructions' => 'Du er en forælder. Du har privat adgang til kommunikation mellem dig og myndighederne. Du kan kun se timeline-elementer, der vedrører din familie.',
+                    'family_id' => $user->family_id,
+                ];
                 break;
 
             default:
                 // Default approved user access
-                $context->setState('access_level', 'limited');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
+                $contextData = [
+                    'access_level' => 'limited',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                ];
                 break;
         }
+
+        $executor->withContext($contextData);
     }
 
     /**

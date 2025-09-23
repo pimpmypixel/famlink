@@ -72,6 +72,15 @@ RETNINGSLINJER:
     {
         Log::info('OnboardingAgent beforeLlmCall', ['session_id' => $context->getSessionId()]);
 
+        // Check for custom instructions from context
+        $customInstructions = $context->getState('custom_instructions');
+        if ($customInstructions) {
+            // Replace the system message with custom instructions
+            if (!empty($inputMessages) && isset($inputMessages[0]['role']) && $inputMessages[0]['role'] === 'system') {
+                $inputMessages[0]['content'] = $customInstructions;
+            }
+        }
+
         // Load playbook data and add it to context
         $playbookData = $this->loadPlaybookData();
         if ($playbookData) {

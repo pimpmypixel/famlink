@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Comment;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -14,8 +14,8 @@ class CommentSeeder extends Seeder
      */
     public function run(): void
     {
-        $socialWorkers = User::role('myndighed')->get();
-        $timelineItems = TimelineItem::all();
+        $socialWorkers = User::role('sagsbehandler')->get();
+        $timelineItems = Event::all();
 
         $this->createCommentsAndReplies($timelineItems, $socialWorkers);
         $this->ensureAllTimelineItemsHaveComments($socialWorkers);
@@ -88,7 +88,7 @@ class CommentSeeder extends Seeder
      */
     private function ensureAllTimelineItemsHaveComments($socialWorkers): void
     {
-        $timelineItemsWithoutComments = TimelineItem::doesntHave('comments')->get();
+        $timelineItemsWithoutComments = Event::doesntHave('comments')->get();
 
         if ($timelineItemsWithoutComments->isEmpty()) {
             return;

@@ -4,8 +4,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-use function Pest\Laravel\actingAs;
-
 it('can complete onboarding chat flow', function () {
     // Onboarding is for guest users, so no authentication needed
     $page = visit('/onboarding');

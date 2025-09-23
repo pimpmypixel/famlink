@@ -1,25 +1,10 @@
-export interface Event {
-  id: string
-  title: string
-  content: string
-  date: string
-  timestamp: number
-  category: string | { id: number; name: string }
-  tags: string[] | { id: number; name: string }[]
-  user: TimelineUser
-  family?: { id: string; name: string; child_name?: string }
-  author?: string
-  attachments?: Attachment[]
-  isCollapsed?: boolean
-  comments?: { id: string; content: string; user: TimelineUser; created_at?: string; replies?: { id: string; content: string; user: TimelineUser; created_at?: string; parent_comment_id?: string }[]; parent_comment_id?: string }[]
-}
+import type { EventData, UserData, CommentData, FamilyData, CategoryData, TagData } from '../../../types/generated';
 
-export interface User {
-  id: string
-  name: string
-  role: "far" | "mor" | "myndighed" | "andet" | "father" | "mother" | "consultant" | "admin" | "super-admin" | string
-}
+export type Event = EventData;
+export type User = UserData;
+export type Comment = CommentData;
 
+// Legacy types for backward compatibility
 export interface TimelineUser {
   id: number;
   name: string;

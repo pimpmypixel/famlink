@@ -16,8 +16,8 @@ class PermissionsSeeder extends Seeder
         // Clear existing permissions and roles
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         $this->createAgentPermissions()
-        ->createAgentRoles()
-        ->assignPermissionsToRoles();
+            ->createAgentRoles()
+            ->assignPermissionsToRoles();
     }
 
     private function createAgentPermissions(): self
@@ -76,7 +76,6 @@ class PermissionsSeeder extends Seeder
 
         return $this;
     }
-
 
     /**
      * Create agent roles and assign permissions
@@ -177,7 +176,7 @@ class PermissionsSeeder extends Seeder
         if ($adminRole) {
             $adminRole->givePermissionTo(Permission::all());
         }
+
         return $this;
     }
-
 }

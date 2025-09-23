@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Family;
 use App\Models\Event;
+use App\Models\Family;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +15,7 @@ describe('Timeline API', function () {
 
     test('timeline endpoint returns items with user roles', function () {
         $user = User::whereHas('roles', function ($query) {
-            $query->where('name', 'far');
+            $query->where('name', 'approved');
         })->first();
 
         $this->actingAs($user);
@@ -54,7 +54,7 @@ describe('Timeline API', function () {
 
         $this->actingAs($admin);
 
-        $response = $this->get('/timeline');
+        $response = $this->get('/timeline?per_page=100'); // Get more items to ensure we see social workers
 
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -64,7 +64,7 @@ describe('Timeline API', function () {
                     $items = $timelineItems->toArray();
                     // Check if any items have social worker role
                     $socialWorkerItems = array_filter($items, function ($item) {
-                        return isset($item['user']['role']) && $item['user']['role'] === 'myndighed';
+                        return isset($item['user']['role']) && $item['user']['role'] === 'sagsbehandler';
                     });
 
                     expect(count($socialWorkerItems))->toBeGreaterThan(0, 'Should have social worker timeline items for admin');
@@ -76,7 +76,7 @@ describe('Timeline API', function () {
 
     test('timeline items include role and roles arrays', function () {
         $user = User::whereHas('roles', function ($query) {
-            $query->where('name', 'far');
+            $query->where('name', 'approved');
         })->first();
 
         $this->actingAs($user);
@@ -105,10 +105,10 @@ describe('Timeline API', function () {
         $families = Family::all();
 
         foreach ($families as $family) {
-            // Count social worker items for this family (items created by users with 'myndighed' role)
+            // Count social worker items for this family (items created by users with 'sagsbehandler' role)
             $socialWorkerItemsCount = Event::where('family_id', $family->id)
                 ->whereHas('user', function ($query) {
-                    $query->role('myndighed');
+                    $query->role('sagsbehandler');
                 })
                 ->count();
 

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
-use App\Models\Family;
 use App\Models\Event;
+use App\Models\Family;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -41,7 +41,7 @@ class DashboardController extends Controller
                             'family_name' => $impersonatableUser->family?->name,
                         ];
                     });
-            } elseif ($user->hasRole('myndighed')) {
+            } elseif ($user->hasRole('sagsbehandler')) {
                 // Social worker stats - specific to their families
                 $families = Family::where('created_by', $user->id)->get();
                 $familyIds = $families->pluck('id');

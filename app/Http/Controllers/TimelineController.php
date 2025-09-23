@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventResource;
+use App\Data\EventData;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -49,7 +49,7 @@ class TimelineController extends Controller
         }
 
         return Inertia::render('authenticated/timeline_page', [
-            'timelineItems' => EventResource::collection($timelineItems)->resolve(),
+            'timelineItems' => EventData::collect($timelineItems->getCollection())->toArray(),
             'pagination' => [
                 'current_page' => $timelineItems->currentPage(),
                 'last_page' => $timelineItems->lastPage(),

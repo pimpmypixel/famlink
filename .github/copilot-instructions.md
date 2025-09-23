@@ -56,7 +56,7 @@ The application uses a family-centric architecture where all data is scoped to f
 ```php
 // Family-Scoped Data Access Pattern
 $user = auth()->user();
-$timelineItems = TimelineItem::with('user', 'comments')
+$events = Event::with('user', 'comments')
     ->whereIn('user_id', $user->family->users()->pluck('id'))
     ->orderBy('item_timestamp', 'desc')
     ->get();
@@ -64,8 +64,8 @@ $timelineItems = TimelineItem::with('user', 'comments')
 
 ### Key Models & Relationships
 - **Family**: Central entity containing users and timeline items
-- **User**: Belongs to family, has roles (far, mor, myndighed, consultant)
-- **TimelineItem**: UUID primary key, belongs to user/family, has comments/tags
+- **User**: Belongs to family, has roles (far, mor, sagsbehandler, consultant)
+- **Event**: UUID primary key, belongs to user/family, has comments/tags (formerly TimelineItem)
 - **Comment**: Nested comment system with parent-child relationships
 - **Category/Tag**: Flexible categorization system for timeline items
 
@@ -121,7 +121,7 @@ Storage::disk('s3')->url($path);
 ### Timeline Item Creation
 ```php
 // UUID-based model creation
-$timelineItem = TimelineItem::create([
+$event = Event::create([
     'id' => (string) Str::uuid(),
     'user_id' => auth()->id(),
     'family_id' => auth()->user()->family_id,
@@ -285,7 +285,7 @@ public function run(): void
     $this->call(RolesSeeder::class);
     $this->call(PermissionsSeeder::class);  // NEW: Granular permissions
     $this->call(UserSeeder::class);
-    $this->call(TimelineItemSeeder::class);
+    $this->call(EventSeeder::class);
 }
 ```
 
@@ -299,14 +299,14 @@ public function run(): void
 - **Features**: Proper role assignments, family relationships, realistic Danish names
 - **Purpose**: Complete user ecosystem for permission and relationship testing
 
-#### TimelineItemSeeder.php
-- **Creates**: 224 timeline items with extensive relationships
+#### EventSeeder.php
+- **Creates**: 224 timeline events with extensive relationships
 - **Features**: 
-  - 24 base items with realistic Danish family law content
-  - 200+ generated items with varied categories and tags
+  - 24 base events with realistic Danish family law content
+  - 200+ generated events with varied categories and tags
   - Extensive comment threads with nested replies (1,236 total comments)
   - Family-scoped content distribution
-  - Urgent item flagging (10% probability)
+  - Urgent event flagging (10% probability)
 - **Purpose**: Comprehensive timeline data for performance and feature testing
 
 #### PermissionsSeeder.php (NEW)
@@ -324,14 +324,14 @@ public function run(): void
 php artisan db:seed
 
 # Run specific seeder
-php artisan db:seed --class=TimelineItemSeeder
+php artisan db:seed --class=EventSeeder
 
 # Fresh database with seeders
 php artisan migrate:fresh --seed
 
 # Check seeded data counts
 php artisan tinker --execute="
-echo 'Timeline Items: ' . App\Models\TimelineItem::count();
+echo 'Timeline Items: ' . App\Models\Event::count();
 echo 'Comments: ' . App\Models\Comment::count();
 echo 'Users: ' . App\Models\User::count();
 echo 'Families: ' . App\Models\Family::count();
@@ -340,20 +340,67 @@ echo 'Families: ' . App\Models\Family::count();
 
 ### Optimized Laravel Resources
 
-#### TimelineItemResource.php
-- **Features**: Conditional loading, pagination support, metadata inclusion
-- **Performance**: Efficient relationship loading, proper null handling
+#### Laravel Data Implementation
+The application uses `spatie/laravel-data` v4.17.1 for type-safe API responses with automatic TypeScript interface generation:
+
+- **Data Classes**: Located in `app/Data/` with `#[TypeScript]` attributes for automatic TypeScript generation
+- **Lazy Loading**: Optional relationships loaded only when needed using `Lazy::create()`
+- **Automatic TypeScript**: Generated interfaces in `resources/types/generated.d.ts`
+- **Collection Classes**: Custom collection classes for paginated and array responses
+- **Type Safety**: Full type safety between Laravel backend and React frontend
+
+#### Data Class Patterns
+```php
+#[TypeScript]
+class EventData extends Data
+{
+    public function __construct(
+        public string $id,
+        public string $title,
+        public string $content,
+        public Lazy|UserData|null $user,
+        public Lazy|CategoryData|null $category,
+        public Lazy|Collection $tags,
+        public Lazy|Collection $comments,
+    ) {}
+    
+    public static function fromModel(Event $event): self
+    {
+        return new self(
+            id: $event->id,
+            title: $event->title,
+            content: $event->content,
+            user: Lazy::create(fn () => UserData::fromModel($event->user)),
+            category: Lazy::create(fn () => CategoryData::fromModel($event->category)),
+            tags: Lazy::create(fn () => TagData::collect($event->tags)),
+            comments: Lazy::create(fn () => CommentData::collect($event->comments)),
+        );
+    }
+}
+```
+
+#### Controller Usage
+```php
+// Return typed data with automatic TypeScript generation
+public function index(Request $request): EventCollection
+{
+    $events = Event::with(['user', 'category', 'tags'])
+        ->paginate($request->get('per_page', 20));
+    
+    return EventData::collect($events);
+}
+```
+
+#### EventData.php
+- **Features**: Type-safe data transfer object with automatic TypeScript generation
+- **Performance**: Lazy loading for optional relationships (comments, tags, user details)
 - **Usage**: 
 ```php
 // With pagination
-TimelineItemResource::collection(
-    TimelineItem::paginate(20)
-);
+EventData::collect(Event::paginate(20));
 
 // With conditional includes
-TimelineItemResource::collection(
-    TimelineItem::with(['user', 'comments'])->get()
-);
+EventData::collect(Event::with(['user', 'comments'])->get());
 ```
 
 #### CommentResource.php
@@ -361,13 +408,13 @@ TimelineItemResource::collection(
 - **Performance**: Lazy loading of replies, efficient relationship queries
 - **Usage**: Automatic inclusion in timeline item responses
 
-#### TimelineItemCollection.php (NEW)
+#### EventCollection.php (NEW)
 - **Features**: Pagination metadata, filter information, relationship counts
 - **Performance**: Optimized for large datasets with proper pagination
 - **Usage**: 
 ```php
-return new TimelineItemCollection(
-    TimelineItem::with(['user', 'category', 'tags'])
+return EventData::collect(
+    Event::with(['user', 'category', 'tags'])
         ->paginate(request('per_page', 20))
 );
 ```
@@ -469,12 +516,12 @@ class User extends Authenticatable
     }
 
     public function family(): BelongsTo
-    public function timelineItems(): HasMany
+    public function events(): HasMany
     public function profile(): HasOne
 }
 
-// TimelineItem Model - Comprehensive implementation
-class TimelineItem extends Model
+// Event Model - Comprehensive implementation
+class Event extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';

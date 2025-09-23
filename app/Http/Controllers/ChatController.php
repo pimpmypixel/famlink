@@ -24,7 +24,7 @@ class ChatController extends Controller
 
         $user = Auth::user();
         $message = $request->input('message');
-        $sessionId = $request->input('session_id') ?: 'chat_' . $user->id . '_' . now()->timestamp;
+        $sessionId = $request->input('session_id') ?: 'chat_'.$user->id.'_'.now()->timestamp;
 
         // Check for onboarding session continuity
         $sessionId = $this->handleSessionContinuity($user, $sessionId);
@@ -51,25 +51,25 @@ class ChatController extends Controller
 
             // Handle streaming response
             if ($response instanceof \Generator) {
-                return response()->stream(function () use ($response, $sessionId, $user) {
+                return response()->stream(function () use ($response, $sessionId) {
                     $fullResponse = '';
                     foreach ($response as $chunk) {
                         if (isset($chunk['content'])) {
                             $fullResponse .= $chunk['content'];
-                            echo 'data: ' . json_encode([
+                            echo 'data: '.json_encode([
                                 'type' => 'chunk',
                                 'content' => $chunk['content'],
-                            ]) . "\n\n";
+                            ])."\n\n";
                             ob_flush();
                             flush();
                         }
                     }
 
-                    echo 'data: ' . json_encode([
+                    echo 'data: '.json_encode([
                         'type' => 'complete',
                         'full_response' => $fullResponse,
                         'session_id' => $sessionId,
-                    ]) . "\n\n";
+                    ])."\n\n";
                     ob_flush();
                     flush();
                 }, 200, [
@@ -95,7 +95,7 @@ class ChatController extends Controller
             // Show detailed error for admin users
             if ($user->hasRole('admin')) {
                 return response()->json([
-                    'error' => 'Chat fejl: ' . $e->getMessage(),
+                    'error' => 'Chat fejl: '.$e->getMessage(),
                     'details' => $e->getTraceAsString(),
                 ], 500);
             }
@@ -112,7 +112,7 @@ class ChatController extends Controller
     public function getMessages(Request $request)
     {
         $user = Auth::user();
-        $sessionId = $request->input('session_id') ?: 'chat_' . $user->id . '_' . now()->timestamp;
+        $sessionId = $request->input('session_id') ?: 'chat_'.$user->id.'_'.now()->timestamp;
 
         try {
             // Get messages from Vizra ADK based on user role
@@ -131,7 +131,7 @@ class ChatController extends Controller
 
             if ($user->hasRole('admin')) {
                 return response()->json([
-                    'error' => 'Fejl ved hentning af beskeder: ' . $e->getMessage(),
+                    'error' => 'Fejl ved hentning af beskeder: '.$e->getMessage(),
                     'details' => $e->getTraceAsString(),
                 ], 500);
             }
@@ -158,7 +158,7 @@ class ChatController extends Controller
             if ($answersCount >= $totalQuestions) {
                 // Onboarding completed, create continuity link
                 // Use a derived session ID that maintains context
-                return 'approved_' . $profile->session_id . '_' . $user->id;
+                return 'approved_'.$profile->session_id.'_'.$user->id;
             }
         }
 
@@ -177,6 +177,7 @@ class ChatController extends Controller
             $json = file_get_contents($playbook);
             $questions = json_decode($json, true) ?? [];
         }
+
         return $questions;
     }
 
@@ -210,13 +211,13 @@ class ChatController extends Controller
                 ];
                 break;
 
-            case 'myndighed':
+            case 'sagsbehandler':
                 // Authority can access their related families
                 $contextData = [
                     'access_level' => 'family',
                     'can_access_all_timelines' => false,
                     'can_access_all_users' => false,
-                    'authority_instructions' => 'Du er en myndighedsperson. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.',
+                    'authority_instructions' => 'Du er en sagsbehandler. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.',
                 ];
                 // Get families this authority has access to
                 $familyIds = $this->getAuthorityFamilyIds($user);
@@ -294,7 +295,7 @@ class ChatController extends Controller
                 'role' => 'assistant',
                 'content' => $this->getWelcomeMessage($user),
                 'timestamp' => now()->toISOString(),
-            ]
+            ],
         ];
     }
 
@@ -310,8 +311,8 @@ class ChatController extends Controller
             case 'admin':
                 return "Hej {$name}! Som administrator har du fuld adgang til alle brugere og timeline-elementer. Hvordan kan jeg hjælpe dig i dag?";
 
-            case 'myndighed':
-                return "Hej {$name}! Som myndighedsperson har du adgang til familier og sager, som du er tilknyttet. Hvordan kan jeg hjælpe dig?";
+            case 'sagsbehandler':
+                return "Hej {$name}! Som sagsbehandler har du adgang til familier og sager, som du er tilknyttet. Hvordan kan jeg hjælpe dig?";
 
             case 'far':
             case 'mor':

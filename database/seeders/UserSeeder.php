@@ -51,8 +51,8 @@ class UserSeeder extends Seeder
         // Create 5 caseworkers
         for ($i = 1; $i <= 5; $i++) {
             $caseworker = User::factory()->create([
-                'name' => 'Caseworker #' . $i,
-                'email' => 'caseworker' . $i . '@famlink.test',
+                'name' => 'Caseworker #'.$i,
+                'email' => 'caseworker'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
             ]);
@@ -63,8 +63,8 @@ class UserSeeder extends Seeder
         // Create 5 psychiatrists
         for ($i = 1; $i <= 5; $i++) {
             $psychiatrist = User::factory()->create([
-                'name' => 'Psychiatrist #' . $i,
-                'email' => 'psychiatrist' . $i . '@famlink.test',
+                'name' => 'Psychiatrist #'.$i,
+                'email' => 'psychiatrist'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
             ]);
@@ -75,8 +75,8 @@ class UserSeeder extends Seeder
         // Create 5 lawyers
         for ($i = 1; $i <= 5; $i++) {
             $lawyer = User::factory()->create([
-                'name' => 'Lawyer #' . $i,
-                'email' => 'lawyer' . $i . '@famlink.test',
+                'name' => 'Lawyer #'.$i,
+                'email' => 'lawyer'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
             ]);
@@ -87,8 +87,8 @@ class UserSeeder extends Seeder
         // Create 5 witnesses
         for ($i = 1; $i <= 5; $i++) {
             $witness = User::factory()->create([
-                'name' => 'Witness #' . $i,
-                'email' => 'witness' . $i . '@famlink.test',
+                'name' => 'Witness #'.$i,
+                'email' => 'witness'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Witnesses don't belong to families
             ]);
@@ -118,7 +118,7 @@ class UserSeeder extends Seeder
             // Create child for this family
             $child = User::factory()->create([
                 'name' => $family->child_name,
-                'email' => strtolower($family->child_name) . '_' . strtolower($family->name) . '@famlink.test',
+                'email' => strtolower($family->child_name).'_'.strtolower($family->name).'@famlink.test',
                 'password' => 'password',
                 'family_id' => $family->id,
             ]);
@@ -134,8 +134,8 @@ class UserSeeder extends Seeder
                 $firstName = $danishFirstNames[$gender][array_rand($danishFirstNames[$gender])];
 
                 $parent = User::factory()->create([
-                    'name' => $firstName . ' ' . $family->name,
-                    'email' => strtolower($firstName) . '_' . strtolower($family->name) . '@famlink.test',
+                    'name' => $firstName.' '.$family->name,
+                    'email' => strtolower($firstName).'_'.strtolower($family->name).'@famlink.test',
                     'password' => 'password',
                     'family_id' => $family->id,
                 ]);
@@ -158,8 +158,8 @@ class UserSeeder extends Seeder
 
                     // Find an authority not already assigned to this family
                     $unassignedAuthorities = collect($availableAuthorities)->filter(function ($authority) use ($family, $familyAuthorities) {
-                        return !isset($familyAuthorities[$family->id]) ||
-                               !in_array($authority->id, $familyAuthorities[$family->id]);
+                        return ! isset($familyAuthorities[$family->id]) ||
+                               ! in_array($authority->id, $familyAuthorities[$family->id]);
                     });
 
                     if ($unassignedAuthorities->isNotEmpty()) {
@@ -167,7 +167,7 @@ class UserSeeder extends Seeder
                         $assignedAuthorities[] = $assignedAuthority;
 
                         // Track assignment
-                        if (!isset($familyAuthorities[$family->id])) {
+                        if (! isset($familyAuthorities[$family->id])) {
                             $familyAuthorities[$family->id] = [];
                         }
                         $familyAuthorities[$family->id][] = $assignedAuthority->id;
@@ -179,7 +179,7 @@ class UserSeeder extends Seeder
                     $caseworker = $authorityUsers['caseworkers'][array_rand($authorityUsers['caseworkers'])];
                     $assignedAuthorities[] = $caseworker;
 
-                    if (!isset($familyAuthorities[$family->id])) {
+                    if (! isset($familyAuthorities[$family->id])) {
                         $familyAuthorities[$family->id] = [];
                     }
                     $familyAuthorities[$family->id][] = $caseworker->id;
@@ -198,8 +198,8 @@ class UserSeeder extends Seeder
         // Create some additional standalone approved users (not part of families)
         for ($i = 1; $i <= 10; $i++) {
             $user = User::factory()->create([
-                'name' => 'Approved User #' . $i,
-                'email' => 'approved' . $i . '@famlink.test',
+                'name' => 'Approved User #'.$i,
+                'email' => 'approved'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null,
             ]);
@@ -207,18 +207,18 @@ class UserSeeder extends Seeder
         }
 
         if ($this->command) {
-            $this->command->info('Created users: ' . User::count() . ' total');
-            $this->command->info('- Admins: ' . User::role('admin')->count());
-            $this->command->info('- Caseworkers: ' . User::role('sagsbehandler')->count());
-            $this->command->info('- Psychiatrists: ' . User::role('psykiater')->count());
-            $this->command->info('- Lawyers: ' . User::role('advokat')->count());
-            $this->command->info('- Witnesses: ' . User::role('vidne')->count());
-            $this->command->info('- Children: ' . User::role('barn')->count());
-            $this->command->info('- Fathers: ' . User::role('far')->count());
-            $this->command->info('- Mothers: ' . User::role('mor')->count());
-            $this->command->info('- Approved users: ' . User::role('approved')->count());
-            $this->command->info('- Temporary users: ' . User::role('temporary')->count());
-            $this->command->info('- Families with complete structure: ' . $families->count());
+            $this->command->info('Created users: '.User::count().' total');
+            $this->command->info('- Admins: '.User::role('admin')->count());
+            $this->command->info('- Caseworkers: '.User::role('sagsbehandler')->count());
+            $this->command->info('- Psychiatrists: '.User::role('psykiater')->count());
+            $this->command->info('- Lawyers: '.User::role('advokat')->count());
+            $this->command->info('- Witnesses: '.User::role('vidne')->count());
+            $this->command->info('- Children: '.User::role('barn')->count());
+            $this->command->info('- Fathers: '.User::role('far')->count());
+            $this->command->info('- Mothers: '.User::role('mor')->count());
+            $this->command->info('- Approved users: '.User::role('approved')->count());
+            $this->command->info('- Temporary users: '.User::role('temporary')->count());
+            $this->command->info('- Families with complete structure: '.$families->count());
         }
     }
 }

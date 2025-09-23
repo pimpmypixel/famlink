@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Event;
 use App\Models\Family;
 use App\Models\Tag;
-use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -353,6 +353,7 @@ class EventSeeder extends Seeder
                 if (! $tag) {
                     $tag = Tag::firstOrCreate(['name' => $tagName]);
                 }
+
                 return $tag->id;
             })->toArray();
             $timelineItem->tags()->attach($tagIds);

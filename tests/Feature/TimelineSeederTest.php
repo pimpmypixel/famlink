@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Family;
 use App\Models\Event;
+use App\Models\Family;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -48,8 +48,8 @@ describe('Timeline Seeder Requirements', function () {
                 "Family {$family->name} should have a designated social worker"
             );
 
-            $this->assertTrue($family->socialWorker->hasRole('myndighed'),
-                "Designated social worker {$family->socialWorker->name} for family {$family->name} should have 'myndighed' role"
+            $this->assertTrue($family->socialWorker->hasRole('sagsbehandler'),
+                "Designated social worker {$family->socialWorker->name} for family {$family->name} should have 'sagsbehandler' role"
             );
         }
     });
@@ -61,9 +61,9 @@ describe('Timeline Seeder Requirements', function () {
             $designatedSocialWorker = $family->socialWorker;
 
             if ($designatedSocialWorker) {
-                // Verify the social worker has the 'myndighed' role
-                $this->assertTrue($designatedSocialWorker->hasRole('myndighed'),
-                    "Designated social worker {$designatedSocialWorker->name} should have 'myndighed' role"
+                // Verify the social worker has the 'sagsbehandler' role
+                $this->assertTrue($designatedSocialWorker->hasRole('sagsbehandler'),
+                    "Designated social worker {$designatedSocialWorker->name} should have 'sagsbehandler' role"
                 );
 
                 // Note: Social workers can work with multiple families, so family_id is not set

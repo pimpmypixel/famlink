@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Family;
 use App\Models\Event;
+use App\Models\Family;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;

@@ -57,7 +57,7 @@ RETNINGSLINJER:
         $customInstructions = $context->getState('custom_instructions');
         if ($customInstructions) {
             // Replace the system message with custom instructions
-            if (!empty($inputMessages) && isset($inputMessages[0]['role']) && $inputMessages[0]['role'] === 'system') {
+            if (! empty($inputMessages) && isset($inputMessages[0]['role']) && $inputMessages[0]['role'] === 'system') {
                 $inputMessages[0]['content'] = $customInstructions;
             }
         }

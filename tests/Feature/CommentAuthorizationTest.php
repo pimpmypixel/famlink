@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Comment;
-use App\Models\Family;
 use App\Models\Event;
+use App\Models\Family;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role as SpatieRole;
@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 describe('Comment Authorization', function () {
     beforeEach(function () {
         // Ensure roles exist for testing
-        SpatieRole::firstOrCreate(['name' => 'myndighed']);
+        SpatieRole::firstOrCreate(['name' => 'sagsbehandler']);
         SpatieRole::firstOrCreate(['name' => 'far']);
         SpatieRole::firstOrCreate(['name' => 'mor']);
         SpatieRole::firstOrCreate(['name' => 'admin']);
@@ -44,7 +44,7 @@ describe('Comment Authorization', function () {
         it('allows social workers to comment on any timeline item', function () {
             $family = Family::factory()->create();
             $socialWorker = User::factory()->create();
-            $socialWorker->assignRole('myndighed');
+            $socialWorker->assignRole('sagsbehandler');
 
             $timelineItem = Event::factory()->create([
                 'family_id' => $family->id,

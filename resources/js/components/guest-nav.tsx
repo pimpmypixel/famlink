@@ -16,9 +16,9 @@ export default function GuestNav() {
             </Link>
             <div className="flex items-center gap-6">
                 <div className="hidden md:flex items-center space-x-6 text-sm">
-                    <Link href="/about" className={`font-medium transition-colors ${isActive('/about') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>{__('welcome.header.about')}</Link>
                     <Link href="/services" className={`font-medium transition-colors ${isActive('/services') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>{__('welcome.header.services')}</Link>
                     <Link href="/help" className={`font-medium transition-colors ${isActive('/help') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>{__('welcome.header.help')}</Link>
+                    <Link href="/about" className={`font-medium transition-colors ${isActive('/about') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>{__('welcome.header.about')}</Link>
                     <Link href="/contact" className={`font-medium transition-colors ${isActive('/contact') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>{__('welcome.header.contact')}</Link>
                 </div>
                 <Link

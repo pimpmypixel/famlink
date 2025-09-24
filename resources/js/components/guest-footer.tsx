@@ -9,7 +9,7 @@ export default function GuestFooter() {
                     {/* Contact Information */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 text-white">{__('welcome.footer.contact.title')}</h3>
-                        <div className="space-y-3 text-slate-300">
+                        <div className="space-y-3 text-slate-300 text-sm">
                             <div>
                                 <p className="font-medium">{__('welcome.footer.contact.family_link_support')}</p>
                                 <p>{__('welcome.footer.contact.phone')}</p>
@@ -30,7 +30,7 @@ export default function GuestFooter() {
                     {/* Services */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 text-white">{__('welcome.footer.services.title')}</h3>
-                        <ul className="space-y-2 text-slate-300">
+                        <ul className="space-y-2 text-slate-300 text-sm">
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.services.family_counseling')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.services.conflict_management')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.services.parental_authority')}</a></li>
@@ -43,7 +43,7 @@ export default function GuestFooter() {
                     {/* Information */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 text-white">{__('welcome.footer.information.title')}</h3>
-                        <ul className="space-y-2 text-slate-300">
+                        <ul className="space-y-2 text-slate-300 text-sm">
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.information.about_family_link')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.information.news_press')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.information.statistics_reports')}</a></li>
@@ -56,7 +56,7 @@ export default function GuestFooter() {
                     {/* Emergency & Legal */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 text-white">{__('welcome.footer.emergency.title')}</h3>
-                        <ul className="space-y-2 text-slate-300">
+                        <ul className="space-y-2 text-slate-300 text-sm">
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.emergency.child_exposure')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.emergency.domestic_violence')}</a></li>
                             <li><a href="#" className="hover:text-white transition-colors">{__('welcome.footer.emergency.suicidal_thoughts')}</a></li>
@@ -135,7 +135,7 @@ export default function GuestFooter() {
                     {/* Bottom Footer */}
                     <div className="border-t border-slate-700 pt-6">
                         <div className="flex flex-col md:flex-row justify-between items-center">
-                            <div className="text-sm text-slate-400 mb-4 md:mb-0">
+                            <div className="text-[0.6em] text-slate-400 mb-4 md:mb-0">
                                 <p>{__('welcome.footer.bottom.copyright')}</p>
                                 <p>{__('welcome.footer.bottom.governed_by')}</p>
                             </div>

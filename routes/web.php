@@ -7,33 +7,15 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-// Route testing routes (for debugging)
-Route::get('/debug/routes', [App\Http\Controllers\RouteTestController::class, 'testAllRoutes'])->name('debug.routes');
-Route::get('/debug/routes/{method}/{path}', [App\Http\Controllers\RouteTestController::class, 'testSpecificRoute'])
-    ->name('debug.routes.specific')
-    ->where('path', '.*');
-
 // Guest onboarding route
 Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');
 })->name('onboarding');
 
-// Onboarding API routes
-Route::middleware(['web'])->prefix('api/onboarding')->group(function () {
-    Route::get('question', [App\Http\Controllers\OnboardingController::class, 'getQuestion']);
-    Route::post('answer', [App\Http\Controllers\OnboardingController::class, 'submitAnswer']);
-    Route::get('stream/{sessionId}', [App\Http\Controllers\OnboardingController::class, 'streamAnswer']);
-    Route::post('approve/{userId}', [App\Http\Controllers\OnboardingController::class, 'approveUser']);
-});
-
-// Web Tinker route (unauthenticated for development)
-Route::middleware([
-    Illuminate\Cookie\Middleware\EncryptCookies::class,
-    Illuminate\Session\Middleware\StartSession::class,
-])->group(function () {
-    Route::get('/tinker', [Spatie\WebTinker\Http\Controllers\WebTinkerController::class, 'index'])->name('web-tinker');
-    Route::post('/tinker', [Spatie\WebTinker\Http\Controllers\WebTinkerController::class, 'execute']);
-});
+// Email verification route
+Route::get('/email/verify/{user}', [App\Http\Controllers\EmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('email.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('userguide', [App\Http\Controllers\UserguideController::class, 'index'])->name('userguide');
@@ -56,11 +38,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Comment routes
-    Route::post('timeline/{timelineItemId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
+    Route::post('timeline/{eventId}/comments', [App\Http\Controllers\CommentController::class, 'store'])->name('timeline.comments.store');
 
     // File upload routes
-    Route::post('timeline/{timelineItemId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
-    Route::delete('timeline/{timelineItemId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
+    Route::post('timeline/{eventId}/upload', [App\Http\Controllers\FileUploadController::class, 'upload'])->name('timeline.upload');
+    Route::delete('timeline/{eventId}/attachment/{attachmentId}', [App\Http\Controllers\FileUploadController::class, 'delete'])->name('timeline.attachment.delete');
 
     // Vizra Agent API routes
     Route::get('api/vizra/{agentName}/messages', [App\Http\Controllers\Api\VizraAgentController::class, 'getMessages'])->name('api.vizra.messages');

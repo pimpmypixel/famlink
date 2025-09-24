@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Timeline } from "@/components/timeline/timeline"
 import { AddItemModal } from "@/components/timeline/add-item-modal"
-import type { User, TimelineItem } from "@/lib/types"
+import type { User, Event } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { usePage } from "@inertiajs/react"
@@ -15,11 +15,11 @@ export default function Home() {
     role: (auth.user.role as User['role']) ?? "andet", // fallback if role is missing
   })
   // const [currentUser, setCurrentUser] = useState<User>(mockUsers[0])
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([])
+  const [timelineItems, setTimelineItems] = useState<Event[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  const handleAddItem = (newItemData: Omit<TimelineItem, "id" | "timestamp">) => {
-    const newItem: TimelineItem = {
+  const handleAddItem = (newItemData: Omit<Event, "id" | "timestamp">) => {
+    const newItem: Event = {
       ...newItemData,
       id: Date.now().toString(),
       timestamp: new Date(`${newItemData.date}T12:00:00`).getTime(),

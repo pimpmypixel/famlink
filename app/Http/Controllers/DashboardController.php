@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Event;
 use App\Models\Family;
-use App\Models\TimelineItem;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -23,7 +23,7 @@ class DashboardController extends Controller
                 $stats = [
                     'users_count' => User::count(),
                     'families_count' => Family::count(),
-                    'timeline_items_count' => TimelineItem::count(),
+                    'timeline_items_count' => Event::count(),
                     'comments_count' => Comment::count(),
                     'average_session_time' => 'N/A',
                 ];
@@ -41,7 +41,7 @@ class DashboardController extends Controller
                             'family_name' => $impersonatableUser->family?->name,
                         ];
                     });
-            } elseif ($user->hasRole('myndighed')) {
+            } elseif ($user->hasRole('sagsbehandler')) {
                 // Social worker stats - specific to their families
                 $families = Family::where('created_by', $user->id)->get();
                 $familyIds = $families->pluck('id');
@@ -49,7 +49,7 @@ class DashboardController extends Controller
                 $stats = [
                     'users_count' => User::whereIn('family_id', $familyIds)->count(),
                     'families_count' => $families->count(),
-                    'timeline_items_count' => TimelineItem::whereIn('family_id', $familyIds)->count(),
+                    'timeline_items_count' => Event::whereIn('family_id', $familyIds)->count(),
                     'comments_count' => Comment::whereHas('timelineItem', function ($query) use ($familyIds) {
                         $query->whereIn('family_id', $familyIds);
                     })->count(),
@@ -57,7 +57,7 @@ class DashboardController extends Controller
                 ];
 
                 // Get timeline cases for this social worker
-                $timelineCases = TimelineItem::with(['user', 'family'])
+                $timelineCases = Event::with(['user', 'family'])
                     ->whereIn('family_id', $familyIds)
                     ->orderBy('created_at', 'desc')
                     ->get()

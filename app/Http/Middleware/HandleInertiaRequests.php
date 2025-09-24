@@ -76,6 +76,9 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'isImpersonating' => $user && session()->has('impersonated_by'),
             'impersonatableUsers' => $impersonatableUsers,
+            'translations' => [
+                'messages' => include lang_path(app()->getLocale().'/messages.php'),
+            ],
         ];
     }
 }

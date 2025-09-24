@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +36,7 @@ class FileVectorizationService
     /**
      * Process an uploaded file and create vector embeddings for semantic search
      */
-    public function processUploadedFile(array $attachment, TimelineItem $timelineItem): bool
+    public function processUploadedFile(array $attachment, Event $timelineItem): bool
     {
         try {
             $filePath = $attachment['path'];
@@ -179,10 +179,13 @@ class FileVectorizationService
     /**
      * Create vector embeddings for the extracted text content
      */
-    protected function createVectorEmbeddings(string $textContent, array $attachment, TimelineItem $timelineItem): void
+    protected function createVectorEmbeddings(string $textContent, array $attachment, Event $timelineItem): void
     {
         $user = $timelineItem->user;
         $agentName = "user_{$user->id}_file_processor";
+
+        // Use FileAnalysisAgent class for vector operations
+        $agentClass = \App\Agents\FileAnalysisAgent::class;
 
         // Chunk the content for better vectorization
         $chunks = $this->chunkText($textContent);
@@ -203,18 +206,26 @@ class FileVectorizationService
             ];
 
             // Store in vector memory using correct API
-            $this->vectorManager->store(
-                $chunk,
-                $metadata
-            );
+            $this->vectorManager->addChunk($agentClass, [
+                'content' => $chunk,
+                'metadata' => $metadata,
+                'namespace' => 'uploaded_files',
+                'source' => 'timeline_attachment',
+                'source_id' => $timelineItem->id.'_'.$index,
+                'chunk_index' => $index,
+            ]);
         }
 
         // Also store a summary entry for the entire file
         $summary = $this->generateFileSummary($textContent, $attachment);
-        $this->vectorManager->store(
-            $summary,
-            array_merge($metadata, ['chunk_index' => -1, 'is_summary' => true])
-        );
+        $this->vectorManager->addChunk($agentClass, [
+            'content' => $summary,
+            'metadata' => array_merge($metadata, ['chunk_index' => -1, 'is_summary' => true]),
+            'namespace' => 'uploaded_files',
+            'source' => 'timeline_attachment',
+            'source_id' => $timelineItem->id.'_summary',
+            'chunk_index' => -1,
+        ]);
     }
 
     /**
@@ -275,30 +286,39 @@ class FileVectorizationService
         float $threshold = 0.7
     ): array {
         try {
+            // Use FileAnalysisAgent class for search
+            $agentClass = \App\Agents\FileAnalysisAgent::class;
+
             // Build search filters
-            $filters = [
-                'source_type' => 'uploaded_file',
+            $searchParams = [
+                'query' => $query,
+                'namespace' => 'uploaded_files',
                 'limit' => $limit,
                 'threshold' => $threshold,
             ];
 
-            if ($familyId) {
-                $filters['family_id'] = $familyId;
-            }
+            $results = $this->vectorManager->search($agentClass, $searchParams);
 
-            $results = $this->vectorManager->search($query, $filters);
+            // Filter by family_id if provided (since VectorMemoryManager doesn't support this directly)
+            if ($familyId) {
+                $results = $results->filter(function ($result) use ($familyId) {
+                    $metadata = $result->metadata ?? [];
+
+                    return ($metadata['family_id'] ?? null) === $familyId;
+                });
+            }
 
             // Format results for the tool
             $formattedResults = [];
             foreach ($results as $result) {
-                $metadata = $result['metadata'] ?? [];
+                $metadata = $result->metadata ?? [];
 
                 $formattedResults[] = [
                     'file_name' => $metadata['file_name'] ?? 'Unknown',
                     'file_path' => $metadata['file_path'] ?? '',
                     'timeline_item_id' => $metadata['timeline_item_id'] ?? '',
-                    'similarity_score' => $result['score'] ?? 0,
-                    'content_preview' => substr($result['content'] ?? '', 0, 300),
+                    'similarity_score' => $result->similarity ?? 0,
+                    'content_preview' => substr($result->content ?? '', 0, 300),
                     'uploaded_at' => $metadata['uploaded_at'] ?? '',
                     'chunk_info' => [
                         'index' => $metadata['chunk_index'] ?? 0,
@@ -328,13 +348,23 @@ class FileVectorizationService
     public function getUserFiles(User $user): array
     {
         try {
-            $results = $this->vectorManager->search('', [
-                'source_type' => 'uploaded_file',
-                'user_id' => $user->id,
+            // Use FileAnalysisAgent class for search
+            $agentClass = \App\Agents\FileAnalysisAgent::class;
+
+            $results = $this->vectorManager->search($agentClass, [
+                'query' => '', // Empty query to get all
+                'namespace' => 'uploaded_files',
                 'limit' => 100,
             ]);
 
-            return $results->toArray();
+            // Filter by user_id
+            $userFiles = $results->filter(function ($result) use ($user) {
+                $metadata = $result->metadata ?? [];
+
+                return ($metadata['user_id'] ?? null) == $user->id;
+            });
+
+            return $userFiles->toArray();
         } catch (\Exception $e) {
             Log::error("Error getting user files: {$e->getMessage()}", [
                 'user_id' => $user->id,

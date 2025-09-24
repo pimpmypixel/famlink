@@ -26,7 +26,7 @@ class Comment extends Model
 
     public function timelineItem()
     {
-        return $this->belongsTo(TimelineItem::class);
+        return $this->belongsTo(Event::class, 'timeline_item_id');
     }
 
     public function user()

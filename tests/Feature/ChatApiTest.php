@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Models\Family;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +16,7 @@ describe('Chat API Routes', function () {
 
     test('returns 401 for unauthenticated POST /api/chat/message', function () {
         $response = $this->postJson('/api/chat/message', [
-            'message' => 'Test message'
+            'message' => 'Test message',
         ]);
 
         $response->assertStatus(401);
@@ -36,41 +35,41 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->getJson('/api/chat/messages');
+                ->getJson('/api/chat/messages');
 
             $response->assertStatus(200)
-                    ->assertJsonStructure([
-                        'messages',
-                        'session_id'
-                    ])
-                    ->assertJsonFragment([
-                        'role' => 'assistant'
-                    ]);
+                ->assertJsonStructure([
+                    'messages',
+                    'session_id',
+                ])
+                ->assertJsonFragment([
+                    'role' => 'assistant',
+                ]);
 
             $responseData = $response->json();
             expect($responseData['messages'][0]['content'])->toContain('Som administrator');
         });
 
         test('returns welcome message for authority user', function () {
-            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'myndighed', 'guard_name' => 'web']);
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'sagsbehandler', 'guard_name' => 'web']);
 
             $authorityUser = User::factory()->create([
                 'name' => 'Authority User',
                 'email' => 'authority@famlink.test',
                 'password' => Hash::make('password'),
             ]);
-            $authorityUser->assignRole('myndighed');
+            $authorityUser->assignRole('sagsbehandler');
 
             $response = $this->actingAs($authorityUser)
-                            ->getJson('/api/chat/messages');
+                ->getJson('/api/chat/messages');
 
             $response->assertStatus(200)
-                    ->assertJsonFragment([
-                        'role' => 'assistant'
-                    ]);
+                ->assertJsonFragment([
+                    'role' => 'assistant',
+                ]);
 
             $responseData = $response->json();
-            expect($responseData['messages'][0]['content'])->toContain('Som myndighedsperson');
+            expect($responseData['messages'][0]['content'])->toContain('Som sagsbehandler');
         });
 
         test('returns welcome message for parent user', function () {
@@ -84,12 +83,12 @@ describe('Chat API Routes', function () {
             $parentUser->assignRole('far');
 
             $response = $this->actingAs($parentUser)
-                            ->getJson('/api/chat/messages');
+                ->getJson('/api/chat/messages');
 
             $response->assertStatus(200)
-                    ->assertJsonFragment([
-                        'role' => 'assistant'
-                    ]);
+                ->assertJsonFragment([
+                    'role' => 'assistant',
+                ]);
 
             $responseData = $response->json();
             expect($responseData['messages'][0]['content'])->toContain('Som forælder');
@@ -106,13 +105,13 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->getJson('/api/chat/messages');
+                ->getJson('/api/chat/messages');
 
             $response->assertStatus(200)
-                    ->assertJsonStructure([
-                        'messages',
-                        'session_id'
-                    ]);
+                ->assertJsonStructure([
+                    'messages',
+                    'session_id',
+                ]);
 
             $responseData = $response->json();
             expect($responseData['session_id'])->toBeString();
@@ -133,31 +132,31 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Hello from admin'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Hello from admin',
+                ]);
 
             $response->assertStatus(200)
-                    ->assertJsonStructure([
-                        'response',
-                        'session_id'
-                    ]);
+                ->assertJsonStructure([
+                    'response',
+                    'session_id',
+                ]);
         });
 
         test('accepts valid message from authority user', function () {
-            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'myndighed', 'guard_name' => 'web']);
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'sagsbehandler', 'guard_name' => 'web']);
 
             $authorityUser = User::factory()->create([
                 'name' => 'Authority User',
                 'email' => 'authority@famlink.test',
                 'password' => Hash::make('password'),
             ]);
-            $authorityUser->assignRole('myndighed');
+            $authorityUser->assignRole('sagsbehandler');
 
             $response = $this->actingAs($authorityUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Hello from authority'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Hello from authority',
+                ]);
 
             $response->assertStatus(200);
         });
@@ -173,9 +172,9 @@ describe('Chat API Routes', function () {
             $parentUser->assignRole('far');
 
             $response = $this->actingAs($parentUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Hello from parent'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Hello from parent',
+                ]);
 
             $response->assertStatus(200);
         });
@@ -191,10 +190,10 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', []);
+                ->postJson('/api/chat/message', []);
 
             $response->assertStatus(422)
-                    ->assertJsonValidationErrors(['message']);
+                ->assertJsonValidationErrors(['message']);
         });
 
         test('validates message length', function () {
@@ -210,12 +209,12 @@ describe('Chat API Routes', function () {
             $longMessage = str_repeat('a', 2001);
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => $longMessage
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => $longMessage,
+                ]);
 
             $response->assertStatus(422)
-                    ->assertJsonValidationErrors(['message']);
+                ->assertJsonValidationErrors(['message']);
         });
 
         test('accepts session_id parameter', function () {
@@ -231,15 +230,15 @@ describe('Chat API Routes', function () {
             $sessionId = 'test_session_123';
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Test with session',
-                                'session_id' => $sessionId
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Test with session',
+                    'session_id' => $sessionId,
+                ]);
 
             $response->assertStatus(200)
-                    ->assertJsonFragment([
-                        'session_id' => $sessionId
-                    ]);
+                ->assertJsonFragment([
+                    'session_id' => $sessionId,
+                ]);
         });
 
     });
@@ -260,27 +259,27 @@ describe('Chat API Routes', function () {
             // We can't easily test the internal agent context, but we can verify
             // the response structure and that no errors occur
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Admin test message'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Admin test message',
+                ]);
 
             $response->assertStatus(200);
         });
 
         test('provides authority context to CustomerSupportAgent', function () {
-            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'myndighed', 'guard_name' => 'web']);
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'sagsbehandler', 'guard_name' => 'web']);
 
             $authorityUser = User::factory()->create([
                 'name' => 'Authority User',
                 'email' => 'authority@famlink.test',
                 'password' => Hash::make('password'),
             ]);
-            $authorityUser->assignRole('myndighed');
+            $authorityUser->assignRole('sagsbehandler');
 
             $response = $this->actingAs($authorityUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Authority test message'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Authority test message',
+                ]);
 
             $response->assertStatus(200);
         });
@@ -296,9 +295,9 @@ describe('Chat API Routes', function () {
             $parentUser->assignRole('far');
 
             $response = $this->actingAs($parentUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Parent test message'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Parent test message',
+                ]);
 
             $response->assertStatus(200);
         });
@@ -319,24 +318,24 @@ describe('Chat API Routes', function () {
 
             // First message
             $response1 = $this->actingAs($adminUser)
-                             ->postJson('/api/chat/message', [
-                                 'message' => 'First message'
-                             ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'First message',
+                ]);
 
             $response1->assertStatus(200);
             $sessionId = $response1->json()['session_id'];
 
             // Second message with same session
             $response2 = $this->actingAs($adminUser)
-                             ->postJson('/api/chat/message', [
-                                 'message' => 'Second message',
-                                 'session_id' => $sessionId
-                             ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Second message',
+                    'session_id' => $sessionId,
+                ]);
 
             $response2->assertStatus(200)
-                     ->assertJsonFragment([
-                         'session_id' => $sessionId
-                     ]);
+                ->assertJsonFragment([
+                    'session_id' => $sessionId,
+                ]);
         });
 
         test('creates new session when none provided', function () {
@@ -350,9 +349,9 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'New session message'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'New session message',
+                ]);
 
             $response->assertStatus(200);
 
@@ -378,9 +377,9 @@ describe('Chat API Routes', function () {
             // This test would need to mock agent failures
             // For now, we verify that the endpoint doesn't crash
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'Test message'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'Test message',
+                ]);
 
             $response->assertStatus(200);
         });
@@ -412,15 +411,15 @@ describe('Chat API Routes', function () {
             $adminUser->assignRole('admin');
 
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'JSON response test'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'JSON response test',
+                ]);
 
             $response->assertStatus(200)
-                    ->assertJsonStructure([
-                        'response',
-                        'session_id'
-                    ]);
+                ->assertJsonStructure([
+                    'response',
+                    'session_id',
+                ]);
 
             // Check that response is JSON (not streaming)
             expect($response->headers->get('Content-Type'))->toBe('application/json');
@@ -443,9 +442,9 @@ describe('Chat API Routes', function () {
             // Since we excluded /api/chat/* from CSRF protection,
             // these requests should work without CSRF tokens
             $response = $this->actingAs($adminUser)
-                            ->postJson('/api/chat/message', [
-                                'message' => 'CSRF test'
-                            ]);
+                ->postJson('/api/chat/message', [
+                    'message' => 'CSRF test',
+                ]);
 
             $response->assertStatus(200);
         });

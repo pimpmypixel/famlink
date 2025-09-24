@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { RefreshCw, Mail, CheckCircle } from 'lucide-react';
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
+import { __ } from '@/lib/translations';
 
 interface Question {
   key: string;
@@ -18,7 +19,7 @@ interface Message {
 
 export default function Onboarding() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, sender: 'system', text: 'Velkommen til Famlink! Lad os komme i gang med en personlig onboarding oplevelse.', timestamp: new Date() }
+    { id: 1, sender: 'system', text: __('onboarding.welcome_message'), timestamp: new Date() }
   ]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string>('');
@@ -57,7 +58,7 @@ export default function Onboarding() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start onboarding');
+        throw new Error(__('onboarding.error_start_onboarding'));
       }
 
       // Check if response is JSON (completion) or event-stream
@@ -69,7 +70,7 @@ export default function Onboarding() {
           setMessages(prev => [...prev, {
             id: Date.now(),
             sender: 'assistant',
-            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            text: __('onboarding.completed_message'),
             timestamp: new Date()
           }]);
           showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
@@ -118,7 +119,7 @@ export default function Onboarding() {
                     setMessages(prev => [...prev, {
                       id: Date.now(),
                       sender: 'assistant',
-                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+                      text: __('onboarding.completed_message'),
                       timestamp: new Date()
                     }]);
                     // Show toast notification
@@ -153,7 +154,7 @@ export default function Onboarding() {
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
-        text: 'Sorry, there was an error starting the onboarding process. Please try again.',
+        text: __('onboarding.error_start'),
         timestamp: new Date()
       }]);
     } finally {
@@ -173,7 +174,7 @@ export default function Onboarding() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to resume onboarding');
+        throw new Error(__('onboarding.error_resume_onboarding'));
       }
 
       // Check if response is JSON (completion) or event-stream
@@ -185,7 +186,7 @@ export default function Onboarding() {
           setMessages(prev => [...prev, {
             id: Date.now(),
             sender: 'assistant',
-            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            text: __('onboarding.completed_message'),
             timestamp: new Date()
           }]);
           showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
@@ -234,7 +235,7 @@ export default function Onboarding() {
                     setMessages(prev => [...prev, {
                       id: Date.now(),
                       sender: 'assistant',
-                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+                      text: __('onboarding.completed_message'),
                       timestamp: new Date()
                     }]);
                     // Show toast notification
@@ -269,7 +270,7 @@ export default function Onboarding() {
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
-        text: 'Sorry, there was an error resuming your onboarding session. Starting fresh...',
+        text: __('onboarding.error_resume'),
         timestamp: new Date()
       }]);
       // Fallback to starting new session
@@ -332,7 +333,7 @@ export default function Onboarding() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit answer');
+        throw new Error(errorData.error || __('onboarding.error_submit_answer'));
       }
 
       await response.json();
@@ -350,7 +351,7 @@ export default function Onboarding() {
       setMessages(prev => [...prev, {
         id: Date.now(),
         sender: 'system',
-        text: `Error: ${error instanceof Error ? error.message : 'Failed to submit answer'}`,
+        text: `__('onboarding.error_prefix') ${error instanceof Error ? error.message : __('onboarding.error_submit_answer')}`,
         timestamp: new Date()
       }]);
     } finally {
@@ -369,7 +370,7 @@ export default function Onboarding() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get next question');
+        throw new Error(__('onboarding.error_get_next_question'));
       }
 
       // Check if response is JSON (completion) or event-stream
@@ -381,7 +382,7 @@ export default function Onboarding() {
           setMessages(prev => [...prev, {
             id: Date.now(),
             sender: 'assistant',
-            text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            text: __('onboarding.completed_message'),
             timestamp: new Date()
           }]);
           showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
@@ -427,7 +428,7 @@ export default function Onboarding() {
                     setMessages(prev => [...prev, {
                       id: Date.now(),
                       sender: 'assistant',
-                      text: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+                      text: __('onboarding.completed_message'),
                       timestamp: new Date()
                     }]);
                     // Show toast notification
@@ -610,7 +611,7 @@ export default function Onboarding() {
                   disabled={isLoading || !input.trim()}
                   className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
-                  {isLoading ? 'Sending...' : 'Send'}
+                  {isLoading ? __('onboarding.sending') : __('onboarding.send')}
                 </button>
               </form>
 

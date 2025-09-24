@@ -28,7 +28,8 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'family_id',
@@ -62,6 +63,24 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute(): string
+    {
+        return trim($this->first_name.' '.$this->last_name);
+    }
+
+    /**
+     * Set the user's first and last name from a full name.
+     */
+    public function setNameAttribute(string $value): void
+    {
+        $parts = explode(' ', $value, 2);
+        $this->first_name = $parts[0] ?? '';
+        $this->last_name = $parts[1] ?? '';
+    }
+
+    /**
      * Get the family that the user belongs to.
      */
     public function family(): BelongsTo
@@ -74,7 +93,7 @@ class User extends Authenticatable
      */
     public function timelineItems(): HasMany
     {
-        return $this->hasMany(TimelineItem::class);
+        return $this->hasMany(Event::class);
     }
 
     /**

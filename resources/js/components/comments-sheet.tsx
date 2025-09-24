@@ -1,12 +1,12 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { TimelineItem } from "@/lib/types";
+import { Event } from "@/lib/types";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { CommentItem, CommentType, ReplyForm } from "./comment-item";
 
 export interface CommentsSheetProps {
-  item: TimelineItem;
+  item: Event;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   comments: CommentType[];
@@ -48,7 +48,7 @@ export function CommentsSheet({ item, open, onOpenChange, comments, onAddComment
           <SheetTitle>Kommentarer for {item.title}</SheetTitle>
           <SheetDescription>Se og tilføj kommentarer til dette timeline element</SheetDescription>
         </SheetHeader>
-        
+
         {/* Header with scaled down elements */}
         <div className="border-b bg-white p-4">
           <div className="flex items-center justify-between mb-2">

@@ -52,6 +52,7 @@
         "concurrently": "^9.0.1",
         "globals": "^15.14.0",
         "laravel-vite-plugin": "^2.0",
+        "ldrs": "^1.1.7",
         "lucide-react": "^0.475.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",

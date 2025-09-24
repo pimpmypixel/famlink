@@ -16,13 +16,6 @@ class FamilySeeder extends Seeder
     {
         // Create 50 diverse families with Danish names and child names
         $familyData = [
-            // Original families
-            ['name' => 'Smith', 'child_name' => 'Sandy'],
-            ['name' => 'Johnson', 'child_name' => 'Dakota'],
-            ['name' => 'Williams', 'child_name' => 'Taylor'],
-            ['name' => 'Brown', 'child_name' => 'Morgan'],
-            ['name' => 'Jones', 'child_name' => 'Casey'],
-
             // Danish families
             ['name' => 'Hansen', 'child_name' => 'Freja'],
             ['name' => 'Jensen', 'child_name' => 'Oliver'],
@@ -48,40 +41,40 @@ class FamilySeeder extends Seeder
             ['name' => 'Mortensen', 'child_name' => 'Axel'],
 
             // Additional families
-            ['name' => 'Dam', 'child_name' => 'Isabella'],
-            ['name' => 'Holm', 'child_name' => 'Liam'],
-            ['name' => 'Jakobsen', 'child_name' => 'Maja'],
-            ['name' => 'Eriksen', 'child_name' => 'Emil'],
-            ['name' => 'Andreasen', 'child_name' => 'Olivia'],
-            ['name' => 'Karlsen', 'child_name' => 'Benjamin'],
-            ['name' => 'Frandsen', 'child_name' => 'Anna'],
-            ['name' => 'Lauridsen', 'child_name' => 'Alexander'],
-            ['name' => 'Lund', 'child_name' => 'Caroline'],
-            ['name' => 'Bertelsen', 'child_name' => 'Sebastian'],
+            // ['name' => 'Dam', 'child_name' => 'Isabella'],
+            // ['name' => 'Holm', 'child_name' => 'Liam'],
+            // ['name' => 'Jakobsen', 'child_name' => 'Maja'],
+            // ['name' => 'Eriksen', 'child_name' => 'Emil'],
+            // ['name' => 'Andreasen', 'child_name' => 'Olivia'],
+            // ['name' => 'Karlsen', 'child_name' => 'Benjamin'],
+            // ['name' => 'Frandsen', 'child_name' => 'Anna'],
+            // ['name' => 'Lauridsen', 'child_name' => 'Alexander'],
+            // ['name' => 'Lund', 'child_name' => 'Caroline'],
+            // ['name' => 'Bertelsen', 'child_name' => 'Sebastian'],
 
-            // More families for comprehensive testing
-            ['name' => 'Kjær', 'child_name' => 'Victoria'],
-            ['name' => 'Bjerg', 'child_name' => 'Magnus'],
-            ['name' => 'Fischer', 'child_name' => 'Josefine'],
-            ['name' => 'Sørensen', 'child_name' => 'Valdemar'],
-            ['name' => 'Gregersen', 'child_name' => 'Mathilde'],
-            ['name' => 'Hedegaard', 'child_name' => 'Christian'],
-            ['name' => 'Bach', 'child_name' => 'Rebecca'],
-            ['name' => 'Friis', 'child_name' => 'Nikolaj'],
-            ['name' => 'Søndergaard', 'child_name' => 'Laura'],
-            ['name' => 'Bech', 'child_name' => 'Johan'],
+            // // More families for comprehensive testing
+            // ['name' => 'Kjær', 'child_name' => 'Victoria'],
+            // ['name' => 'Bjerg', 'child_name' => 'Magnus'],
+            // ['name' => 'Fischer', 'child_name' => 'Josefine'],
+            // ['name' => 'Sørensen', 'child_name' => 'Valdemar'],
+            // ['name' => 'Gregersen', 'child_name' => 'Mathilde'],
+            // ['name' => 'Hedegaard', 'child_name' => 'Christian'],
+            // ['name' => 'Bach', 'child_name' => 'Rebecca'],
+            // ['name' => 'Friis', 'child_name' => 'Nikolaj'],
+            // ['name' => 'Søndergaard', 'child_name' => 'Laura'],
+            // ['name' => 'Bech', 'child_name' => 'Johan'],
 
-            // Final batch
-            ['name' => 'Lind', 'child_name' => 'Sarah'],
-            ['name' => 'Koch', 'child_name' => 'Philip'],
-            ['name' => 'Schou', 'child_name' => 'Camilla'],
-            ['name' => 'Vestergaard', 'child_name' => 'Mikkel'],
-            ['name' => 'Buch', 'child_name' => 'Katrine'],
-            ['name' => 'Svendsen', 'child_name' => 'Anders'],
-            ['name' => 'Hald', 'child_name' => 'Signe'],
-            ['name' => 'Beck', 'child_name' => 'Tobias'],
-            ['name' => 'Hermansen', 'child_name' => 'Julie'],
-            ['name' => 'Thygesen', 'child_name' => 'Rasmus'],
+            // // Final batch
+            // ['name' => 'Lind', 'child_name' => 'Sarah'],
+            // ['name' => 'Koch', 'child_name' => 'Philip'],
+            // ['name' => 'Schou', 'child_name' => 'Camilla'],
+            // ['name' => 'Vestergaard', 'child_name' => 'Mikkel'],
+            // ['name' => 'Buch', 'child_name' => 'Katrine'],
+            // ['name' => 'Svendsen', 'child_name' => 'Anders'],
+            // ['name' => 'Hald', 'child_name' => 'Signe'],
+            // ['name' => 'Beck', 'child_name' => 'Tobias'],
+            // ['name' => 'Hermansen', 'child_name' => 'Julie'],
+            // ['name' => 'Thygesen', 'child_name' => 'Rasmus'],
         ];
 
         foreach ($familyData as $fam) {

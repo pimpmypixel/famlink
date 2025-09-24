@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DeleteAttachmentRequest;
 use App\Http\Requests\FileUploadRequest;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Services\FileVectorizationService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,9 +15,9 @@ class FileUploadController extends Controller
         private FileVectorizationService $vectorizationService
     ) {}
 
-    public function upload(FileUploadRequest $request, string $timelineItemId)
+    public function upload(FileUploadRequest $request, string $eventId)
     {
-        $timelineItem = TimelineItem::findOrFail($timelineItemId);
+        $timelineItem = Event::findOrFail($eventId);
 
         $file = $request->file('file');
         $originalName = $file->getClientOriginalName();
@@ -29,7 +29,7 @@ class FileUploadController extends Controller
 
         // Upload to S3 under timeline item folder
         $path = $file->storeAs(
-            "timeline-items/{$timelineItemId}",
+            "timeline-items/{$eventId}",
             $filename,
             's3'
         );
@@ -67,7 +67,7 @@ class FileUploadController extends Controller
             // Log error but don't fail the upload
             \Illuminate\Support\Facades\Log::error('File vectorization failed', [
                 'file' => $originalName,
-                'timeline_item_id' => $timelineItemId,
+                'timeline_item_id' => $eventId,
                 'error' => $e->getMessage(),
             ]);
         }
@@ -75,9 +75,9 @@ class FileUploadController extends Controller
         return back()->with('success', 'File uploaded successfully!');
     }
 
-    public function delete(DeleteAttachmentRequest $request, string $timelineItemId, string $attachmentId)
+    public function delete(DeleteAttachmentRequest $request, string $eventId, string $attachmentId)
     {
-        $timelineItem = TimelineItem::findOrFail($timelineItemId);
+        $timelineItem = Event::findOrFail($eventId);
 
         $attachments = $timelineItem->attachments ?? [];
         $attachmentIndex = collect($attachments)->search(function ($attachment) use ($attachmentId) {

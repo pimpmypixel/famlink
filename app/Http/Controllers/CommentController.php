@@ -3,20 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
-    public function store(Request $request, string $timelineItemId)
+    public function store(Request $request, string $eventId)
     {
         $request->validate([
             'content' => 'required|string|max:1000',
             'parent_comment_id' => 'nullable|string|exists:comments,id',
         ]);
 
-        $timelineItem = TimelineItem::findOrFail($timelineItemId);
+        $timelineItem = Event::findOrFail($eventId);
         $user = Auth::user();
 
         // Check if user can comment on this timeline item
@@ -27,13 +27,13 @@ class CommentController extends Controller
         // If replying to a comment, verify the parent comment belongs to the same timeline item
         if ($request->parent_comment_id) {
             $parentComment = Comment::findOrFail($request->parent_comment_id);
-            if ($parentComment->timeline_item_id !== $timelineItemId) {
+            if ($parentComment->timeline_item_id !== $eventId) {
                 abort(422, 'Invalid parent comment.');
             }
         }
 
         $comment = Comment::create([
-            'timeline_item_id' => $timelineItemId,
+            'timeline_item_id' => $eventId,
             'user_id' => $user->id,
             'content' => $request->input('content'),
             'parent_comment_id' => $request->parent_comment_id,
@@ -42,7 +42,7 @@ class CommentController extends Controller
         return back()->with('success', $request->parent_comment_id ? 'Reply added successfully!' : 'Comment added successfully!');
     }
 
-    private function canCommentOnTimelineItem($user, TimelineItem $timelineItem): bool
+    private function canCommentOnTimelineItem($user, Event $timelineItem): bool
     {
         // Social workers can comment on any timeline item
         if ($user->hasRole('myndighed')) {

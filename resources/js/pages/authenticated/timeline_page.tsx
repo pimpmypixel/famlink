@@ -4,7 +4,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from "react"
 import { Timeline as TimelineComponent } from "@/components/timeline/timeline"
 import { AddItemModal } from "@/components/timeline/add-item-modal"
-import type { User, TimelineItem } from "@/lib/types"
+import type { User, Event } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,7 +17,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface TimelineProps {
-  timelineItems: TimelineItem[];
+  timelineItems: Event[];
   pagination: {
     current_page: number;
     last_page: number;
@@ -49,8 +49,8 @@ export default function TimelinePage({ timelineItems: initialTimelineItems, pagi
     setCurrentPagination(pagination)
   }, [initialTimelineItems, pagination])
 
-  const handleAddItem = (newItemData: Omit<TimelineItem, "id" | "timestamp">) => {
-    const newItem: TimelineItem = {
+  const handleAddItem = (newItemData: Omit<Event, "id" | "timestamp">) => {
+    const newItem: Event = {
       ...newItemData,
       id: Date.now().toString(),
       timestamp: new Date(`${newItemData.date}T12:00:00`).getTime(),
@@ -176,7 +176,7 @@ export default function TimelinePage({ timelineItems: initialTimelineItems, pagi
           user={currentUser}
           onAddClick={() => setIsAddModalOpen(true)}
           onAddFile={(itemId) => {
-            // This will be handled by the TimelineItemComponent's FileUploadModal
+            // This will be handled by the EventComponent's FileUploadModal
             console.log('Add file for item:', itemId)
           }}
         />

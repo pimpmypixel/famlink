@@ -9,8 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Execution\AgentExecutor;
 
 class OnboardingController extends Controller
 {
@@ -19,13 +20,8 @@ class OnboardingController extends Controller
      */
     public function getQuestion(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('OnboardingController::getQuestion called', [
-            'path' => $request->path(),
-            'method' => $request->method(),
-            'environment' => app()->environment(),
-        ]);
         $sessionId = $request->input('session_id') ?: uniqid('onboarding_', true);
-        $isResumed = (bool) $request->input('resumed', false);
+        $isResumed = $request->input('resumed', false);
 
         // Find or create profile for this session
         $profile = Profile::firstOrCreate(
@@ -73,26 +69,11 @@ class OnboardingController extends Controller
                 'answers' => $answers,
                 'session_id' => $sessionId,
                 'completed' => true,
-                'message' => 'Tak for dine svar! Du er nu klar til at bruge Famlink.',
+                'message' => 'Tak for dine svar. Du vil snart modtage en email fra Famlink.',
             ]);
         }
 
         // Use the agent to generate a personalized response with streaming
-        // In testing or local development, return JSON directly instead of streaming
-        if (app()->environment(['testing', 'local'])) {
-            $response = [
-                'question' => $nextQuestion,
-                'answers' => $answers,
-                'session_id' => $sessionId,
-                'completed' => false,
-                'is_resumed' => $isResumed,
-            ];
-
-            \Illuminate\Support\Facades\Log::info('Returning JSON response', ['response' => $response]);
-
-            return response()->json($response);
-        }
-
         return $this->streamAgentResponse($sessionId, $nextQuestion, $answers, $questionList, $isResumed);
     }
 
@@ -136,10 +117,10 @@ class OnboardingController extends Controller
         // Update user information based on the question answered
         $user = $profile->user;
         if ($user) {
-            if ($questionKey === 'name' || $questionKey === 'user_firstname') { // Name question
-                $user->name = $answer;
+            if ($questionKey === 'user_firstname') { // First name question
+                $user->first_name = $answer;
                 $user->save();
-            } elseif ($questionKey === 'email' || $questionKey === 'user_email') { // Email question
+            } elseif ($questionKey === 'user_email') { // Email question
                 // Check if email already exists
                 $existingUser = User::where('email', $answer)->first();
 
@@ -155,7 +136,7 @@ class OnboardingController extends Controller
                         $user->delete();
 
                         // Update the existing temporary user with the new information
-                        $existingUser->name = $profile->answers['name'] ?? $existingUser->name;
+                        $existingUser->first_name = $profile->answers['user_firstname'] ?? $existingUser->first_name;
                         $existingUser->save();
 
                         // Update the user reference for the rest of this method
@@ -254,61 +235,52 @@ class OnboardingController extends Controller
      */
     protected function streamAgentResponse(string $sessionId, array $question, array $answers, array $allQuestions, bool $isResumed = false)
     {
-        return response()->stream(function () use ($sessionId, $question, $answers, $isResumed) {
+        return response()->stream(function () use ($sessionId, $question, $answers, $allQuestions, $isResumed) {
             try {
-                // In testing mode, use fixed text from playbook instead of AI agent
-                if (app()->environment(['testing', 'local'])) {
-                    Log::info('Using fixed test response for question: '.$question['key']);
+                // Find or create profile for this session
+                $profile = Profile::firstOrCreate(
+                    ['session_id' => $sessionId],
+                    ['answers' => []]
+                );
 
-                    // Send initial data
-                    echo 'data: '.json_encode([
-                        'type' => 'start',
-                        'question' => $question,
-                        'answers' => $answers,
-                        'session_id' => $sessionId,
-                        'completed' => false,
-                        'is_resumed' => $isResumed,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
-                    ob_flush();
-                    flush();
+                $user = $profile->user;
 
-                    // Send the fixed question text as a single chunk
-                    $questionText = $question['text'];
-                    echo 'data: '.json_encode([
-                        'type' => 'chunk',
-                        'content' => $questionText,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
-                    ob_flush();
-                    flush();
+                // Determine if this is the first question ever for this session
+                $isFirstQuestionEver = empty($answers);
 
-                    // Send completion
-                    echo 'data: '.json_encode([
-                        'type' => 'complete',
-                        'full_response' => $questionText,
-                        'question' => $question,
-                        'answers' => $answers,
-                        'session_id' => $sessionId,
-                        'is_resumed' => $isResumed,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
-                    ob_flush();
-                    flush();
+                // Build instructions
+                $instructions = $isFirstQuestionEver
+                    ? "Du er Famlinks onboarding-assistent. Dette er det første spørgsmål nogensinde - sig hej, byd velkommen og introducer dig selv. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.'
+                    : "Du er Famlinks onboarding-assistent. Dette er ikke det første spørgsmål - stil kun spørgsmålet uden yderligere hilsener. Stil spørgsmålet på en empatisk måde. Brugeren skal besvare spørgsmål {$question['key']} ud af ".count($allQuestions).'.';
 
-                    return;
+                // Add previous answers as context if available
+                if (! empty($answers)) {
+                    $instructions .= "\n\nTidligere svar: ".json_encode($answers, JSON_UNESCAPED_UNICODE);
                 }
 
-                $agent = new OnboardingAgent;
+                // Add resumption context if this is a resumed session
+                if ($isResumed) {
+                    $instructions .= "\n\nDette er en genoptaget samtale. Brugeren har tidligere besvaret nogle spørgsmål og vender nu tilbage. Vær venlig og hjælpsom, og fortsæt hvor I slap.";
+                }
 
-                // Create context with session data
-                $context = new AgentContext($sessionId);
-                $context->setState('current_question', $question);
-                $context->setState('answers', $answers);
-                $context->setState('is_resumed', $isResumed);
-                $context->setState('is_first_question', empty($answers));
-                $context->setState('user_name', $answers['user_firstname'] ?? $answers['name'] ?? 'der');
+                // Use AgentExecutor for proper persistence
+                $executor = (new AgentExecutor(OnboardingAgent::class, "Stil spørgsmål {$question['key']}: {$question['text']}"))
+                    ->forUser($user)
+                    ->withSession($sessionId)
+                    ->withContext([
+                        'current_question' => $question,
+                        'answers' => $answers,
+                        'is_resumed' => $isResumed,
+                        'progress' => [
+                            'answered' => count($answers),
+                            'total' => count($allQuestions),
+                            'current' => $question['key'],
+                        ],
+                        'custom_instructions' => $instructions,
+                    ]);
 
-                // Get agent response - handle both streaming and non-streaming
-                $prompt = "Stil spørgsmålet på en empatisk måde: {$question['text']}";
-                $response = $agent->execute($prompt, $context);
+                // Execute the agent
+                $response = $executor->go();
 
                 // Send initial data
                 echo 'data: '.json_encode([
@@ -318,7 +290,7 @@ class OnboardingController extends Controller
                     'session_id' => $sessionId,
                     'completed' => false,
                     'is_resumed' => $isResumed,
-                ], JSON_UNESCAPED_UNICODE)."\n\n";
+                ])."\n\n";
                 ob_flush();
                 flush();
 
@@ -332,7 +304,7 @@ class OnboardingController extends Controller
                             echo 'data: '.json_encode([
                                 'type' => 'chunk',
                                 'content' => $chunk['content'],
-                            ], JSON_UNESCAPED_UNICODE)."\n\n";
+                            ])."\n\n";
                             ob_flush();
                             flush();
                         }
@@ -346,7 +318,7 @@ class OnboardingController extends Controller
                         'answers' => $answers,
                         'session_id' => $sessionId,
                         'is_resumed' => $isResumed,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
+                    ])."\n\n";
                     ob_flush();
                     flush();
                 } else {
@@ -357,7 +329,7 @@ class OnboardingController extends Controller
                     echo 'data: '.json_encode([
                         'type' => 'chunk',
                         'content' => $fullResponse,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
+                    ])."\n\n";
                     ob_flush();
                     flush();
 
@@ -369,7 +341,7 @@ class OnboardingController extends Controller
                         'answers' => $answers,
                         'session_id' => $sessionId,
                         'is_resumed' => $isResumed,
-                    ], JSON_UNESCAPED_UNICODE)."\n\n";
+                    ])."\n\n";
                     ob_flush();
                     flush();
                 }
@@ -381,11 +353,6 @@ class OnboardingController extends Controller
                     'question_key' => $question['key'],
                 ]);
 
-                // Check if this is a rate limit error
-                $isRateLimit = str_contains(strtolower($e->getMessage()), 'rate limit') ||
-                              str_contains(strtolower($e->getMessage()), 'quota exceeded') ||
-                              str_contains(strtolower($e->getMessage()), 'too many requests');
-
                 // Send error and fallback
                 echo 'data: '.json_encode([
                     'type' => 'error',
@@ -395,9 +362,7 @@ class OnboardingController extends Controller
                     'answers' => $answers,
                     'session_id' => $sessionId,
                     'is_resumed' => $isResumed,
-                    'is_rate_limit' => $isRateLimit,
-                    'error_message' => $isRateLimit ? 'LLM API call failed: You hit a provider rate limit' : $e->getMessage(),
-                ], JSON_UNESCAPED_UNICODE)."\n\n";
+                ])."\n\n";
                 ob_flush();
                 flush();
             }
@@ -415,24 +380,6 @@ class OnboardingController extends Controller
      */
     protected function loadQuestions(): array
     {
-        // Use test playbook if in testing environment OR if running tests (check for test file existence)
-        if (app()->environment('testing') || file_exists(resource_path('prompts/test-playbook.json'))) {
-            Log::info('Loading test playbook - environment detected as testing or test file exists');
-            $testPlaybook = resource_path('prompts/test-playbook.json');
-            if (file_exists($testPlaybook)) {
-                Log::info('Test playbook file exists at: '.$testPlaybook);
-                $json = file_get_contents($testPlaybook);
-                $data = json_decode($json, true);
-                Log::info('Loaded test questions: '.count($data['questions'] ?? []));
-
-                return $data['questions'] ?? [];
-            } else {
-                Log::error('Test playbook file not found at: '.$testPlaybook);
-            }
-        } else {
-            Log::info('Not in testing environment, current env: '.app()->environment());
-        }
-
         $questions = [];
         $playbook = storage_path('app/onboarding_playbook.json');
         if (file_exists($playbook)) {
@@ -451,8 +398,21 @@ class OnboardingController extends Controller
     protected function sendCompletionEmail(User $user, array $answers): void
     {
         try {
-            Mail::raw(
-                $this->buildCompletionEmailContent($user, $answers),
+            // Generate signed verification URL (valid for 7 days)
+            $verificationUrl = URL::temporarySignedRoute(
+                'email.verify',
+                now()->addDays(7),
+                ['user' => $user->id]
+            );
+
+            Mail::send(
+                'emails.onboarding-completion',
+                [
+                    'user' => $user,
+                    'answers' => $answers,
+                    'verificationUrl' => $verificationUrl,
+                    'controller' => $this,
+                ],
                 function ($message) use ($user) {
                     $message->to($user->email)
                         ->subject('Tak for din onboarding - Velkommen til Famlink!')
@@ -471,51 +431,6 @@ class OnboardingController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * Build completion email content
-     */
-    protected function buildCompletionEmailContent(User $user, array $answers): string
-    {
-        $name = $answers['name'] ?? $answers['user_firstname'] ?? $user->name ?? 'Bruger';
-
-        return "Kære {$name},
-
-Tak for at du har gennemført Famlinks onboarding! 🎉
-
-Vi har modtaget dine svar og er glade for at byde dig velkommen til Famlink. Vi har noteret følgende oplysninger fra din onboarding:
-
-".$this->formatAnswersForEmail($answers).'
-
-Dit næste skridt:
-- Log ind på Famlink for at begynde at bruge platformen
-- Udforsk de forskellige funktioner, der kan hjælpe dig
-- Kontakt os hvis du har spørgsmål
-
-Vi håber, at Famlink kan være til gavn for dig og din situation.
-
-Med venlig hilsen,
-Famlink-teamet
-
----
-Denne email blev sendt automatisk efter gennemført onboarding.';
-    }
-
-    /**
-     * Format answers for email
-     */
-    protected function formatAnswersForEmail(array $answers): string
-    {
-        $formatted = '';
-        foreach ($answers as $key => $answer) {
-            $questionText = $this->getQuestionTextByKey($key);
-            if ($questionText) {
-                $formatted .= "- {$questionText}: {$answer}\n";
-            }
-        }
-
-        return $formatted;
     }
 
     /**

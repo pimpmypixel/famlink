@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Agents\CustomerSupportAgent;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Vizra\VizraADK\System\AgentContext;
+use Vizra\VizraADK\Execution\AgentExecutor;
 
 class ChatController extends Controller
 {
@@ -24,48 +24,52 @@ class ChatController extends Controller
 
         $user = Auth::user();
         $message = $request->input('message');
-        $sessionId = $request->input('session_id') ?: 'chat_' . $user->id . '_' . now()->timestamp;
+        $sessionId = $request->input('session_id') ?: 'chat_'.$user->id.'_'.now()->timestamp;
 
         // Check for onboarding session continuity
         $sessionId = $this->handleSessionContinuity($user, $sessionId);
 
         try {
             // Determine agent based on user role
-            $agent = $this->getAgentForUser($user);
+            $agentClass = $this->getAgentClassForUser($user);
 
-            // Create context with role-based permissions
-            $context = new AgentContext($sessionId);
-            $context->setState('authenticated_user_id', $user->id);
-            $context->setState('user_role', $user->getRoleNames()->first());
-            $context->setState('family_id', $user->family_id);
+            // Use AgentExecutor for proper persistence
+            $executor = (new AgentExecutor($agentClass, $message))
+                ->forUser($user)
+                ->withSession($sessionId)
+                ->withContext([
+                    'authenticated_user_id' => $user->id,
+                    'user_role' => $user->getRoleNames()->first(),
+                    'family_id' => $user->family_id,
+                ]);
 
             // Add role-specific context
-            $this->addRoleContext($context, $user);
+            $this->addRoleContextToExecutor($executor, $user);
 
-            // Execute agent with user message
-            $response = $agent->execute($message, $context);
+            // Execute agent
+            $response = $executor->go();
 
             // Handle streaming response
             if ($response instanceof \Generator) {
-                return response()->stream(function () use ($response, $sessionId, $user) {
+                return response()->stream(function () use ($response, $sessionId) {
                     $fullResponse = '';
                     foreach ($response as $chunk) {
                         if (isset($chunk['content'])) {
                             $fullResponse .= $chunk['content'];
-                            echo 'data: ' . json_encode([
+                            echo 'data: '.json_encode([
                                 'type' => 'chunk',
                                 'content' => $chunk['content'],
-                            ]) . "\n\n";
+                            ])."\n\n";
                             ob_flush();
                             flush();
                         }
                     }
 
-                    echo 'data: ' . json_encode([
+                    echo 'data: '.json_encode([
                         'type' => 'complete',
                         'full_response' => $fullResponse,
                         'session_id' => $sessionId,
-                    ]) . "\n\n";
+                    ])."\n\n";
                     ob_flush();
                     flush();
                 }, 200, [
@@ -91,7 +95,7 @@ class ChatController extends Controller
             // Show detailed error for admin users
             if ($user->hasRole('admin')) {
                 return response()->json([
-                    'error' => 'Chat fejl: ' . $e->getMessage(),
+                    'error' => 'Chat fejl: '.$e->getMessage(),
                     'details' => $e->getTraceAsString(),
                 ], 500);
             }
@@ -108,7 +112,7 @@ class ChatController extends Controller
     public function getMessages(Request $request)
     {
         $user = Auth::user();
-        $sessionId = $request->input('session_id') ?: 'chat_' . $user->id . '_' . now()->timestamp;
+        $sessionId = $request->input('session_id') ?: 'chat_'.$user->id.'_'.now()->timestamp;
 
         try {
             // Get messages from Vizra ADK based on user role
@@ -127,7 +131,7 @@ class ChatController extends Controller
 
             if ($user->hasRole('admin')) {
                 return response()->json([
-                    'error' => 'Fejl ved hentning af beskeder: ' . $e->getMessage(),
+                    'error' => 'Fejl ved hentning af beskeder: '.$e->getMessage(),
                     'details' => $e->getTraceAsString(),
                 ], 500);
             }
@@ -154,7 +158,7 @@ class ChatController extends Controller
             if ($answersCount >= $totalQuestions) {
                 // Onboarding completed, create continuity link
                 // Use a derived session ID that maintains context
-                return 'approved_' . $profile->session_id . '_' . $user->id;
+                return 'approved_'.$profile->session_id.'_'.$user->id;
             }
         }
 
@@ -173,63 +177,76 @@ class ChatController extends Controller
             $json = file_get_contents($playbook);
             $questions = json_decode($json, true) ?? [];
         }
+
         return $questions;
     }
 
     /**
-     * Get the appropriate agent based on user role.
+     * Get the appropriate agent class based on user role.
      */
-    private function getAgentForUser(User $user): CustomerSupportAgent
+    private function getAgentClassForUser(User $user): string
     {
         // All approved users use CustomerSupportAgent for now
         // Could be extended to use different agents based on role
-        return new CustomerSupportAgent();
+        return CustomerSupportAgent::class;
     }
 
     /**
-     * Add role-specific context to the agent context.
+     * Add role-specific context to the agent executor.
      */
-    private function addRoleContext(AgentContext $context, User $user): void
+    private function addRoleContextToExecutor(AgentExecutor $executor, User $user): void
     {
         $role = $user->getRoleNames()->first();
+
+        $contextData = [];
 
         switch ($role) {
             case 'admin':
                 // Admin can access everything
-                $context->setState('access_level', 'global');
-                $context->setState('can_access_all_timelines', true);
-                $context->setState('can_access_all_users', true);
-                $context->setState('admin_instructions', 'Du er en administrator. Du har adgang til alle brugere, familier og timeline-elementer. Vær særlig hjælpsom og detaljeret i dine svar.');
+                $contextData = [
+                    'access_level' => 'global',
+                    'can_access_all_timelines' => true,
+                    'can_access_all_users' => true,
+                    'admin_instructions' => 'Du er en administrator. Du har adgang til alle brugere, familier og timeline-elementer. Vær særlig hjælpsom og detaljeret i dine svar.',
+                ];
                 break;
 
-            case 'myndighed':
+            case 'sagsbehandler':
                 // Authority can access their related families
-                $context->setState('access_level', 'family');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
-                $context->setState('authority_instructions', 'Du er en myndighedsperson. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.');
+                $contextData = [
+                    'access_level' => 'family',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                    'authority_instructions' => 'Du er en sagsbehandler. Du har adgang til familier og brugere, som du er tilknyttet. Du kan se alle timeline-elementer for disse familier.',
+                ];
                 // Get families this authority has access to
                 $familyIds = $this->getAuthorityFamilyIds($user);
-                $context->setState('accessible_family_ids', $familyIds);
+                $contextData['accessible_family_ids'] = $familyIds;
                 break;
 
             case 'far':
             case 'mor':
                 // Parents have private access between themselves and authorities
-                $context->setState('access_level', 'private');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
-                $context->setState('parent_instructions', 'Du er en forælder. Du har privat adgang til kommunikation mellem dig og myndighederne. Du kan kun se timeline-elementer, der vedrører din familie.');
-                $context->setState('family_id', $user->family_id);
+                $contextData = [
+                    'access_level' => 'private',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                    'parent_instructions' => 'Du er en forælder. Du har privat adgang til kommunikation mellem dig og myndighederne. Du kan kun se timeline-elementer, der vedrører din familie.',
+                    'family_id' => $user->family_id,
+                ];
                 break;
 
             default:
                 // Default approved user access
-                $context->setState('access_level', 'limited');
-                $context->setState('can_access_all_timelines', false);
-                $context->setState('can_access_all_users', false);
+                $contextData = [
+                    'access_level' => 'limited',
+                    'can_access_all_timelines' => false,
+                    'can_access_all_users' => false,
+                ];
                 break;
         }
+
+        $executor->withContext($contextData);
     }
 
     /**
@@ -239,7 +256,7 @@ class ChatController extends Controller
     {
         // For now, return families where this authority has interacted
         // This could be extended based on actual authority-family relationships
-        $familyIds = TimelineItem::where('user_id', $user->id)
+        $familyIds = Event::where('user_id', $user->id)
             ->whereNotNull('family_id')
             ->distinct()
             ->pluck('family_id')
@@ -278,7 +295,7 @@ class ChatController extends Controller
                 'role' => 'assistant',
                 'content' => $this->getWelcomeMessage($user),
                 'timestamp' => now()->toISOString(),
-            ]
+            ],
         ];
     }
 
@@ -294,8 +311,8 @@ class ChatController extends Controller
             case 'admin':
                 return "Hej {$name}! Som administrator har du fuld adgang til alle brugere og timeline-elementer. Hvordan kan jeg hjælpe dig i dag?";
 
-            case 'myndighed':
-                return "Hej {$name}! Som myndighedsperson har du adgang til familier og sager, som du er tilknyttet. Hvordan kan jeg hjælpe dig?";
+            case 'sagsbehandler':
+                return "Hej {$name}! Som sagsbehandler har du adgang til familier og sager, som du er tilknyttet. Hvordan kan jeg hjælpe dig?";
 
             case 'far':
             case 'mor':

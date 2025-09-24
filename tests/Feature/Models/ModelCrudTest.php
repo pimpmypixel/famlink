@@ -1,7 +1,7 @@
 <?php
 
+use App\Models\Event;
 use App\Models\Family;
-use App\Models\TimelineItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -11,36 +11,54 @@ describe('Model CRUD Operations', function () {
     describe('User CRUD Operations', function () {
         it('can create users', function () {
             $user = User::create([
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => 'test@example.com',
                 'password' => 'password123',
             ]);
 
             expect($user->exists)->toBeTrue();
             expect($user->name)->toBe('Test User');
+            expect($user->first_name)->toBe('Test');
+            expect($user->last_name)->toBe('User');
             expect($user->email)->toBe('test@example.com');
         });
 
         it('can read users', function () {
-            $user = User::factory()->create(['name' => 'John Doe']);
+            $user = User::factory()->create([
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+            ]);
 
             $foundUser = User::find($user->id);
             expect($foundUser)->not->toBeNull();
             expect($foundUser->name)->toBe('John Doe');
+            expect($foundUser->first_name)->toBe('John');
+            expect($foundUser->last_name)->toBe('Doe');
 
             $foundByEmail = User::where('email', $user->email)->first();
             expect($foundByEmail->id)->toBe($user->id);
         });
 
         it('can update users', function () {
-            $user = User::factory()->create(['name' => 'Original Name']);
+            $user = User::factory()->create([
+                'first_name' => 'Original',
+                'last_name' => 'Name',
+            ]);
 
-            $user->update(['name' => 'Updated Name']);
+            $user->update([
+                'first_name' => 'Updated',
+                'last_name' => 'Name',
+            ]);
 
             expect($user->name)->toBe('Updated Name');
+            expect($user->first_name)->toBe('Updated');
+            expect($user->last_name)->toBe('Name');
 
             $refreshedUser = User::find($user->id);
             expect($refreshedUser->name)->toBe('Updated Name');
+            expect($refreshedUser->first_name)->toBe('Updated');
+            expect($refreshedUser->last_name)->toBe('Name');
         });
 
         it('can delete users', function () {
@@ -124,11 +142,11 @@ describe('Model CRUD Operations', function () {
         });
     });
 
-    describe('TimelineItem CRUD Operations', function () {
+    describe('Event CRUD Operations', function () {
         it('can create timeline items', function () {
             $user = User::factory()->create();
 
-            $timelineItem = TimelineItem::create([
+            $timelineItem = Event::create([
                 'user_id' => $user->id,
                 'title' => 'Test Timeline Item',
                 'content' => 'Test content',
@@ -144,45 +162,45 @@ describe('Model CRUD Operations', function () {
         });
 
         it('can read timeline items', function () {
-            $timelineItem = TimelineItem::factory()->create(['title' => 'Unique Title']);
+            $timelineItem = Event::factory()->create(['title' => 'Unique Title']);
 
-            $foundItem = TimelineItem::find($timelineItem->id);
+            $foundItem = Event::find($timelineItem->id);
             expect($foundItem)->not->toBeNull();
             expect($foundItem->title)->toBe('Unique Title');
 
-            $foundByTitle = TimelineItem::where('title', 'Unique Title')->first();
+            $foundByTitle = Event::where('title', 'Unique Title')->first();
             expect($foundByTitle->id)->toBe($timelineItem->id);
         });
 
         it('can update timeline items', function () {
-            $timelineItem = TimelineItem::factory()->create(['title' => 'Original Title']);
+            $timelineItem = Event::factory()->create(['title' => 'Original Title']);
 
             $timelineItem->update(['title' => 'Updated Title']);
 
             expect($timelineItem->title)->toBe('Updated Title');
 
-            $refreshedItem = TimelineItem::find($timelineItem->id);
+            $refreshedItem = Event::find($timelineItem->id);
             expect($refreshedItem->title)->toBe('Updated Title');
         });
 
         it('can delete timeline items', function () {
-            $timelineItem = TimelineItem::factory()->create();
+            $timelineItem = Event::factory()->create();
             $itemId = $timelineItem->id;
 
             $timelineItem->delete();
 
-            expect(TimelineItem::find($itemId))->toBeNull();
+            expect(Event::find($itemId))->toBeNull();
         });
 
         it('can query timeline items by user', function () {
             $user1 = User::factory()->create();
             $user2 = User::factory()->create();
 
-            $item1 = TimelineItem::factory()->create(['user_id' => $user1->id, 'title' => 'Item 1']);
-            $item2 = TimelineItem::factory()->create(['user_id' => $user1->id, 'title' => 'Item 2']);
-            $item3 = TimelineItem::factory()->create(['user_id' => $user2->id, 'title' => 'Item 3']);
+            $item1 = Event::factory()->create(['user_id' => $user1->id, 'title' => 'Item 1']);
+            $item2 = Event::factory()->create(['user_id' => $user1->id, 'title' => 'Item 2']);
+            $item3 = Event::factory()->create(['user_id' => $user2->id, 'title' => 'Item 3']);
 
-            $user1Items = TimelineItem::where('user_id', $user1->id)->get();
+            $user1Items = Event::where('user_id', $user1->id)->get();
             expect($user1Items)->toHaveCount(2);
             expect($user1Items->pluck('title')->toArray())->toContain('Item 1');
             expect($user1Items->pluck('title')->toArray())->toContain('Item 2');
@@ -213,12 +231,12 @@ describe('Model CRUD Operations', function () {
         });
 
         it('can perform bulk deletes', function () {
-            $timelineItems = TimelineItem::factory()->count(4)->create();
+            $timelineItems = Event::factory()->count(4)->create();
             $itemIds = $timelineItems->pluck('id')->toArray();
 
-            TimelineItem::whereIn('id', $itemIds)->delete();
+            Event::whereIn('id', $itemIds)->delete();
 
-            $remainingItems = TimelineItem::whereIn('id', $itemIds)->get();
+            $remainingItems = Event::whereIn('id', $itemIds)->get();
             expect($remainingItems)->toHaveCount(0);
         });
     });
@@ -229,8 +247,8 @@ describe('Model CRUD Operations', function () {
             $user1 = User::factory()->create(['family_id' => $family->id]);
             $user2 = User::factory()->create(['family_id' => $family->id]);
 
-            TimelineItem::factory()->count(3)->create(['user_id' => $user1->id]);
-            TimelineItem::factory()->count(2)->create(['user_id' => $user2->id]);
+            Event::factory()->count(3)->create(['user_id' => $user1->id]);
+            Event::factory()->count(2)->create(['user_id' => $user2->id]);
 
             $userWithCounts = User::withCount('timelineItems')
                 ->where('family_id', $family->id)
@@ -245,7 +263,7 @@ describe('Model CRUD Operations', function () {
             $users = User::factory()->count(2)->create(['family_id' => $family->id]);
 
             foreach ($users as $user) {
-                TimelineItem::factory()->count(2)->create(['user_id' => $user->id]);
+                Event::factory()->count(2)->create(['user_id' => $user->id]);
             }
 
             $familyWithRelations = Family::with(['users.timelineItems'])->find($family->id);
@@ -262,20 +280,20 @@ describe('Model CRUD Operations', function () {
             $medicalTag = \App\Models\Tag::firstOrCreate(['name' => 'medical']);
             $routineTag = \App\Models\Tag::firstOrCreate(['name' => 'routine']);
 
-            $item1 = TimelineItem::factory()->create();
+            $item1 = Event::factory()->create();
             $item1->tags()->detach(); // Clear any auto-attached tags
             $item1->tags()->attach([$urgentTag->id, $medicalTag->id]);
 
-            $item2 = TimelineItem::factory()->create();
+            $item2 = Event::factory()->create();
             $item2->tags()->detach(); // Clear any auto-attached tags
             $item2->tags()->attach([$routineTag->id]);
 
-            $item3 = TimelineItem::factory()->create();
+            $item3 = Event::factory()->create();
             $item3->tags()->detach(); // Clear any auto-attached tags
             $item3->tags()->attach([$urgentTag->id]);
 
             // Test filtering by tags using relationships
-            $urgentItems = TimelineItem::whereHas('tags', function ($query) {
+            $urgentItems = Event::whereHas('tags', function ($query) {
                 $query->where('name', 'urgent');
             })->get();
 
@@ -289,7 +307,7 @@ describe('Model CRUD Operations', function () {
         it('maintains referential integrity', function () {
             $family = Family::factory()->create();
             $user = User::factory()->create(['family_id' => $family->id]);
-            $timelineItem = TimelineItem::factory()->create(['user_id' => $user->id]);
+            $timelineItem = Event::factory()->create(['user_id' => $user->id]);
 
             // Test that relationships work both ways
             expect($user->family->id)->toBe($family->id);

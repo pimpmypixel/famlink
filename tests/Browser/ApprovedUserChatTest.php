@@ -13,7 +13,7 @@ it('can click ask ai button', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'clicktest@famlink.test',
-        'name' => 'Click Test User'
+        'name' => 'Click Test User',
     ]);
     $user->assignRole('far');
 
@@ -44,7 +44,7 @@ it('can open and use approved user chat modal', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'approved@famlink.test',
-        'name' => 'Approved User'
+        'name' => 'Approved User',
     ]);
     $user->assignRole('far');
 
@@ -68,7 +68,7 @@ it('handles chat modal closing correctly', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'approved2@famlink.test',
-        'name' => 'Approved User 2'
+        'name' => 'Approved User 2',
     ]);
     $user->assignRole('far');
 
@@ -90,7 +90,7 @@ it('chat modal shows correct permissions and limitations', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'approved3@famlink.test',
-        'name' => 'Approved User 3'
+        'name' => 'Approved User 3',
     ]);
     $user->assignRole('far');
 
@@ -112,7 +112,7 @@ it('chat modal handles errors and timeouts correctly', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'approved4@famlink.test',
-        'name' => 'Approved User 4'
+        'name' => 'Approved User 4',
     ]);
     $user->assignRole('far');
 
@@ -134,7 +134,7 @@ it('chat modal supports accessibility features', function () {
 
     $user = \App\Models\User::factory()->create([
         'email' => 'approved5@famlink.test',
-        'name' => 'Approved User 5'
+        'name' => 'Approved User 5',
     ]);
     $user->assignRole('far');
 

@@ -38,13 +38,13 @@ test('admin users receive dashboard statistics', function () {
 
 test('social worker users receive their specific dashboard statistics and timeline cases', function () {
     // Ensure roles exist
-    Role::firstOrCreate(['name' => 'myndighed']);
+    Role::firstOrCreate(['name' => 'sagsbehandler']);
     Role::firstOrCreate(['name' => 'far']);
     Role::firstOrCreate(['name' => 'mor']);
 
     // Create social worker
     $socialWorker = User::factory()->create();
-    $socialWorker->assignRole('myndighed');
+    $socialWorker->assignRole('sagsbehandler');
 
     // Create families assigned to this social worker
     $family1 = \App\Models\Family::factory()->create(['created_by' => $socialWorker->id]);
@@ -60,14 +60,14 @@ test('social worker users receive their specific dashboard statistics and timeli
     $father2->assignRole('far');
 
     // Create timeline items for these families
-    \App\Models\TimelineItem::factory()->create([
+    \App\Models\Event::factory()->create([
         'user_id' => $father1->id,
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 1',
         'content' => 'Test content 1',
     ]);
 
-    \App\Models\TimelineItem::factory()->create([
+    \App\Models\Event::factory()->create([
         'user_id' => $mother1->id,
         'family_id' => $family1->id,
         'title' => 'Test Timeline Item 2',
@@ -85,6 +85,6 @@ test('social worker users receive their specific dashboard statistics and timeli
             ->where('stats.families_count', 2) // 2 families assigned to this social worker
             ->where('stats.users_count', 3) // 3 users in those families
             ->where('stats.timeline_items_count', 2) // 2 timeline items
-            ->where('userRole', 'myndighed')
+            ->where('userRole', 'sagsbehandler')
         );
 });

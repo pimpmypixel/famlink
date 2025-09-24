@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\TimelineItem;
+use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
 
 class FileUploadRequest extends FormRequest
@@ -13,7 +13,7 @@ class FileUploadRequest extends FormRequest
     public function authorize(): bool
     {
         $timelineItemId = $this->route('timelineItemId');
-        $timelineItem = TimelineItem::find($timelineItemId);
+        $timelineItem = Event::find($timelineItemId);
 
         if (! $timelineItem) {
             return false;

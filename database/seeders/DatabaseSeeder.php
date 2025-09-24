@@ -12,10 +12,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(FamilySeeder::class);
         $this->call(RolesSeeder::class);
         $this->call(PermissionsSeeder::class);
+
+        $this->call(FamilySeeder::class);
         $this->call(UserSeeder::class);
-        $this->call(TimelineItemSeeder::class);
+
+        $this->call(CategorySeeder::class);
+        $this->call(TagSeeder::class);
+        $this->call(EventSeeder::class);
+        $this->call(CommentSeeder::class);
     }
 }

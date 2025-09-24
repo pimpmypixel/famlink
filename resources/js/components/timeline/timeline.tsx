@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react"
-import type { TimelineItem, User } from "@/lib/types"
+import type { Event, User } from "@/lib/types"
 import { sortTimelineItems, filterTimelineItems, groupItemsByDate, formatGroupDate } from "@/lib/timeline-utils"
-import { TimelineItemComponent } from "./timeline-item"
+import { EventComponent } from "./event"
 import { SearchFilters } from "./search-filters"
 import { TimelineControls } from "./timeline-controls"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface TimelineProps {
-  items: TimelineItem[]
+  items: Event[]
   user?: User
   onAddClick?: () => void
   onAddFile?: (itemId: string) => void
@@ -57,7 +57,7 @@ export function Timeline({ items = [], user, onAddClick, onAddFile }: TimelinePr
     // setTimeout(() => setForceExpandAll(undefined), 100)
   }
 
-  const renderTimelineItem = (item: TimelineItem) => {
+  const renderTimelineItem = (item: Event) => {
     const isLeft = item.user.role === "far"
     const isCenter = item.user.role === "myndighed"
 
@@ -73,7 +73,7 @@ export function Timeline({ items = [], user, onAddClick, onAddFile }: TimelinePr
         {/* Timeline item */}
         <div className={`flex flex-col sm:flex-row ${isCenter ? 'justify-center' : isLeft ? "sm:justify-start" : "sm:justify-end"}`}>
           <div className={`w-full ${isCenter ? 'sm:w-2/3 sm:max-w-2xl' : 'sm:w-1/2'} ${isCenter ? '' : isLeft ? "sm:pr-8" : "sm:pl-8"}`}>
-            <TimelineItemComponent
+            <EventComponent
               item={item}
               isLeft={isLeft}
               isCenter={isCenter}

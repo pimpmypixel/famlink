@@ -71,7 +71,7 @@ class TimelineTool implements ToolInterface
 
             case 'family':
                 // Authority can access their related families
-                if (!empty($accessibleFamilyIds)) {
+                if (! empty($accessibleFamilyIds)) {
                     $query->whereIn('family_id', $accessibleFamilyIds);
                 } else {
                     // Fallback: only their own family
@@ -92,7 +92,7 @@ class TimelineTool implements ToolInterface
                     return json_encode([
                         'status' => 'error',
                         'message' => 'Ingen adgang til timeline data',
-                        'items' => []
+                        'items' => [],
                     ]);
                 }
                 break;
@@ -121,7 +121,7 @@ class TimelineTool implements ToolInterface
                     return json_encode([
                         'status' => 'error',
                         'message' => 'Ingen adgang til denne brugers timeline',
-                        'items' => []
+                        'items' => [],
                     ]);
                 }
             } else {
@@ -132,7 +132,7 @@ class TimelineTool implements ToolInterface
                     return json_encode([
                         'status' => 'error',
                         'message' => 'Du kan kun se dine egne timeline-elementer',
-                        'items' => []
+                        'items' => [],
                     ]);
                 }
             }

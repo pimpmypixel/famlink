@@ -76,6 +76,13 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'isImpersonating' => $user && session()->has('impersonated_by'),
             'impersonatableUsers' => $impersonatableUsers,
+            'translations' => [
+                'messages' => __('messages'),
+                'auth' => __('auth'),
+                'validation' => __('validation'),
+                'pagination' => __('pagination'),
+                'passwords' => __('passwords'),
+            ],
         ];
     }
 }

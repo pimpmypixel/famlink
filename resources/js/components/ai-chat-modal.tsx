@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
 import { RefreshCw, Mail, CheckCircle, Sparkles, MessageSquare, Shield, Users, FileText, Clock } from 'lucide-react';
 import { Loader } from "@/components/ui/loader";
+import { __ } from "@/lib/translations";
 
 // Onboarding chat modal for welcome page
 interface AIChatModalProps {
@@ -152,7 +153,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           setMessages([{
             id: `msg-${Date.now()}`,
             role: "agent",
-            content: 'Tak for dine svar! Vi har sendt dig en email med en opsummering.',
+            content: __('messages.onboarding_thank_you') + ' ' + __('messages.onboarding_ready') + ' ' + __('messages.onboarding_email_sent'),
             timestamp: new Date().toISOString()
           }]);
           showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
@@ -247,7 +248,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       };
 
     } catch {
-      setError("Kunne ikke starte onboarding chatten.");
+      setError(__('messages.onboarding_error_start'));
       setLoading(false);
     }
   }, [streamText, showToastNotification]);
@@ -375,7 +376,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       };
 
     } catch {
-      setError("Kunne ikke genoptage onboarding chatten.");
+      setError(__('messages.onboarding_error_resume'));
       setLoading(false);
     }
   }, [streamText, showToastNotification]);
@@ -389,8 +390,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
         setMessages([{
           id: `msg-${Date.now()}`,
           role: "agent",
-          content: <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Velkommen tilbage! Jeg har fundet din tidligere onboarding-session. Du var ved spørgsmål ${existingSession.progress.answered + 1} af ${existingSession.progress.total}. Lad os fortsætte, hvor vi slap.</span>,
-
+          content: <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> {__('messages.onboarding_welcome_back')} {__('messages.onboarding_found_session')} {__('messages.onboarding_continue')}</span>,
           timestamp: new Date().toISOString()
         }]);
         resumeOnboarding(existingSession.sessionId);
@@ -577,7 +577,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
       };
 
     } catch {
-      setError("Kunne ikke sende svar.");
+      setError(__('messages.onboarding_error_send'));
       setLoading(false);
     }
   }
@@ -611,14 +611,14 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
             <div>
               <DialogTitle className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                 <MessageSquare className="w-6 h-6" />
-                Onboarding Chat
+                {__('messages.onboarding_chat')}
               </DialogTitle>
               <DialogDescription className="text-[.6em] text-blue-900 dark:text-blue-300">
                 {completed
-                  ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
+                  ? __('messages.onboarding_ready')
                   : isResumed
-                  ? <span className="flex items-center gap-1">Genoptaget session - fortsæt hvor du slap</span>
-                  : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
+                  ? <span className="flex items-center gap-1">{__('messages.onboarding_resumed')}</span>
+                  : __('messages.onboarding_description')
                 }
               </DialogDescription>
             </div>
@@ -634,9 +634,8 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   color="#9ca3af"
                   className="mb-4"
                 />
-                <p className="text-sm font-medium">Starter onboarding chatten</p>
-                <p className="text-xs text-gray-400 mt-1">Vi er i gang med at oprette din midlertidige profil. Forbered dig på kort at svare på nogle enkelte spørgsmål.</p>
-                Alt er er fortroligt, sikkert og privat.
+                <p className="text-sm font-medium">{__('messages.onboarding_starting')}</p>
+                <p className="text-xs text-gray-400 mt-1">{__('messages.onboarding_preparing')} {__('messages.onboarding_short_answers')}.<br />{__('messages.onboarding_confidential')}.</p>
               </div>
             )}
             {messages.map((msg, idx) => (
@@ -702,7 +701,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                     className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Skriv dit svar..."
+                    placeholder={__('messages.onboarding_write_answer')}
                     disabled={loading || isTyping}
                     autoFocus
                   />
@@ -711,7 +710,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                     disabled={loading || !input.trim() || isTyping}
                     className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
                   >
-                    {isTyping ? "AI skriver..." : loading ? "Sender..." : "Send"}
+                    {isTyping ? __('messages.onboarding_ai_writing') : loading ? __('messages.onboarding_sending') : __('messages.send')}
                   </Button>
                 </form>
                 <div className="flex justify-center mt-3">
@@ -722,7 +721,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                     className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-6 px-2 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center"
                   >
                     <RefreshCw className="w-3 h-3 mr-1" />
-                    Genstart
+                    {__('messages.onboarding_restart')}
                   </Button>
                 </div>
               </div>
@@ -734,17 +733,17 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-lg font-semibold">Onboarding fuldført!</span>
+                  <span className="text-lg font-semibold">{__('messages.onboarding_completed_title')}</span>
                 </div>
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  Tak for dine svar.<br />Du vil om kort tid modtage en email fra Famlink.
+                  {__('messages.onboarding_thank_you_short')}<br />{__('messages.onboarding_email_notification')}
                 </p>
               </div>
               <Button
                 onClick={() => onOpenChange(false)}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 hover:border-blue-700 transition-colors"
               >
-                Luk chat
+                {__('messages.close_chat')}
               </Button>
             </div>
           )}

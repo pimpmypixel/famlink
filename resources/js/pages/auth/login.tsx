@@ -22,9 +22,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
             {/* Security Information */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-sm font-semibold text-blue-800 mb-2">🔒 Sikkerhed og Privatliv</h3>
+                <h3 className="text-sm font-semibold text-blue-800 mb-2">{__('auth.login.security_title')}</h3>
                 <p className="text-xs text-blue-700 mb-2">
-                    FamLink tager dit privatliv alvorligt. Alle data krypteres og opbevares sikkert i overensstemmelse med dansk lovgivning.
+                    {__('auth.login.security_description')}<
                 </p>
                 <p className="text-xs text-blue-600">
                     <strong>Prototyping fase:</strong> Vi bruger traditionel login under udvikling. Når appen lanceres, vil MitID blive den primære autentificeringsmetode for maksimal sikkerhed.
@@ -36,8 +36,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 {/* Left column - Login Form */}
                 <div className="space-y-4">
                     <div className="text-center mb-4">
-                        <h2 className="text-lg font-semibold text-gray-800">Log ind på din konto</h2>
-                        <p className="text-sm text-gray-600">Adgang til din FamLink konto</p>
+                        <h2 className="text-lg font-semibold text-gray-800">{__('auth.login.page_title')}</h2>
+                        <p className="text-sm text-gray-600">{__('auth.login.description')}</p>
                     </div>
 
                     <Form action="/login" method="post" resetOnSuccess={['password']} className="flex flex-col gap-4">
@@ -45,7 +45,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <>
                                 <div className="grid gap-4">
                                     <div className="grid gap-1">
-                                        <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                                        <Label htmlFor="email" className="text-sm font-medium">{__('auth.login.email_label')}</Label>
                                         <Input
                                             id="email"
                                             type="email"
@@ -55,17 +55,17 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             tabIndex={1}
                                             autoComplete="email"
                                             className="h-10 text-sm"
-                                            placeholder="din@email.dk"
+                                            placeholder={__('auth.login.email_placeholder')}
                                         />
                                         <InputError message={errors.email} />
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="flex items-center">
-                                            <Label htmlFor="password" className="text-sm font-medium">Adgangskode</Label>
+                                            <Label htmlFor="password" className="text-sm font-medium">{__('auth.login.password_label')}</Label>
                                             {canResetPassword && (
                                                 <TextLink href={request()} className="ml-auto text-xs text-blue-600 hover:text-blue-800" tabIndex={5}>
-                                                    Glemt adgangskode?
+                                                    {__('auth.login.forgot_password')}<
                                                 </TextLink>
                                             )}
                                         </div>
@@ -77,26 +77,26 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             tabIndex={2}
                                             autoComplete="current-password"
                                             className="h-10 text-sm"
-                                            placeholder="Din adgangskode"
+                                            placeholder={__('auth.login.password_placeholder')}
                                         />
                                         <InputError message={errors.password} />
                                     </div>
 
                                     <div className="flex items-center space-x-2">
                                         <Checkbox id="remember" name="remember" tabIndex={3} className="h-4 w-4" />
-                                        <Label htmlFor="remember" className="text-sm">Husk mig</Label>
+                                        <Label htmlFor="remember" className="text-sm">{__('auth.login.remember_me')}</Label>
                                     </div>
 
                                     <Button type="submit" className="mt-2 h-10 text-sm font-medium" tabIndex={4} disabled={processing} data-test="login-button">
                                         {processing && <LoaderCircle className="h-4 w-4 animate-spin mr-2" />}
-                                        Log ind
+                                        {__('auth.login.login_button')}
                                     </Button>
                                 </div>
 
                                 <div className="text-center text-sm text-muted-foreground">
-                                    Har du ikke en konto?{' '}
+                                    {__('auth.login.no_account')}<{' '}
                                     <TextLink href={register()} tabIndex={5} className="text-blue-600 hover:text-blue-800 font-medium">
-                                        Opret konto
+                                        {__('auth.login.create_account')}<
                                     </TextLink>
                                 </div>
                             </>
@@ -114,22 +114,22 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 {/* Right column - MitID Image */}
                 <div className="flex flex-col items-center justify-center space-y-4">
                     <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">MitID Autentificering</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">{__('auth.login.mitid_title')}</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                            Fremtidig sikker login metode når appen lanceres
+                            {__('auth.login.mitid_description')}<
                         </p>
                     </div>
 
                     <div className="flex justify-center">
                         <img
                             src="/img/fake-mit-id-login.png"
-                            alt="MitID Login - Fremtidig autentificeringsmetode"
+                            alt={__('auth.login.mitid_alt')}<
                             className="w-full h-auto max-w-sm"
                         />
                     </div>
 
                     <div className="text-center text-xs text-gray-500 max-w-xs">
-                        MitID er Danmarks officielle digitale ID-løsning, der sikrer den højeste grad af sikkerhed og tillid.
+                        {__('auth.login.mitid_footer')}<
                     </div>
                 </div>
             </div>

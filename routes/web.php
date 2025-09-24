@@ -12,6 +12,11 @@ Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');
 })->name('onboarding');
 
+// Email verification route
+Route::get('/email/verify/{user}', [App\Http\Controllers\EmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('email.verify');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('userguide', [App\Http\Controllers\UserguideController::class, 'index'])->name('userguide');
 

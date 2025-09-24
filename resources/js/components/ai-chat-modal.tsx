@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
 import { RefreshCw, Mail, CheckCircle, Sparkles, MessageSquare, Shield, Users, FileText, Clock } from 'lucide-react';
+import { Loader } from "@/components/ui/loader";
 
 // Onboarding chat modal for welcome page
 interface AIChatModalProps {
@@ -151,7 +152,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           setMessages([{
             id: `msg-${Date.now()}`,
             role: "agent",
-            content: 'Tak for dine svar! Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+            content: 'Tak for dine svar! Vi har sendt dig en email med en opsummering.',
             timestamp: new Date().toISOString()
           }]);
           showToastNotification(<span className="flex items-center gap-1"><Mail className="w-4 h-4" /> En email er blevet sendt til dig med en opsummering af dine svar!</span>);
@@ -606,17 +607,17 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
       <DialogContent className="w-[95vw] md:w-[80vw] lg:w-[70vw] max-w-none h-[95vh] flex flex-col bg-white dark:bg-gray-900 dark:border-blue-400 shadow-2xl p-0">
         <DialogHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4 from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-6 pt-4">
             <div>
               <DialogTitle className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                 <MessageSquare className="w-6 h-6" />
                 Onboarding Chat
               </DialogTitle>
-              <DialogDescription className="text-xs text-blue-700 dark:text-blue-300">
+              <DialogDescription className="text-[.6em] text-blue-900 dark:text-blue-300">
                 {completed
                   ? "Onboarding er fuldført! Du kan nu begynde at bruge Famlink."
                   : isResumed
-                  ? <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> Genoptaget session - fortsæt hvor du slap</span>
+                  ? <span className="flex items-center gap-1">Genoptaget session - fortsæt hvor du slap</span>
                   : "Besvar spørgsmålene for at oprette din profil og få personlig hjælp."
                 }
               </DialogDescription>
@@ -627,11 +628,15 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           <div className="flex-1 overflow-y-auto mb-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mx-6 mt-6">
             {messages.length === 0 && (
               <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p className="text-sm font-medium">Start onboarding chatten</p>
-                <p className="text-xs text-gray-400 mt-1">Besvar spørgsmålene for at komme i gang</p>
+                <Loader
+                  size="48"
+                  speed="1.75"
+                  color="#9ca3af"
+                  className="mb-4"
+                />
+                <p className="text-sm font-medium">Starter onboarding chatten</p>
+                <p className="text-xs text-gray-400 mt-1">Vi er i gang med at oprette din midlertidige profil. Forbered dig på kort at svare på nogle enkelte spørgsmål.</p>
+                Alt er er fortroligt, sikkert og privat.
               </div>
             )}
             {messages.map((msg, idx) => (
@@ -690,7 +695,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
           )}
 
             {!completed && (
-              <div className="mx-6 mb-6">
+              <div className="mx-6 mb-2">
                 <form onSubmit={(e) => handleSend(e)} className="flex gap-3">
                   <input
                     ref={inputRef}
@@ -714,7 +719,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                     onClick={handleRestart}
                     variant="ghost"
                     size="sm"
-                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-6 px-2"
+                    className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 h-6 px-2 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center"
                   >
                     <RefreshCw className="w-3 h-3 mr-1" />
                     Genstart
@@ -732,7 +737,7 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
                   <span className="text-lg font-semibold">Onboarding fuldført!</span>
                 </div>
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  Tak for dine svar! Du kan nu begynde at bruge Famlink.
+                  Tak for dine svar.<br />Du vil om kort tid modtage en email fra Famlink.
                 </p>
               </div>
               <Button
@@ -747,48 +752,10 @@ export function AIChatModal({ open, onOpenChange }: AIChatModalProps) {
 
         {/* Helpful Footer */}
         <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-6 py-3 rounded-b-lg">
-          <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 dark:text-gray-400">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                <span>Sikker onboarding</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                <span>Personlig assistance</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span>Intelligente svar</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                <span>Session gemmes</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="w-3 h-3" />
-                <span>AI-drevet onboarding</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                <span>Famlink Platform</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                <span>24/7 Support</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                <span>GDPR Compliant</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                <span>Family Focused</span>
-              </div>
+          <div className="grid grid-cols-4 gap-4 text-[10px] text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col gap-2 col-span-4">
+              <div className="flex items-center gap-1 text-left">
+                Denne chat er beskyttet i overensstemmelse med gældende databeskyttelseslovgivning, herunder GDPR. Alle oplysninger, som du vælger at dele, behandles fortroligt og gemmes med henblik på at kunne tilbyde en forbedret brugeroplevelse ved fremtidige anvendelser. Dine data opbevares sikkert og anvendes udelukkende til de formål, som er angivet, og videregives ikke til tredjepart uden dit udtrykkelige samtykke. Du har til enhver tid ret til indsigt, berigtigelse og sletning af dine oplysninger. Chatten kan genstartes, og du kan til enhver tid udøve dine rettigheder i henhold til GDPR.</div>
             </div>
           </div>
         </div>

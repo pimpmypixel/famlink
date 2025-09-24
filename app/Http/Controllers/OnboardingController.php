@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Vizra\VizraADK\Execution\AgentExecutor;
 
@@ -68,7 +69,7 @@ class OnboardingController extends Controller
                 'answers' => $answers,
                 'session_id' => $sessionId,
                 'completed' => true,
-                'message' => 'Tak for dine svar! Du er nu klar til at bruge Famlink.',
+                'message' => 'Tak for dine svar. Du vil snart modtage en email fra Famlink.',
             ]);
         }
 
@@ -116,10 +117,10 @@ class OnboardingController extends Controller
         // Update user information based on the question answered
         $user = $profile->user;
         if ($user) {
-            if ($questionKey === 'name') { // Name question
-                $user->name = $answer;
+            if ($questionKey === 'user_firstname') { // First name question
+                $user->first_name = $answer;
                 $user->save();
-            } elseif ($questionKey === 'email') { // Email question
+            } elseif ($questionKey === 'user_email') { // Email question
                 // Check if email already exists
                 $existingUser = User::where('email', $answer)->first();
 
@@ -135,7 +136,7 @@ class OnboardingController extends Controller
                         $user->delete();
 
                         // Update the existing temporary user with the new information
-                        $existingUser->name = $profile->answers['name'] ?? $existingUser->name;
+                        $existingUser->first_name = $profile->answers['user_firstname'] ?? $existingUser->first_name;
                         $existingUser->save();
 
                         // Update the user reference for the rest of this method
@@ -397,8 +398,21 @@ class OnboardingController extends Controller
     protected function sendCompletionEmail(User $user, array $answers): void
     {
         try {
-            Mail::raw(
-                $this->buildCompletionEmailContent($user, $answers),
+            // Generate signed verification URL (valid for 7 days)
+            $verificationUrl = URL::temporarySignedRoute(
+                'email.verify',
+                now()->addDays(7),
+                ['user' => $user->id]
+            );
+
+            Mail::send(
+                'emails.onboarding-completion',
+                [
+                    'user' => $user,
+                    'answers' => $answers,
+                    'verificationUrl' => $verificationUrl,
+                    'controller' => $this,
+                ],
                 function ($message) use ($user) {
                     $message->to($user->email)
                         ->subject('Tak for din onboarding - Velkommen til Famlink!')
@@ -417,51 +431,6 @@ class OnboardingController extends Controller
                 'error' => $e->getMessage(),
             ]);
         }
-    }
-
-    /**
-     * Build completion email content
-     */
-    protected function buildCompletionEmailContent(User $user, array $answers): string
-    {
-        $name = $answers['name'] ?? $user->name ?? 'Bruger';
-
-        return "Kære {$name},
-
-Tak for at du har gennemført Famlinks onboarding! 🎉
-
-Vi har modtaget dine svar og er glade for at byde dig velkommen til Famlink. Vi har noteret følgende oplysninger fra din onboarding:
-
-".$this->formatAnswersForEmail($answers).'
-
-Dit næste skridt:
-- Log ind på Famlink for at begynde at bruge platformen
-- Udforsk de forskellige funktioner, der kan hjælpe dig
-- Kontakt os hvis du har spørgsmål
-
-Vi håber, at Famlink kan være til gavn for dig og din situation.
-
-Med venlig hilsen,
-Famlink-teamet
-
----
-Denne email blev sendt automatisk efter gennemført onboarding.';
-    }
-
-    /**
-     * Format answers for email
-     */
-    protected function formatAnswersForEmail(array $answers): string
-    {
-        $formatted = '';
-        foreach ($answers as $key => $answer) {
-            $questionText = $this->getQuestionTextByKey($key);
-            if ($questionText) {
-                $formatted .= "- {$questionText}: {$answer}\n";
-            }
-        }
-
-        return $formatted;
     }
 
     /**

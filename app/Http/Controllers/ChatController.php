@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Agents\CustomerSupportAgent;
-use App\Models\TimelineItem;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -256,7 +256,7 @@ class ChatController extends Controller
     {
         // For now, return families where this authority has interacted
         // This could be extended based on actual authority-family relationships
-        $familyIds = TimelineItem::where('user_id', $user->id)
+        $familyIds = Event::where('user_id', $user->id)
             ->whereNotNull('family_id')
             ->distinct()
             ->pluck('family_id')

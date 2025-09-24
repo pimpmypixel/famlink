@@ -11,36 +11,54 @@ describe('Model CRUD Operations', function () {
     describe('User CRUD Operations', function () {
         it('can create users', function () {
             $user = User::create([
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => 'test@example.com',
                 'password' => 'password123',
             ]);
 
             expect($user->exists)->toBeTrue();
             expect($user->name)->toBe('Test User');
+            expect($user->first_name)->toBe('Test');
+            expect($user->last_name)->toBe('User');
             expect($user->email)->toBe('test@example.com');
         });
 
         it('can read users', function () {
-            $user = User::factory()->create(['name' => 'John Doe']);
+            $user = User::factory()->create([
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+            ]);
 
             $foundUser = User::find($user->id);
             expect($foundUser)->not->toBeNull();
             expect($foundUser->name)->toBe('John Doe');
+            expect($foundUser->first_name)->toBe('John');
+            expect($foundUser->last_name)->toBe('Doe');
 
             $foundByEmail = User::where('email', $user->email)->first();
             expect($foundByEmail->id)->toBe($user->id);
         });
 
         it('can update users', function () {
-            $user = User::factory()->create(['name' => 'Original Name']);
+            $user = User::factory()->create([
+                'first_name' => 'Original',
+                'last_name' => 'Name',
+            ]);
 
-            $user->update(['name' => 'Updated Name']);
+            $user->update([
+                'first_name' => 'Updated',
+                'last_name' => 'Name',
+            ]);
 
             expect($user->name)->toBe('Updated Name');
+            expect($user->first_name)->toBe('Updated');
+            expect($user->last_name)->toBe('Name');
 
             $refreshedUser = User::find($user->id);
             expect($refreshedUser->name)->toBe('Updated Name');
+            expect($refreshedUser->first_name)->toBe('Updated');
+            expect($refreshedUser->last_name)->toBe('Name');
         });
 
         it('can delete users', function () {

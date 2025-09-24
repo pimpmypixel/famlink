@@ -17,19 +17,22 @@ class UserSeeder extends Seeder
         // Create admin users
         $adminUsers = [
             [
-                'name' => 'Admin User',
+                'first_name' => 'Admin',
+                'last_name' => 'User',
                 'email' => 'pimpmypixel@me.com',
                 'password' => 'hejhejhej',
                 'role' => 'admin',
             ],
             [
-                'name' => 'System Administrator',
+                'first_name' => 'System',
+                'last_name' => 'Administrator',
                 'email' => 'admin@famlink.test',
                 'password' => 'password',
                 'role' => 'admin',
             ],
             [
-                'name' => 'Super Admin',
+                'first_name' => 'Super',
+                'last_name' => 'Admin',
                 'email' => 'superadmin@famlink.test',
                 'password' => 'password',
                 'role' => 'admin',
@@ -38,7 +41,8 @@ class UserSeeder extends Seeder
 
         foreach ($adminUsers as $adminData) {
             $admin = User::factory()->create([
-                'name' => $adminData['name'],
+                'first_name' => $adminData['first_name'],
+                'last_name' => $adminData['last_name'],
                 'email' => $adminData['email'],
                 'password' => $adminData['password'],
             ]);
@@ -51,7 +55,8 @@ class UserSeeder extends Seeder
         // Create 5 caseworkers
         for ($i = 1; $i <= 5; $i++) {
             $caseworker = User::factory()->create([
-                'name' => 'Caseworker #'.$i,
+                'first_name' => 'Caseworker',
+                'last_name' => '#'.$i,
                 'email' => 'caseworker'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
@@ -63,7 +68,8 @@ class UserSeeder extends Seeder
         // Create 5 psychiatrists
         for ($i = 1; $i <= 5; $i++) {
             $psychiatrist = User::factory()->create([
-                'name' => 'Psychiatrist #'.$i,
+                'first_name' => 'Psychiatrist',
+                'last_name' => '#'.$i,
                 'email' => 'psychiatrist'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
@@ -75,7 +81,8 @@ class UserSeeder extends Seeder
         // Create 5 lawyers
         for ($i = 1; $i <= 5; $i++) {
             $lawyer = User::factory()->create([
-                'name' => 'Lawyer #'.$i,
+                'first_name' => 'Lawyer',
+                'last_name' => '#'.$i,
                 'email' => 'lawyer'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Authorities don't belong to families
@@ -87,7 +94,8 @@ class UserSeeder extends Seeder
         // Create 5 witnesses
         for ($i = 1; $i <= 5; $i++) {
             $witness = User::factory()->create([
-                'name' => 'Witness #'.$i,
+                'first_name' => 'Witness',
+                'last_name' => '#'.$i,
                 'email' => 'witness'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null, // Witnesses don't belong to families
@@ -98,7 +106,8 @@ class UserSeeder extends Seeder
 
         // Create guest user (temporary role, no family)
         $guestUser = User::factory()->create([
-            'name' => 'Guest User',
+            'first_name' => 'Guest',
+            'last_name' => 'User',
             'email' => 'guest@famlink.test',
             'password' => 'password',
             'family_id' => null,
@@ -117,7 +126,8 @@ class UserSeeder extends Seeder
         foreach ($families as $family) {
             // Create child for this family
             $child = User::factory()->create([
-                'name' => $family->child_name,
+                'first_name' => $family->child_name,
+                'last_name' => $family->name,
                 'email' => strtolower($family->child_name).'_'.strtolower($family->name).'@famlink.test',
                 'password' => 'password',
                 'family_id' => $family->id,
@@ -134,7 +144,8 @@ class UserSeeder extends Seeder
                 $firstName = $danishFirstNames[$gender][array_rand($danishFirstNames[$gender])];
 
                 $parent = User::factory()->create([
-                    'name' => $firstName.' '.$family->name,
+                    'first_name' => $firstName,
+                    'last_name' => $family->name,
                     'email' => strtolower($firstName).'_'.strtolower($family->name).'@famlink.test',
                     'password' => 'password',
                     'family_id' => $family->id,
@@ -198,7 +209,8 @@ class UserSeeder extends Seeder
         // Create some additional standalone approved users (not part of families)
         for ($i = 1; $i <= 10; $i++) {
             $user = User::factory()->create([
-                'name' => 'Approved User #'.$i,
+                'first_name' => 'Approved',
+                'last_name' => 'User #'.$i,
                 'email' => 'approved'.$i.'@famlink.test',
                 'password' => 'password',
                 'family_id' => null,

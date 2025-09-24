@@ -29,9 +29,9 @@ class TimelineController extends Controller
         }
 
         $query = Event::with([
-            'user:id,name,email',
+            'user:id,first_name,email',
             'comments' => function ($query) {
-                $query->with('user:id,name')->latest()->limit(5);
+                $query->with('user:id,first_name')->latest()->limit(5);
             },
             'family:id,name,child_name',
             'category:id,name',

@@ -48,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                     $query->whereIn('name', ['admin', 'super-admin']);
                 })
                 ->with('family') // Load family relationship
-                ->select('id', 'name', 'email', 'family_id')
+                ->select('id', 'first_name', 'email', 'family_id')
                 ->get()
                 ->map(function ($user) {
                     return [

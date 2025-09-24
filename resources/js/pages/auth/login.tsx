@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { __ } from '@/lib/translations';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
@@ -24,7 +25,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="text-sm font-semibold text-blue-800 mb-2">{__('auth.login.security_title')}</h3>
                 <p className="text-xs text-blue-700 mb-2">
-                    {__('auth.login.security_description')}<
+                    {__('auth.login.security_description')}
                 </p>
                 <p className="text-xs text-blue-600">
                     <strong>Prototyping fase:</strong> Vi bruger traditionel login under udvikling. Når appen lanceres, vil MitID blive den primære autentificeringsmetode for maksimal sikkerhed.
@@ -65,7 +66,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             <Label htmlFor="password" className="text-sm font-medium">{__('auth.login.password_label')}</Label>
                                             {canResetPassword && (
                                                 <TextLink href={request()} className="ml-auto text-xs text-blue-600 hover:text-blue-800" tabIndex={5}>
-                                                    {__('auth.login.forgot_password')}<
+                                                    {__('auth.login.forgot_password')}
                                                 </TextLink>
                                             )}
                                         </div>
@@ -94,9 +95,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 </div>
 
                                 <div className="text-center text-sm text-muted-foreground">
-                                    {__('auth.login.no_account')}<{' '}
+                                    {__('auth.login.no_account')} {' '}
                                     <TextLink href={register()} tabIndex={5} className="text-blue-600 hover:text-blue-800 font-medium">
-                                        {__('auth.login.create_account')}<
+                                        {__('auth.login.create_account')}
                                     </TextLink>
                                 </div>
                             </>
@@ -116,20 +117,20 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="text-center">
                         <h3 className="text-lg font-semibold text-gray-800 mb-2">{__('auth.login.mitid_title')}</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                            {__('auth.login.mitid_description')}<
+                            {__('auth.login.mitid_description')}
                         </p>
                     </div>
 
                     <div className="flex justify-center">
                         <img
                             src="/img/fake-mit-id-login.png"
-                            alt={__('auth.login.mitid_alt')}<
+                            alt={__('auth.login.mitid_alt')}
                             className="w-full h-auto max-w-sm"
                         />
                     </div>
 
                     <div className="text-center text-xs text-gray-500 max-w-xs">
-                        {__('auth.login.mitid_footer')}<
+                        {__('auth.login.mitid_footer')}
                     </div>
                 </div>
             </div>

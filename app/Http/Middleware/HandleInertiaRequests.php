@@ -77,11 +77,7 @@ class HandleInertiaRequests extends Middleware
             'isImpersonating' => $user && session()->has('impersonated_by'),
             'impersonatableUsers' => $impersonatableUsers,
             'translations' => [
-                'messages' => __('messages'),
-                'auth' => __('auth'),
-                'validation' => __('validation'),
-                'pagination' => __('pagination'),
-                'passwords' => __('passwords'),
+                'messages' => include lang_path(app()->getLocale().'/messages.php'),
             ],
         ];
     }

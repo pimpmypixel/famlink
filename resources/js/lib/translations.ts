@@ -16,6 +16,11 @@ export function __(key: string, replacements: Record<string, any> = {}): string 
     const keys = key.split('.');
     let value: any = translations;
 
+    // First, try to find the key under the 'messages' namespace
+    if (translations.messages && typeof translations.messages === 'object') {
+        value = translations.messages;
+    }
+
     // Navigate through the nested object
     for (const k of keys) {
         if (value && typeof value === 'object' && k in value) {
@@ -50,6 +55,11 @@ export function trans(namespace: string): Record<string, any> {
     const { props } = usePage();
     const translations = (props as any).translations || {};
 
+    // Look under the 'messages' namespace first
+    if (translations.messages && typeof translations.messages === 'object') {
+        return translations.messages[namespace] || {};
+    }
+
     return translations[namespace] || {};
 }
 
@@ -65,6 +75,11 @@ export function hasTranslation(key: string): boolean {
 
     const keys = key.split('.');
     let value: any = translations;
+
+    // First, try to find the key under the 'messages' namespace
+    if (translations.messages && typeof translations.messages === 'object') {
+        value = translations.messages;
+    }
 
     for (const k of keys) {
         if (value && typeof value === 'object' && k in value) {

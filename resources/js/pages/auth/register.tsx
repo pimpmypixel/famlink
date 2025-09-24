@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { __ } from '@/lib/translations';
 
 export default function Register() {
     return (
@@ -87,7 +88,7 @@ export default function Register() {
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            {__('auth.register.already_have_account')}<{' '}
+                            {__('auth.register.already_have_account')} {' '}
                             <TextLink href={login()} tabIndex={6}>
                                 Log in
                             </TextLink>

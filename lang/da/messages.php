@@ -205,7 +205,7 @@ return [
     'clear_filters' => 'Ryd filtre',
     'no_results' => 'Ingen resultater fundet',
 
-        // Onboarding Chat - Additional strings
+    // Onboarding Chat - Additional strings
     'onboarding_welcome_back' => 'Velkommen tilbage!',
     'onboarding_found_session' => 'Jeg har fundet din tidligere onboarding-session.',
     'onboarding_continue' => 'Lad os fortsætte, hvor vi slap.',
@@ -250,6 +250,20 @@ return [
     'verify_email_description' => 'Verificer venligst din e-mail adresse ved at klikke på linket vi lige har sendt til dig.',
     'email_verification_title' => 'E-mail verifikation',
     'verification_link_sent' => 'Et nyt verifikationslink er blevet sendt til den e-mail adresse du opgav under registreringen.',
+    'resend_verification_email' => 'Send verifikationslink igen',
+
+    // Confirm password
+    'confirm_password_title' => 'Bekræft adgangskode',
+    'confirm_password_description' => 'Dette er et sikkert område af applikationen. Bekræft venligst din adgangskode før du fortsætter.',
+    'confirm_password_button' => 'Bekræft adgangskode',
+
+    // Password reset
+    'reset_password_title' => 'Nulstil adgangskode',
+    'reset_password_description' => 'Indtast venligst din nye adgangskode nedenfor',
+    'reset_password_email' => 'E-mail',
+    'reset_password_password' => 'Adgangskode',
+    'reset_password_confirm_password' => 'Bekræft adgangskode',
+    'reset_password_button' => 'Nulstil adgangskode',
 
     // Onboarding Page
     'onboarding' => [
@@ -440,7 +454,7 @@ return [
             'mitid_title' => 'MitID Autentificering',
             'mitid_description' => 'Fremtidig sikker login metode når appen lanceres',
             'mitid_alt' => 'MitID Login - Fremtidig autentificeringsmetode',
-                        'mitid_footer' => 'MitID er Danmarks officielle digitale ID-løsning, der sikrer den højeste grad af sikkerhed og tillid.',
+            'mitid_footer' => 'MitID er Danmarks officielle digitale ID-løsning, der sikrer den højeste grad af sikkerhed og tillid.',
         ],
         'register' => [
             'title' => 'Opret konto',
@@ -458,7 +472,6 @@ return [
             'already_have_account' => 'Har du allerede en konto?',
             'login_link' => 'Log ind',
         ],
-        ],
+    ],
 
-]
-;
+];

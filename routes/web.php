@@ -7,6 +7,23 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// Public pages
+Route::get('/about', function () {
+    return Inertia::render('about');
+})->name('about');
+
+Route::get('/services', function () {
+    return Inertia::render('services');
+})->name('services');
+
+Route::get('/help', function () {
+    return Inertia::render('help');
+})->name('help');
+
+Route::get('/contact', function () {
+    return Inertia::render('contact');
+})->name('contact');
+
 // Guest onboarding route
 Route::middleware('guest')->get('/onboarding', function () {
     return Inertia::render('onboarding');
@@ -27,7 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('intro', function () {
-        return Inertia::render('intro');
+        return Inertia::render('whitepaper');
     })->name('intro');
 
     Route::get('timeline', [App\Http\Controllers\TimelineController::class, 'index'])->name('timeline');

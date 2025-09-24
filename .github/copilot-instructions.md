@@ -96,6 +96,20 @@ php artisan pail               # Log monitoring
 bun run dev                    # Frontend dev server
 ```
 
+**IMPORTANT**: Always check for running development servers before starting new ones to avoid conflicts:
+
+```bash
+# Check for running processes
+ps aux | grep -E "(php|bun|node)" | grep -v grep
+
+# Check specific ports
+lsof -i :8000  # Laravel dev server (typically 8000)
+lsof -i :5173  # Vite dev server (typically 5173)
+
+# Kill conflicting processes if needed
+kill -9 <PID>
+```
+
 ### Code Quality & Testing
 ```bash
 # Code formatting (DO NOT use --test flag)

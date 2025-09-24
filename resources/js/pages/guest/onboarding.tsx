@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { RefreshCw, Mail, CheckCircle } from 'lucide-react';
-import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../utils/cookies';
+import { setOnboardingSession, getOnboardingSession, clearOnboardingSession, updateSessionActivity } from '../../utils/cookies';
 import { __ } from '@/lib/translations';
 
 interface Question {

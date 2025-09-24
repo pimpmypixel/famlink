@@ -9,7 +9,15 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
+    resolve: (name) => {
+        // First try to resolve from guest folder for public pages
+        const guestPages = ['welcome', 'about', 'services', 'help', 'contact', 'onboarding', 'whitepaper'];
+        if (guestPages.includes(name)) {
+            return resolvePageComponent(`./pages/guest/${name}.tsx`, import.meta.glob('./pages/**/*.tsx'));
+        }
+        // Otherwise resolve from the regular pages directory
+        return resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx'));
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 

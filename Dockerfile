@@ -36,8 +36,7 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
-    --no-scripts \
-    --prefer-dist
+    --no-scripts
 
 
 # ==============================

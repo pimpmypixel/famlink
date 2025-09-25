@@ -3,7 +3,7 @@ name: Deploy FamLink to CasaOS
 
 on:
   push:
-    branches: [ main, production ]
+    branches: [ deploy ]
   workflow_dispatch:
 
 env:
@@ -152,7 +152,7 @@ jobs:
           database/ \
           bootstrap/
 
-    - name: Deploy to CasaOS
+    - name: Deploy to Sevalla
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.CASAOS_HOST }}
@@ -162,7 +162,7 @@ jobs:
         timeout: 10m
         script: |
           set -e
-          echo "🚀 Starting deployment to CasaOS..."
+          echo "🚀 Starting deployment to Sevalla..."
 
           # Create and navigate to deployment directory
           mkdir -p ${{ env.DEPLOYMENT_PATH }}/{deployments,current}

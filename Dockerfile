@@ -1,7 +1,7 @@
 # ==============================
 # Stage 1: Build Node.js assets
 # ==============================
-FROM oven/bun:1.1.22-node-20-alpine AS node-builder
+FROM oven/bun:latest AS node-builder
 
 WORKDIR /app
 

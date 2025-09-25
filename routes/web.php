@@ -1,32 +1,32 @@
-<?php
-
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+// Test route for debugging
+Route::get('/test', function () {
+    return response()->json(['status' => 'ok', 'message' => 'Laravel is working']);
+});
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('guest/welcome');
 })->name('home');
 
 // Public pages
 Route::get('/about', function () {
-    return Inertia::render('about');
+    return Inertia::render('guest/about');
 })->name('about');
 
 Route::get('/services', function () {
-    return Inertia::render('services');
+    return Inertia::render('guest/services');
 })->name('services');
 
 Route::get('/help', function () {
-    return Inertia::render('help');
+    return Inertia::render('guest/help');
 })->name('help');
 
 Route::get('/contact', function () {
-    return Inertia::render('contact');
+    return Inertia::render('guest/contact');
 })->name('contact');
 
 // Guest onboarding route
 Route::middleware('guest')->get('/onboarding', function () {
-    return Inertia::render('onboarding');
+    return Inertia::render('guest/onboarding');
 })->name('onboarding');
 
 // Email verification route
@@ -44,7 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('intro', function () {
-        return Inertia::render('whitepaper');
+        return Inertia::render('guest/whitepaper');
     })->name('intro');
 
     Route::get('timeline', [App\Http\Controllers\TimelineController::class, 'index'])->name('timeline');

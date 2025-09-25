@@ -13,9 +13,7 @@ export default defineConfig({
         }),
         react(),
         tailwindcss(),
-        ...(process.env.NODE_ENV === 'production' ? [wayfinder({
-            formVariants: true,
-        })] : [wayfinder({
+        ...(process.env.NODE_ENV === 'production' ? [] : [wayfinder({
             formVariants: true,
         })]),
     ],

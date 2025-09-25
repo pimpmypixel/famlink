@@ -10,15 +10,13 @@ Famlink is a digital platform and logbook for separated parents in Danish family
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - **php** - 8.3.25
-- **inertiajs/inertia-laravel** (INERTIA) - v2.1.6
 - **laravel/framework** (LARAVEL) - v12.28.1
+- **@inertiajs/react** (INERTIA) - v2.1.6
 - **laravel/prompts** (PROMPTS) - v0
 - **laravel/wayfinder** (WAYFINDER) - v0.1.9
 - **laravel/pint** (PINT) - v1.18
 - **laravel/sail** (SAIL) - v1.41
 - **pestphp/pest** (PEST) - v4.1
-- **phpunit/phpunit** (PHPUNIT) - v12
-- **@inertiajs/react** (INERTIA) - v2.1.6
 - **react** (REACT) - v19.0.0
 - **tailwindcss** (TAILWINDCSS) - v4.0.0
 - **@laravel/vite-plugin-wayfinder** (WAYFINDER) - v0.1.3

@@ -1,7 +1,59 @@
 # ==============================
-# Stage 1: Build Node.js assets
+# Stage 1: PHP dependencies
 # ==============================
-FROM oven/bun:latest AS node-builder
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+# Install GD extension required by some packages
+RUN apk add --no-cache --virtual .build-deps \
+        freetype-dev libjpeg-turbo-dev libpng-dev \
+    && apk add --no-cache \
+        libpng libjpeg-turbo freetype \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
+    && apk del .build-deps
+
+# Copy only composer files (cache-friendly)
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies optimized for production
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts
+
+
+# ==============================
+# Stage 2: Build Node.js assets
+# ==============================
+FROM php:8.4-cli AS node-builder
+
+# Install system dependencies and PHP extensions needed for Laravel commands
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    unzip \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libsqlite3-dev \
+    libpq-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) mbstring pdo pdo_sqlite pdo_pgsql bcmath gd xml zip \
+    && apt-get remove -y libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev libsqlite3-dev libpq-dev \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash && \
+    cp ~/.bun/bin/bun /usr/local/bin/bun && \
+    cp ~/.bun/bin/bunx /usr/local/bin/bunx && \
+    chmod +x /usr/local/bin/bun /usr/local/bin/bunx
 
 WORKDIR /app
 
@@ -16,27 +68,34 @@ COPY resources/ resources/
 COPY public/ public/
 COPY vite.config.ts tsconfig.json* ./
 
+# Copy PHP application files needed for wayfinder
+COPY app/ app/
+COPY bootstrap/ bootstrap/
+COPY config/ config/
+COPY database/ database/
+COPY routes/ routes/
+COPY composer.json composer.lock artisan ./
+# Copy .env.example and set a dummy APP_KEY for build
+COPY .env.example .env
+RUN sed -i 's/APP_KEY=/APP_KEY=base64:dummy_key_for_build_only/' .env
+
+# Copy vendor directory from vendor stage
+COPY --from=vendor /app/vendor ./vendor
+
+# Create Laravel storage directories with full structure
+RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/cache && \
+    chmod -R 777 storage bootstrap/cache
+
+# Setup Laravel environment - skip key generation for build
+# RUN sed -i 's/CACHE_STORE=.*/CACHE_STORE=file/' .env && \
+#     php artisan key:generate
+
+# Try to run wayfinder command to see the error
+RUN php artisan wayfinder:generate || echo "Wayfinder failed, continuing..."
+
 # Build production assets
 ENV NODE_ENV=production
 RUN bunx vite build
-
-
-# ==============================
-# Stage 2: PHP dependencies
-# ==============================
-FROM composer:2 AS vendor
-
-WORKDIR /app
-
-# Copy only composer files (cache-friendly)
-COPY composer.json composer.lock ./
-
-# Install PHP dependencies optimized for production
-RUN composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --no-scripts
 
 
 # ==============================

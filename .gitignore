@@ -32,3 +32,4 @@ yarn-error.log
 /.kiro/logs/
 .env.testing
 database/.DS_Store
+.env.docker

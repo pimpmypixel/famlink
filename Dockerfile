@@ -75,8 +75,8 @@ COPY config/ config/
 COPY database/ database/
 COPY routes/ routes/
 COPY composer.json composer.lock artisan ./
-# Copy .env.example (key generation will happen at runtime)
-COPY .env.example .env
+# Copy .env.docker (Docker-specific environment file)
+COPY .env.docker .env
 
 # Copy vendor directory from vendor stage
 COPY --from=vendor /app/vendor ./vendor
@@ -88,6 +88,8 @@ RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstra
 # Build production assets
 ENV NODE_ENV=production
 RUN bunx vite build
+# Copy pre-built assets if they exist, otherwise create empty build directory
+# RUN mkdir -p public/build || true
 
 
 # ==============================
@@ -98,6 +100,7 @@ FROM php:8.4-fpm-alpine AS runtime
 # Install runtime + build deps in one go
 RUN apk add --no-cache \
         bash nginx curl git supervisor tzdata \
+        libpng libjpeg-turbo freetype postgresql-libs \
     && apk add --no-cache --virtual .build-deps \
         freetype-dev libjpeg-turbo-dev libpng-dev \
         oniguruma-dev libxml2-dev postgresql-dev sqlite-dev \
@@ -128,6 +131,9 @@ RUN mkdir -p \
 
 # Copy app source (filtered by .dockerignore)
 COPY . .
+
+# Copy Docker-specific environment file
+COPY .env.docker .env
 
 # Copy build artifacts & vendor
 COPY --from=node-builder /app/public/build ./public/build

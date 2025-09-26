@@ -13,7 +13,6 @@ env:
 
 jobs:
   build-and-deploy:
-    if: false
     runs-on: ubuntu-latest
 
     steps:

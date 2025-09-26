@@ -434,6 +434,47 @@ return [
         ],
     ],
 
+    'messages' => [
+        'close_chat' => 'Luk chat',
+        'onboarding_ai_writing' => 'AI skriver...',
+        'onboarding_chat' => 'Onboarding Chat',
+        'onboarding_completed_title' => 'Onboarding fuldført!',
+        'onboarding_confidential' => 'Alt er fortroligt, sikkert og privat.',
+        'onboarding_continue' => 'Lad os fortsætte, hvor vi slap.',
+        'onboarding_description' => 'Besvar spørgsmålene for at oprette din profil og få personlig hjælp.',
+        'onboarding_email_notification' => 'Du vil om kort tid modtage en email fra Famlink.',
+        'onboarding_email_sent' => 'En email er blevet sendt til dig med en opsummering af dine svar.',
+        'onboarding_error_resume' => 'Kunne ikke genoptage onboarding chatten.',
+        'onboarding_error_send' => 'Kunne ikke sende svar.',
+        'onboarding_error_start' => 'Kunne ikke starte onboarding chatten.',
+        'onboarding_preparing' => 'Vi er i gang med at oprette din midlertidige profil.',
+        'onboarding_ready' => 'Du er nu klar til at bruge Famlink.',
+        'onboarding_restart' => 'Genstart',
+        'onboarding_resumed' => 'Genoptaget session - fortsæt hvor du slap',
+        'onboarding_sending' => 'Sender...',
+        'onboarding_short_answers' => 'Forbered dig på kort at svare på nogle enkelte spørgsmål.',
+        'onboarding_starting' => 'Starter onboarding chatten',
+        'onboarding_thank_you' => 'Tak for dine svar!',
+        'onboarding_thank_you_short' => 'Tak for dine svar.',
+        'onboarding_welcome_back' => 'Velkommen tilbage!',
+        'onboarding_write_answer' => 'Skriv dit svar...',
+        'send' => 'Send',
+    ],
+
+    'onboarding' => [
+        'completed_message' => 'Du er nu klar til at bruge Famlink. Vi har sendt dig en email med en opsummering.',
+        'error_get_next_question' => 'Kunne ikke hente næste spørgsmål',
+        'error_prefix' => 'Fejl:',
+        'error_resume' => 'Beklager, der opstod en fejl ved genoptagelse af din onboarding-session. Starter forfra...',
+        'error_resume_onboarding' => 'Kunne ikke genoptage onboarding',
+        'error_start' => 'Beklager, der opstod en fejl ved start af onboarding processen. Prøv igen.',
+        'error_start_onboarding' => 'Kunne ikke starte onboarding',
+        'error_submit_answer' => 'Kunne ikke sende svar',
+        'send' => 'Send',
+        'sending' => 'Sender...',
+        'welcome_message' => 'Velkommen til Famlink! Lad os komme i gang med en personlig onboarding oplevelse.',
+    ],
+
     'auth' => [
         'login' => [
             'title' => 'Log ind',
@@ -474,4 +515,9 @@ return [
         ],
     ],
 
+    // Additional UI strings
+    'system' => 'System',
+    'password' => 'Adgangskode',
+
 ];
+

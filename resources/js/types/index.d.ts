@@ -34,6 +34,9 @@ export interface SharedData {
         email: string;
         role: string;
     }>;
+    translations?: {
+        messages?: Record<string, any>;
+    };
     [key: string]: unknown;
 }
 

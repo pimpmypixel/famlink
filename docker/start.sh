@@ -3,8 +3,28 @@ set -e
 
 echo "🚀 Starting FamLink application..."
 
-# Create database file if it doesn't exist
-touch /var/www/html/database/database.sqlite
+# Skip SQLite cache table creation for PostgreSQL setup
+echo "🗄️ Skipping cache table creation (using PostgreSQL)..."
+
+# Run database migrations (now cache table exists)
+echo "🗄️ Running database migrations..."
+if php artisan migrate --force --no-interaction; then
+    echo "✅ Migrations completed successfully"
+else
+    echo "⚠️  Migrations failed, but continuing..."
+fi
+
+# Generate application key if not set
+if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
+    echo "🔑 Generating application key..."
+    php artisan key:generate --force --no-interaction
+fi
+
+# Clear and cache config
+echo "🧹 Clearing caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
 # Set proper permissions
 echo "🔒 Setting proper permissions..."
@@ -13,7 +33,12 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/d
 
 # Test PHP-FPM configuration
 echo "🧪 Testing PHP-FPM configuration..."
-php-fpm -t
+if php-fpm -t; then
+    echo "✅ PHP-FPM configuration is valid"
+else
+    echo "❌ PHP-FPM configuration test failed"
+    exit 1
+fi
 
 # Start Nginx
 echo "🌐 Starting Nginx..."
@@ -30,14 +55,8 @@ else
     exit 1
 fi
 
-# Try to run migrations (with error handling)
-echo "🗄️ Running database migrations..."
-if php artisan migrate --force --no-interaction 2>/dev/null; then
-    echo "✅ Migrations completed successfully"
-else
-    echo "⚠️  Migrations failed, but continuing startup..."
-fi
-
 # Start PHP-FPM in foreground
 echo "🐘 Starting PHP-FPM..."
+echo "PHP-FPM logs will be written to /var/log/php-fpm.log"
+echo "PHP error logs will be written to /var/log/php-error.log"
 php-fpm

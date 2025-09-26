@@ -49,6 +49,7 @@ pest.php
 # Environment files
 .env*
 !.env.example
+!.env.docker
 
 # Build artifacts (will be copied from build stages)
 public/build

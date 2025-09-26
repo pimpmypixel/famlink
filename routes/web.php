@@ -1,6 +1,11 @@
-// Test route for debugging
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+// Test route for debugging - simple response
 Route::get('/test', function () {
-    return response()->json(['status' => 'ok', 'message' => 'Laravel is working']);
+    return 'Hello World - PHP is working!';
 });
 
 Route::get('/', function () {

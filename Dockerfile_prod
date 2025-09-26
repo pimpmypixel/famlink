@@ -133,8 +133,69 @@ RUN mkdir -p \
 # Copy application source (filtered by .dockerignore)
 COPY . .
 
-# Copy Docker-specific environment file
-COPY .env.docker .env
+# Generate .env file from Sevalla injected environment variables
+RUN echo "# Generated .env file from Sevalla environment variables" > .env && \
+    echo "APP_NAME=FamLink" >> .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_KEY=${APP_KEY}" >> .env && \
+    echo "APP_DEBUG=false" >> .env && \
+    echo "APP_URL=${APP_URL}" >> .env && \
+    echo "APP_LOCALE=da" >> .env && \
+    echo "APP_FALLBACK_LOCALE=en" >> .env && \
+    echo "APP_FAKER_LOCALE=da_DK" >> .env && \
+    echo "DB_CONNECTION=pgsql" >> .env && \
+    echo "DB_HOST=${DB_HOST}" >> .env && \
+    echo "DB_PORT=${DB_PORT}" >> .env && \
+    echo "DB_DATABASE=${DB_DATABASE}" >> .env && \
+    echo "DB_USERNAME=${DB_USERNAME}" >> .env && \
+    echo "DB_PASSWORD=${DB_PASSWORD}" >> .env && \
+    echo "SESSION_DRIVER=database" >> .env && \
+    echo "SESSION_LIFETIME=120" >> .env && \
+    echo "SESSION_ENCRYPT=false" >> .env && \
+    echo "CACHE_STORE=database" >> .env && \
+    echo "QUEUE_CONNECTION=database" >> .env && \
+    echo "FILESYSTEM_DISK=s3" >> .env && \
+    echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> .env && \
+    echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> .env && \
+    echo "AWS_BUCKET=${AWS_BUCKET}" >> .env && \
+    echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}" >> .env && \
+    echo "AWS_USE_PATH_STYLE_ENDPOINT=false" >> .env && \
+    echo "MAIL_MAILER=smtp" >> .env && \
+    echo "MAIL_HOST=${MAIL_HOST}" >> .env && \
+    echo "MAIL_PORT=${MAIL_PORT}" >> .env && \
+    echo "MAIL_USERNAME=${MAIL_USERNAME}" >> .env && \
+    echo "MAIL_PASSWORD=${MAIL_PASSWORD}" >> .env && \
+    echo "MAIL_ENCRYPTION=${MAIL_ENCRYPTION}" >> .env && \
+    echo "MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}" >> .env && \
+    echo "MAIL_FROM_NAME=FamLink" >> .env && \
+    echo "REVERB_APP_ID=${REVERB_APP_ID}" >> .env && \
+    echo "REVERB_APP_KEY=${REVERB_APP_KEY}" >> .env && \
+    echo "REVERB_APP_SECRET=${REVERB_APP_SECRET}" >> .env && \
+    echo "REVERB_HOST=${REVERB_HOST}" >> .env && \
+    echo "REVERB_PORT=${REVERB_PORT}" >> .env && \
+    echo "REVERB_SCHEME=${REVERB_SCHEME}" >> .env && \
+    echo "VITE_REVERB_APP_KEY=${REVERB_APP_KEY}" >> .env && \
+    echo "VITE_REVERB_HOST=${REVERB_HOST}" >> .env && \
+    echo "VITE_REVERB_PORT=${REVERB_PORT}" >> .env && \
+    echo "VITE_REVERB_SCHEME=${REVERB_SCHEME}" >> .env && \
+    echo "VITE_APP_NAME=FamLink" >> .env && \
+    echo "LOG_CHANNEL=stack" >> .env && \
+    echo "LOG_STACK=single" >> .env && \
+    echo "LOG_DEPRECATIONS_CHANNEL=null" >> .env && \
+    echo "LOG_LEVEL=error" >> .env && \
+    echo "VIZRA_ADK_DEFAULT_PROVIDER=${VIZRA_ADK_DEFAULT_PROVIDER:-gemini}" >> .env && \
+    echo "VIZRA_ADK_DEFAULT_MODEL=${VIZRA_ADK_DEFAULT_MODEL:-gemini-2.0-flash}" >> .env && \
+    echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> .env && \
+    echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> .env && \
+    echo "OPENROUTER_API_KEY=${OPENROUTER_API_KEY}" >> .env && \
+    echo "MISTRAL_API_KEY=${MISTRAL_API_KEY}" >> .env && \
+    echo "MCP_POSTGRES_URL=${MCP_POSTGRES_URL}" >> .env && \
+    echo "MCP_POSTGRES_ENABLED=${MCP_POSTGRES_ENABLED:-true}" >> .env && \
+    echo "MCP_PG_VECTOR_ENABLED=${MCP_PG_VECTOR_ENABLED:-true}" >> .env && \
+    echo "MCP_PG_VECTOR_TABLE=${MCP_PG_VECTOR_TABLE:-vector_embeddings}" >> .env && \
+    echo "MCP_PG_VECTOR_COLUMN=${MCP_PG_VECTOR_COLUMN:-embedding}" >> .env && \
+    echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> .env && \
+    echo "MCP_GITHUB_ENABLED=${MCP_GITHUB_ENABLED:-true}" >> .env
 
 # Copy build artifacts & vendor from previous stages
 COPY --from=node-builder /app/public/build ./public/build

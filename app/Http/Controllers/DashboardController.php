@@ -57,7 +57,7 @@ class DashboardController extends Controller
                 ];
 
                 // Get timeline cases for this social worker
-                $timelineCases = Event::with(['user', 'family'])
+                $timelineCases = Event::with(['user:id,first_name,last_name,email', 'family'])
                     ->whereIn('family_id', $familyIds)
                     ->orderBy('created_at', 'desc')
                     ->get()

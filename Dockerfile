@@ -75,9 +75,8 @@ COPY config/ config/
 COPY database/ database/
 COPY routes/ routes/
 COPY composer.json composer.lock artisan ./
-# Copy .env.example and set a dummy APP_KEY for build
+# Copy .env.example (key generation will happen at runtime)
 COPY .env.example .env
-RUN sed -i 's/APP_KEY=/APP_KEY=base64:dummy_key_for_build_only/' .env
 
 # Copy vendor directory from vendor stage
 COPY --from=vendor /app/vendor ./vendor
@@ -85,13 +84,6 @@ COPY --from=vendor /app/vendor ./vendor
 # Create Laravel storage directories with full structure
 RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/cache && \
     chmod -R 777 storage bootstrap/cache
-
-# Setup Laravel environment - skip key generation for build
-# RUN sed -i 's/CACHE_STORE=.*/CACHE_STORE=file/' .env && \
-#     php artisan key:generate
-
-# Try to run wayfinder command to see the error
-RUN php artisan wayfinder:generate || echo "Wayfinder failed, continuing..."
 
 # Build production assets
 ENV NODE_ENV=production
@@ -151,6 +143,9 @@ COPY docker/start.sh /start.sh
 RUN ln -snf /usr/share/zoneinfo/Europe/Copenhagen /etc/localtime \
     && echo Europe/Copenhagen > /etc/timezone \
     && chmod +x /start.sh
+
+# Setup Laravel after copying all files (skip all artisan commands - handled by start.sh)
+# RUN php artisan storage:link
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost/ || exit 1

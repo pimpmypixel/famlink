@@ -23,7 +23,7 @@ class UserData extends Data
     {
         return new self(
             id: (string) $user->id,
-            name: $user->name,
+            name: $user->name, // This uses the computed attribute from the User model
             email: $user->email,
             role: $user->getRoleNames()->first() ?? '',
             roles: $user->getRoleNames()->toArray(),
